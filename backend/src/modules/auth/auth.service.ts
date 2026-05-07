@@ -40,11 +40,21 @@ export class AuthService {
     if (!user || !(await bcrypt.compare(dto.password, user.password_hash))) {
       throw new UnauthorizedException('Invalid credentials');
     }
+    // SUPER_ADMIN has no shop to block — skip tenant check
+    if (user.role !== 'SUPER_ADMIN') {
+      const tenant = await this.tenantRepo.findOne({ where: { id: user.tenant_id } });
+      if (tenant?.status === 'blocked') {
+        throw new UnauthorizedException('Your shop has been blocked. Contact support.');
+      }
+    }
     return this.signToken(user);
   }
 
   private signToken(user: User) {
     const payload = { sub: user.id, tenant_id: user.tenant_id, role: user.role, name: user.name };
-    return { access_token: this.jwtService.sign(payload), user: { id: user.id, name: user.name, role: user.role, tenant_id: user.tenant_id } };
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: { id: user.id, name: user.name, role: user.role, tenant_id: user.tenant_id },
+    };
   }
 }

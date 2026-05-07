@@ -11,6 +11,12 @@ export class Tenant {
   @Column({ unique: true })
   slug: string;
 
+  @Column({ type: 'enum', enum: ['active', 'blocked', 'suspended'], default: 'active' })
+  status: string;
+
+  @Column({ nullable: true, type: 'text' })
+  plan_note: string;
+
   @CreateDateColumn()
   created_at: Date;
 }

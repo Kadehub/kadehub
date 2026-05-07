@@ -6,7 +6,8 @@ import Sidebar from '../../components/ui/Sidebar';
 import LanguageSwitcher from '../../components/ui/LanguageSwitcher';
 import { useLang } from '../../hooks/useLang';
 import { TranslationKey } from '../../lib/i18n';
-import { Wifi, WifiOff } from 'lucide-react';
+import { Wifi, WifiOff, X, Info, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react';
+import api from '../../lib/api';
 
 const pageTitleKeys: Record<string, TranslationKey> = {
   '/pos':       'page.pos',
@@ -23,6 +24,14 @@ const pageTitleKeys: Record<string, TranslationKey> = {
   '/settings':  'page.settings',
 };
 
+const ANN_ICONS: Record<string, any> = { info: Info, warning: AlertTriangle, success: CheckCircle, error: AlertCircle };
+const ANN_STYLES: Record<string, string> = {
+  info:    'bg-blue-50 border-blue-200 text-blue-800',
+  warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+  success: 'bg-green-50 border-green-200 text-green-800',
+  error:   'bg-red-50 border-red-200 text-red-800',
+};
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { token } = useAuthStore();
   const router = useRouter();
@@ -30,6 +39,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { t } = useLang();
   const [hydrated, setHydrated] = useState(false);
   const [online, setOnline] = useState(true);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<number[]>([]);
 
   useEffect(() => { setHydrated(true); }, []);
   useEffect(() => { if (hydrated && !token) router.push('/login'); }, [hydrated, token, router]);
@@ -41,19 +52,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     window.addEventListener('offline', off);
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, []);
+  useEffect(() => {
+    api.get('/super-admin/announcements/active').then(({ data }) => setAnnouncements(data)).catch(() => {});
+  }, []);
 
   if (!hydrated || !token) return null;
 
   const titleKey = Object.entries(pageTitleKeys).find(([k]) => pathname.startsWith(k))?.[1];
   const title = titleKey ? t(titleKey) : 'KadeHub';
   const today = new Date().toLocaleDateString('en-LK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const visible = announcements.filter(a => !dismissedIds.includes(a.id));
 
   return (
-    /* Full viewport, no overflow on the outer shell */
     <div className="flex h-screen overflow-hidden bg-ink-50">
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        {/* Top bar — fixed height, never shrinks */}
+        {/* Announcement banners */}
+        {visible.map(ann => {
+          const Icon = ANN_ICONS[ann.type] || Info;
+          return (
+            <div key={ann.id} className={`flex-shrink-0 flex items-center gap-3 px-6 py-2.5 border-b text-sm font-medium ${ANN_STYLES[ann.type] || ANN_STYLES.info}`}>
+              <Icon size={15} className="flex-shrink-0" />
+              <span className="font-semibold mr-1">{ann.title}:</span>
+              <span className="flex-1">{ann.message}</span>
+              <button onClick={() => setDismissedIds(ids => [...ids, ann.id])} className="flex-shrink-0 opacity-60 hover:opacity-100">
+                <X size={14} />
+              </button>
+            </div>
+          );
+        })}
+        {/* Top bar */}
         <header className="flex-shrink-0 h-14 bg-white border-b border-ink-200 flex items-center justify-between px-6">
           <div>
             <h1 className="text-base font-semibold text-ink-800">{title}</h1>
@@ -72,7 +100,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
           </div>
         </header>
-        {/* Scrollable page content */}
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>

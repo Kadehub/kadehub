@@ -8,7 +8,7 @@ export class User {
   @Column() name: string;
   @Column() email: string;
   @Column() password_hash: string;
-  @Column({ type: 'enum', enum: ['ADMIN', 'CASHIER'], default: 'CASHIER' }) role: string;
+  @Column({ type: 'enum', enum: ['SUPER_ADMIN', 'ADMIN', 'CASHIER'], default: 'CASHIER' }) role: string;
   @Column({ nullable: true }) phone: string;
   @Column({ nullable: true }) emp_no: string;
   @Column({ nullable: true }) photo_url: string;

@@ -27,7 +27,7 @@ export default function LoginPage() {
     try {
       const { data } = await api.post('/auth/login', form);
       setAuth(data.user, data.access_token);
-      router.push('/pos');
+      router.push(data.user.role === 'SUPER_ADMIN' ? '/super-admin' : '/pos');
     } catch (err: any) {
       const msg = err.response?.data?.message;
       toast.error(Array.isArray(msg) ? msg[0] : msg || 'Invalid credentials');

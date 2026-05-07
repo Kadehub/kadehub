@@ -9,7 +9,19 @@ import * as path from 'path';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.setGlobalPrefix('api');
-  app.enableCors({ origin: process.env.FRONTEND_URL || '*' });
+  const allowedOrigins = (process.env.FRONTEND_URL || '*').split(',').map(s => s.trim());
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const allowed = allowedOrigins.some(pattern => {
+        if (pattern === '*') return true;
+        if (pattern.startsWith('*.')) return origin.endsWith(pattern.slice(1));
+        return origin === pattern;
+      });
+      if (allowed) callback(null, true);
+      else callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
+  });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useStaticAssets(path.join(process.cwd(), 'uploads'), { prefix: '/uploads' });

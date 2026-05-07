@@ -15,7 +15,10 @@ async function bootstrap() {
       if (!origin) return callback(null, true);
       const allowed = allowedOrigins.some(pattern => {
         if (pattern === '*') return true;
-        if (pattern.startsWith('*.')) return origin.endsWith(pattern.slice(1));
+        if (pattern.startsWith('*.')) {
+          const base = pattern.slice(2);
+          return origin === `https://${base}` || origin === `http://${base}` || origin.endsWith(`.${base}`);
+        }
         return origin === pattern;
       });
       if (allowed) callback(null, true);

@@ -19,6 +19,8 @@ RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
 COPY --from=builder /app/dist ./dist
 
+RUN mkdir -p /app/uploads && chown node:node /app/uploads
+
 EXPOSE 3001
 
 USER node

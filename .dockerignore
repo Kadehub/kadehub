@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.next/
+.git/
+.env
+.env.local
+*.log
+uploads/
+.gitkeep
+**/README.md
+**/docs/

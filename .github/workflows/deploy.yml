@@ -40,6 +40,8 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           tags: nethun/dev:kadehub-fe
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://api.kadehub.com/api
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

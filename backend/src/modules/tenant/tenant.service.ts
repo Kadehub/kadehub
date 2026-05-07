@@ -6,7 +6,7 @@ import { Subscription } from '../../database/entities/subscription.entity';
 import { User } from '../../database/entities/user.entity';
 import { Package } from '../../database/entities/package.entity';
 import { IsString, IsEmail, MinLength, IsOptional } from 'class-validator';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 export class CreateUserDto {
   @IsString() name: string;

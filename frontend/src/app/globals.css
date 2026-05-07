@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: 'Poppins', 'Noto Sans Sinhala', system-ui, sans-serif;
+  font-weight: 600; /* SemiBold as default — matches brand typography spec */
+  background: #F1F5F9;
+  color: #0F172A;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography scale — all SemiBold (600) by default */
+h1, h2, h3, h4, h5, h6 { font-weight: 700; letter-spacing: -0.02em; }
+p, span, div, td, th, li { font-weight: 600; }
+small, .text-xs, .text-2xs { font-weight: 500; }
+label { font-weight: 600; }
+input, select, textarea, button { font-family: 'Poppins', sans-serif; font-weight: 500; }
+
+/* Explicit weight helpers */
+.font-normal   { font-weight: 400 !important; }
+.font-medium   { font-weight: 500 !important; }
+.font-semibold { font-weight: 600 !important; }
+.font-bold     { font-weight: 700 !important; }
+.font-extrabold{ font-weight: 800 !important; }
+
+/* ── Design tokens ── */
+:root {
+  --navy:       #0F172A;
+  --navy-mid:   #1E293B;
+  --teal:       #009688;
+  --teal-dark:  #00796B;
+  --teal-light: #E0F2F1;
+  --blue:       #2563EB;
+  --amber:      #FFB703;
+  --amber-dark: #F59E0B;
+  --coral:      #FF6B6B;
+  --gray-50:    #F1F5F9;
+  --gray-100:   #E2E8F0;
+  --gray-200:   #CBD5E1;
+  --gray-400:   #94A3B8;
+  --gray-500:   #64748B;
+  --gray-600:   #475569;
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+}
+
+/* ── Focus ── */
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--teal) !important;
+  box-shadow: 0 0 0 3px rgb(0 150 136 / 0.15);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 99px; }
+
+/* ── Utility classes ── */
+@layer components {
+  .kh-card {
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-card);
+  }
+
+  .kh-btn-primary {
+    background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 100%);
+    color: white;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    border-radius: var(--radius-sm);
+    transition: opacity 0.15s, transform 0.1s;
+    box-shadow: 0 2px 8px rgb(0 150 136 / 0.3);
+  }
+  .kh-btn-primary:hover  { opacity: 0.92; }
+  .kh-btn-primary:active { transform: scale(0.98); }
+  .kh-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .kh-btn-amber {
+    background: linear-gradient(135deg, var(--amber-dark) 0%, var(--amber) 100%);
+    color: var(--navy);
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+    border-radius: var(--radius-sm);
+    transition: opacity 0.15s, transform 0.1s;
+    box-shadow: 0 2px 8px rgb(255 183 3 / 0.35);
+  }
+  .kh-btn-amber:hover  { opacity: 0.92; }
+  .kh-btn-amber:active { transform: scale(0.98); }
+  .kh-btn-amber:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .kh-badge-teal   { background: #E0F2F1; color: #00796B; }
+  .kh-badge-amber  { background: #FFF8E1; color: #F59E0B; }
+  .kh-badge-coral  { background: #FFF0F0; color: #E53E3E; }
+  .kh-badge-blue   { background: #EFF6FF; color: #2563EB; }
+  .kh-badge-navy   { background: #F1F5F9; color: #0F172A; }
+  .kh-badge-gray   { background: #F1F5F9; color: #475569; }
+
+  /* keep old green aliases pointing to teal for backward compat */
+  .kh-badge-green  { background: #E0F2F1; color: #00796B; }
+  .kh-badge-orange { background: #FFF8E1; color: #F59E0B; }
+  .kh-badge-red    { background: #FFF0F0; color: #E53E3E; }
+}

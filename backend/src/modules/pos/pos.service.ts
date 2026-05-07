@@ -1,0 +1,72 @@
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Sale } from '../../database/entities/sale.entity';
+import { SaleItem } from '../../database/entities/sale-item.entity';
+import { CreditSale } from '../../database/entities/credit-sale.entity';
+import { AppEventEmitter, SALE_COMPLETED } from '../../common/events/app-event-emitter';
+import { CreateSaleDto } from './pos.dto';
+
+@Injectable()
+export class PosService {
+  constructor(
+    @InjectRepository(Sale) private saleRepo: Repository<Sale>,
+    @InjectRepository(SaleItem) private saleItemRepo: Repository<SaleItem>,
+    @InjectRepository(CreditSale) private creditRepo: Repository<CreditSale>,
+    private events: AppEventEmitter,
+  ) {}
+
+  async createSale(tenantId: number, userId: number, dto: CreateSaleDto) {
+    if (dto.payment_method === 'CREDIT' && !dto.customer_id)
+      throw new BadRequestException('A customer must be selected for credit sales');
+
+    const subtotal = dto.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const total = subtotal - (dto.discount || 0);
+
+    const sale = this.saleRepo.create({
+      tenant_id: tenantId,
+      user_id: userId,
+      customer_id: dto.customer_id || null,
+      total_amount: total,
+      discount: dto.discount || 0,
+      payment_method: dto.payment_method,
+    });
+    await this.saleRepo.save(sale);
+
+    const items = dto.items.map((i) => this.saleItemRepo.create({ sale_id: sale.id, product_id: i.product_id, quantity: i.quantity, price: i.price }));
+    await this.saleItemRepo.save(items);
+
+    // Auto-create credit record for CREDIT sales
+    if (dto.payment_method === 'CREDIT') {
+      await this.creditRepo.save(this.creditRepo.create({
+        tenant_id: tenantId,
+        sale_id: sale.id,
+        customer_id: dto.customer_id!,
+        amount_due: total,
+        amount_paid: 0,
+        due_date: dto.due_date || null,
+        status: 'outstanding',
+      }));
+    }
+
+    this.events.emit(SALE_COMPLETED, { sale_id: sale.id, tenant_id: tenantId, customer_id: dto.customer_id, items: dto.items, total });
+
+    return this.getReceipt(sale.id);
+  }
+
+  async getReceipt(saleId: number, tenantId?: number) {
+    return this.saleRepo.findOne({
+      where: { id: saleId, ...(tenantId && { tenant_id: tenantId }) },
+      relations: ['items', 'items.product', 'user', 'customer'],
+    });
+  }
+
+  async getSales(tenantId: number, date?: string) {
+    const qb = this.saleRepo.createQueryBuilder('s')
+      .where('s.tenant_id = :tenantId', { tenantId })
+      .orderBy('s.created_at', 'DESC')
+      .take(50);
+    if (date) qb.andWhere('DATE(s.created_at) = :date', { date });
+    return qb.getMany();
+  }
+}

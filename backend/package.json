@@ -22,12 +22,8 @@
     "class-validator": "^0.14.0",
     "cloudinary": "^1.41.3",
     "multer": "^2.1.1",
-<<<<<<< HEAD
-    "nodemailer": "^8.0.7",
-=======
     "mysql2": "^3.22.3",
->>>>>>> 429125eea73f03569c81ff85cfc0269388f7c054
-    "passport": "^0.6.0",
+    "nodemailer": "^8.0.7",    "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.11.0",
     "reflect-metadata": "^0.1.13",

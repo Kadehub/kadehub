@@ -14,7 +14,7 @@ export default function SettingsPage() {
   const [tab, setTab] = useState<'company' | 'billing'>('company');
 
   // Company
-  const [form, setForm] = useState({ address: '', city: '', country: 'Sri Lanka', phone: '', email: '', website: '', tax_number: '' });
+  const [form, setForm] = useState({ address: '', city: '', country: '', phone: '', email: '', website: '', tax_number: '' });
   const [saving, setSaving] = useState(false);
   const logoRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState('');
@@ -36,7 +36,7 @@ export default function SettingsPage() {
     api.get('/billing/profile').then(r => {
       setForm({
         address: r.data.address || '', city: r.data.city || '',
-        country: r.data.country || 'Sri Lanka', phone: r.data.phone || '',
+        country: r.data.country || '', phone: r.data.phone || '',
         email: r.data.email || '', website: r.data.website || '',
         tax_number: r.data.tax_number || '',
       });
@@ -89,7 +89,7 @@ export default function SettingsPage() {
         const res = await api.post('/billing/onepay/initiate', {
           package_id: selectedPkg.id,
           billing_cycle: billing,
-          registration_fee: regFee / 2,
+          ...(!activeSub && { registration_fee: regFee / 2 }),
         });
         // Redirect to OnePay hosted payment page
         window.location.href = res.data.payment_url;
@@ -104,7 +104,7 @@ export default function SettingsPage() {
         billing_cycle: billing,
         gateway,
         gateway_ref: gatewayRef,
-        registration_fee: regFee / 2,
+        ...(!activeSub && { registration_fee: regFee / 2 }),
       });
       toast.success('Plan upgraded successfully!');
       window.location.reload();
@@ -202,7 +202,7 @@ export default function SettingsPage() {
                 value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
             </div>
             <Input label="City" placeholder="Colombo" value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} />
-            <Input label="Country" placeholder="Sri Lanka" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} />
+            <Input label="Country" placeholder="Country" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} />
             <Input label="Phone" placeholder="0112345678" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
             <Input label="Business Email" type="email" placeholder="shop@example.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
             <Input label="Website" placeholder="www.yourshop.lk" value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} />
@@ -266,7 +266,7 @@ export default function SettingsPage() {
                           </div>
                           <p className="font-bold text-ink-800">Pay with OnePay</p>
                         </div>
-                        <p className="text-xs text-ink-500">Sri Lanka's trusted payment gateway. Supports Visa, Mastercard, LANKAQR & internet banking.</p>
+                        <p className="text-xs text-ink-500">Trusted payment gateway. Supports Visa, Mastercard, LANKAQR & internet banking.</p>
                         <div className="flex justify-center gap-2 pt-1">
                           {['VISA', 'MC', 'QR', 'Bank'].map(m => (
                             <span key={m} className="px-2 py-0.5 rounded text-xs font-bold bg-white border border-ink-200 text-ink-600">{m}</span>
@@ -300,7 +300,7 @@ export default function SettingsPage() {
                         ? <Loader2 size={18} className="animate-spin" />
                         : gateway === 'onepay'
                           ? <>Proceed to OnePay &rarr;</>
-                          : <>Pay {LKR(price + (regFee / 2))}</>
+                          : <>Pay {LKR(!activeSub ? price + regFee / 2 : price)}</>
                       }
                     </button>
                     <p className="text-xs text-center text-ink-400">🔒 Secured payment via OnePay</p>
@@ -316,21 +316,24 @@ export default function SettingsPage() {
                   <div className="flex justify-between text-xs text-ink-400 mb-1">
                     <span>Billing</span><span className="capitalize">{billing}</span>
                   </div>
-                  {/* Registration fee with discount */}
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-ink-500">Registration fee</span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="line-through text-ink-300">{LKR(regFee)}</span>
-                      <span className="font-bold" style={{ color: '#FF6B6B' }}>{LKR(regFee / 2)}</span>
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs text-green-600 font-semibold mb-3">
-                    <span>🎉 50% discount applied</span>
-                    <span>-{LKR(regFee / 2)}</span>
-                  </div>
+                  {!activeSub && (
+                    <>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-ink-500">Registration fee</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="line-through text-ink-300">{LKR(regFee)}</span>
+                          <span className="font-bold" style={{ color: '#FF6B6B' }}>{LKR(regFee / 2)}</span>
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs text-green-600 font-semibold mb-3">
+                        <span>🎉 50% discount applied</span>
+                        <span>-{LKR(regFee / 2)}</span>
+                      </div>
+                    </>
+                  )}
                   <div className="border-t border-ink-200 pt-3 mb-3 flex justify-between font-bold">
                     <span>Total</span>
-                    <span style={{ color: '#00A884' }}>{LKR(price + (regFee / 2))}</span>
+                    <span style={{ color: '#00A884' }}>{LKR(!activeSub ? price + regFee / 2 : price)}</span>
                   </div>
                   <p className="text-xs font-semibold text-ink-500 mb-2">Included modules:</p>
                   {selectedPkg.modules?.map((m: any) => (
@@ -407,26 +410,7 @@ export default function SettingsPage() {
                 </Card>
               )}
 
-              {/* Registration fee promo banner */}
-              <div className="rounded-xl p-4 flex items-center gap-4"
-                style={{ background: 'linear-gradient(135deg, #FFF8E1 0%, #FFF3CD 100%)', border: '1.5px solid #FFD54F' }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: '#FFB703' }}>
-                  <span className="text-lg">🎉</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-ink-800">Limited Time — 50% Off Registration Fee!</p>
-                  <p className="text-xs text-ink-500 mt-0.5">One-time setup fee</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-xs font-semibold text-ink-400 line-through">{LKR(regFee)}</p>
-                  <p className="text-xl font-extrabold" style={{ color: '#FF6B6B' }}>{LKR(regFee / 2)}</p>
-                  <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold text-white mt-0.5"
-                    style={{ background: '#FF6B6B' }}>50% OFF</span>
-                </div>
-              </div>
-
-              {/* Package selection */}
+              {/* Package selection */
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <p className="font-semibold text-ink-800">Choose a Plan</p>

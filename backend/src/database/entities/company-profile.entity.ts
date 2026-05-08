@@ -8,7 +8,7 @@ export class CompanyProfile {
   @Column({ nullable: true }) logo_url: string;
   @Column({ nullable: true, type: 'text' }) address: string;
   @Column({ nullable: true }) city: string;
-  @Column({ default: 'Sri Lanka' }) country: string;
+  @Column({ nullable: true }) country: string;
   @Column({ nullable: true }) phone: string;
   @Column({ nullable: true }) email: string;
   @Column({ nullable: true }) website: string;

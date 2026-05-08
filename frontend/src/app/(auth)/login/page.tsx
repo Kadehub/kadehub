@@ -66,7 +66,7 @@ export default function LoginPage() {
             ))}
           </div>
         </div>
-        <p className="text-xs opacity-40">© {new Date().getFullYear()} KadeHub · Built for Sri Lankan shops</p>
+        <p className="text-xs opacity-40">© {new Date().getFullYear()} KadeHub</p>
       </div>
 
       {/* Right — login form */}

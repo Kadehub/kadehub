@@ -5,6 +5,7 @@ import { Tenant } from '../../database/entities/tenant.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
 import { User } from '../../database/entities/user.entity';
 import { Package } from '../../database/entities/package.entity';
+import { CompanyProfile } from '../../database/entities/company-profile.entity';
 import { IsString, IsEmail, MinLength, IsOptional } from 'class-validator';
 import * as bcrypt from 'bcryptjs';
 
@@ -33,6 +34,7 @@ export class TenantService {
     @InjectRepository(Subscription) private subRepo: Repository<Subscription>,
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Package) private packageRepo: Repository<Package>,
+    @InjectRepository(CompanyProfile) private profileRepo: Repository<CompanyProfile>,
   ) {}
 
   async getTenant(tenantId: number) {
@@ -57,6 +59,13 @@ export class TenantService {
     if (dto.emp_no !== undefined) user.emp_no = dto.emp_no;
     if (dto.password) user.password_hash = await bcrypt.hash(dto.password, 10);
     return this.userRepo.save(user);
+  }
+
+  async updateCompanyLogo(tenantId: number, logoUrl: string) {
+    let profile = await this.profileRepo.findOne({ where: { tenant_id: tenantId } });
+    if (!profile) profile = this.profileRepo.create({ tenant_id: tenantId });
+    profile.logo_url = logoUrl;
+    return this.profileRepo.save(profile);
   }
 
   async updateUserPhoto(tenantId: number, userId: number, photoUrl: string) {

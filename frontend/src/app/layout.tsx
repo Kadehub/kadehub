@@ -5,7 +5,7 @@ import { LangProvider } from '../hooks/useLang';
 
 export const metadata: Metadata = {
   title: 'KadeHub - Smart Shop Platform',
-  description: 'POS & Shop Management for Sri Lankan Businesses',
+  description: 'POS & Shop Management for Local Businesses',
   icons: {
     icon: [
       { url: '/logo-icon.png', sizes: '32x32',  type: 'image/png' },

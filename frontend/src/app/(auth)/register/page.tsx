@@ -164,10 +164,10 @@ export default function RegisterPage() {
 
         {/* ── STEP 1: Account ── */}
         {step === 'account' && (
-          <div className="w-full max-w-md kh-card p-8">
-            <h2 className="text-xl font-bold text-ink-900 mb-1">Create your account</h2>
-            <p className="text-sm text-ink-400 mb-6">Start your KadeHub journey</p>
-            <form onSubmit={submitAccount} className="space-y-4">
+          <div className="w-full max-w-md kh-card p-5 sm:p-8">
+            <h2 className="text-lg sm:text-xl font-bold text-ink-900 mb-1">Create your account</h2>
+            <p className="text-sm text-ink-400 mb-5">Start your KadeHub journey</p>
+            <form onSubmit={submitAccount} className="space-y-3 sm:space-y-4">
               <Input label="Shop / Business Name" placeholder="e.g. Perera Grocery" required
                 value={account.shopName} onChange={e => setAccount(a => ({ ...a, shopName: e.target.value }))} />
               <Input label="Your Full Name" placeholder="e.g. Nimal Perera" required
@@ -177,7 +177,7 @@ export default function RegisterPage() {
               <Input label="Password" type="password" placeholder="Min 6 characters" required
                 value={account.password} onChange={e => setAccount(a => ({ ...a, password: e.target.value }))} />
               <button type="submit" disabled={loading}
-                className="kh-btn-primary w-full py-2.5 rounded-xl flex items-center justify-center gap-2">
+                className="kh-btn-primary w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm sm:text-base">
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <>Continue <ChevronRight size={16} /></>}
               </button>
             </form>
@@ -186,18 +186,18 @@ export default function RegisterPage() {
 
         {/* ── STEP 2: Company Details ── */}
         {step === 'company' && (
-          <div className="w-full max-w-xl kh-card p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#E0F2F1' }}>
+          <div className="w-full max-w-xl kh-card p-5 sm:p-8">
+            <div className="flex items-center gap-3 mb-5 sm:mb-6">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#E0F2F1' }}>
                 <Building2 size={20} style={{ color: '#00A884' }} />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-ink-900">Company Details</h2>
-                <p className="text-sm text-ink-400">This appears on your receipts and invoices</p>
+                <h2 className="text-lg sm:text-xl font-bold text-ink-900">Company Details</h2>
+                <p className="text-xs sm:text-sm text-ink-400">This appears on your receipts and invoices</p>
               </div>
             </div>
-            <form onSubmit={submitCompany} className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
+            <form onSubmit={submitCompany} className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="col-span-1 sm:col-span-2">
                 <Input label="Business Address" placeholder="No 45, Main Street, Colombo"
                   value={company.address} onChange={e => setCompany(c => ({ ...c, address: e.target.value }))} />
               </div>
@@ -209,11 +209,11 @@ export default function RegisterPage() {
                 value={company.email} onChange={e => setCompany(c => ({ ...c, email: e.target.value }))} />
               <Input label="Website" placeholder="www.yourshop.lk"
                 value={company.website} onChange={e => setCompany(c => ({ ...c, website: e.target.value }))} />
-              <div className="col-span-2">
+              <div className="col-span-1 sm:col-span-2">
                 <Input label="Tax / VAT Number (optional)" placeholder="VAT123456789"
                   value={company.tax_number} onChange={e => setCompany(c => ({ ...c, tax_number: e.target.value }))} />
               </div>
-              <div className="col-span-2 flex gap-3 pt-2">
+              <div className="col-span-1 sm:col-span-2 flex gap-3 pt-2">
                 <button type="button" onClick={() => setStep('account')}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-ink-200 text-sm font-semibold text-ink-600 hover:bg-ink-50 transition-colors">
                   <ArrowLeft size={15} /> Back
@@ -230,31 +230,36 @@ export default function RegisterPage() {
         {/* ── STEP 3: Package Selection ── */}
         {step === 'package' && (
           <div className="w-full max-w-5xl">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-ink-900">Choose your plan</h2>
-              <p className="text-ink-400 mt-2">Select the modules your shop needs. Upgrade anytime.</p>
+            <div className="text-center mb-6 sm:mb-8 px-2">
+              <h2 className="text-xl sm:text-2xl font-bold text-ink-900">Choose your plan</h2>
+              <p className="text-sm text-ink-400 mt-2">Select the modules your shop needs. Upgrade anytime.</p>
               {/* Registration fee notice */}
-              <div className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl text-sm font-medium" style={{ background: '#FEF9C3', color: '#92400E' }}>
-                One-time registration fee: <strong>{fmt(registrationFee)}</strong>
+              <div className="inline-flex flex-wrap items-center justify-center gap-2 mt-3 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium" style={{ background: '#FEF9C3', color: '#92400E' }}>
+                One-time registration fee:
+                <span className="line-through opacity-60">{fmt(registrationFee * 2)}</span>
+                <strong>{fmt(registrationFee)}</strong>
+                <span className="px-1.5 py-0.5 rounded-md text-xs font-bold text-white" style={{ background: '#DC2626' }}>50% OFF</span>
               </div>
               {/* Billing toggle */}
-              <div className="inline-flex items-center gap-1 mt-4 p-1 rounded-xl bg-white border border-ink-200">
-                {(['monthly', 'yearly'] as const).map(b => (
-                  <button key={b} onClick={() => setBilling(b)}
-                    className="px-5 py-2 rounded-lg text-sm font-semibold capitalize transition-all"
-                    style={{ background: billing === b ? '#00A884' : 'transparent', color: billing === b ? 'white' : '#64748B' }}>
-                    {b === 'yearly' ? 'Yearly — Save 17%' : 'Monthly'}
-                  </button>
-                ))}
+              <div className="flex items-center justify-center mt-4">
+                <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-white border border-ink-200">
+                  {(['monthly', 'yearly'] as const).map(b => (
+                    <button key={b} onClick={() => setBilling(b)}
+                      className="px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold capitalize transition-all"
+                      style={{ background: billing === b ? '#00A884' : 'transparent', color: billing === b ? 'white' : '#64748B' }}>
+                      {b === 'yearly' ? 'Yearly — Save 17%' : 'Monthly'}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {packages.map(pkg => {
                 const pkgPrice = billing === 'yearly' ? pkg.price_yearly : pkg.price_monthly;
                 return (
                   <div key={pkg.id}
-                    className="kh-card p-6 flex flex-col relative transition-all hover:shadow-lg"
+                    className="kh-card p-5 sm:p-6 flex flex-col relative transition-all hover:shadow-lg"
                     style={{ border: pkg.is_popular ? '2px solid #00A884' : undefined }}>
                     {pkg.is_popular && (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1"
@@ -263,18 +268,18 @@ export default function RegisterPage() {
                       </div>
                     )}
                     <div className="mb-4">
-                      <h3 className="text-lg font-bold text-ink-900">{pkg.name}</h3>
+                      <h3 className="text-base sm:text-lg font-bold text-ink-900">{pkg.name}</h3>
                       <p className="text-xs text-ink-400 mt-1">{pkg.description}</p>
                     </div>
-                    <div className="mb-5">
-                      <span className="text-3xl font-extrabold" style={{ color: '#00A884' }}>{fmt(pkgPrice)}</span>
+                    <div className="mb-4 sm:mb-5">
+                      <span className="text-2xl sm:text-3xl font-extrabold" style={{ color: '#00A884' }}>{fmt(pkgPrice)}</span>
                       <span className="text-ink-400 text-sm ml-1">/{billing === 'yearly' ? 'year' : 'month'}</span>
                       {billing === 'yearly' && (
                         <p className="text-xs text-ink-400 mt-0.5">{fmt(pkg.price_monthly)}/mo billed annually</p>
                       )}
                     </div>
                     {/* Modules */}
-                    <div className="flex-1 space-y-2 mb-6">
+                    <div className="flex-1 space-y-2 mb-5 sm:mb-6">
                       {pkg.modules?.map((m: any, idx: number) => {
                         const meta = MODULE_META[m.module_name];
                         if (!meta) return null;
@@ -285,8 +290,8 @@ export default function RegisterPage() {
                               style={{ background: '#E0F2F1' }}>
                               <Icon size={13} style={{ color: '#00A884' }} />
                             </div>
-                            <span className="text-ink-700 font-medium">{meta.label}</span>
-                            <span className="text-ink-400 text-xs ml-auto">{meta.desc}</span>
+                            <span className="text-ink-700 font-medium text-xs sm:text-sm">{meta.label}</span>
+                            <span className="text-ink-400 text-xs ml-auto hidden sm:block">{meta.desc}</span>
                           </div>
                         );
                       })}
@@ -314,29 +319,29 @@ export default function RegisterPage() {
 
         {/* ── STEP 4: Payment ── */}
         {step === 'payment' && selectedPkg && (
-          <div className="w-full max-w-2xl">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
+          <div className="w-full max-w-2xl px-0 sm:px-0">
+            <div className="flex flex-col md:grid md:grid-cols-5 gap-4 sm:gap-5">
               {/* Payment form */}
-              <div className="md:col-span-3 kh-card p-6">
-                <h2 className="text-lg font-bold text-ink-900 mb-5">Payment Details</h2>
+              <div className="md:col-span-3 kh-card p-4 sm:p-6">
+                <h2 className="text-base sm:text-lg font-bold text-ink-900 mb-4 sm:mb-5">Payment Details</h2>
 
                 {/* Gateway selector */}
-                <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-5">
                   {(['card', 'paypal'] as const).map(g => (
                     <button key={g} onClick={() => setGateway(g)}
-                      className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 text-sm font-semibold transition-all"
+                      className="flex items-center justify-center gap-2 py-2.5 sm:py-3 rounded-xl border-2 text-xs sm:text-sm font-semibold transition-all"
                       style={{
                         borderColor: gateway === g ? '#00A884' : '#E2E8F0',
                         background: gateway === g ? '#E0F2F1' : 'white',
                         color: gateway === g ? '#00A884' : '#64748B',
                       }}>
-                      {g === 'card' ? <CreditCard size={16} /> : <span className="font-extrabold text-blue-600">Pay</span>}
-                      {g === 'card' ? 'Credit / Debit Card' : 'PayPal'}
+                      {g === 'card' ? <CreditCard size={15} /> : <span className="font-extrabold text-blue-600">Pay</span>}
+                      {g === 'card' ? 'Credit / Debit' : 'PayPal'}
                     </button>
                   ))}
                 </div>
 
-                <form onSubmit={submitPayment} className="space-y-4">
+                <form onSubmit={submitPayment} className="space-y-3 sm:space-y-4">
                   {gateway === 'card' && (
                     <>
                       <Input label="Card Number" placeholder="1234 5678 9012 3456" required
@@ -359,7 +364,7 @@ export default function RegisterPage() {
                     </div>
                   )}
                   <button type="submit" disabled={loading}
-                    className="kh-btn-primary w-full py-3 rounded-xl flex items-center justify-center gap-2 text-base font-bold">
+                    className="kh-btn-primary w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm sm:text-base font-bold">
                     {loading
                       ? <Loader2 size={18} className="animate-spin" />
                       : <>Pay {fmt(price)} <ChevronRight size={16} /></>
@@ -370,9 +375,9 @@ export default function RegisterPage() {
               </div>
 
               {/* Order summary */}
-              <div className="md:col-span-2 kh-card p-5 h-fit">
-                <h3 className="font-semibold text-ink-800 mb-4">Order Summary</h3>
-                <div className="space-y-2 mb-4">
+              <div className="md:col-span-2 kh-card p-4 sm:p-5 h-fit">
+                <h3 className="font-semibold text-ink-800 mb-3 sm:mb-4">Order Summary</h3>
+                <div className="space-y-2 mb-3 sm:mb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-ink-600">{selectedPkg.name} Plan</span>
                     <span className="font-bold text-ink-800">{fmt(price)}</span>
@@ -388,30 +393,41 @@ export default function RegisterPage() {
                     </div>
                   )}
                 </div>
-                <div className="border-t border-ink-100 pt-3 mb-4">
+                <div className="border-t border-ink-100 pt-3 mb-3 sm:mb-4">
                   <div className="flex justify-between text-xs text-ink-500 mb-1">
-                    <span>Registration fee (one-time)</span>
-                    <span>{fmt(registrationFee)}</span>
+                    <div className="flex flex-col gap-0.5">
+                      <span>Registration fee (one-time)</span>
+                      <span className="px-1.5 py-0.5 rounded text-xs font-bold text-white w-fit" style={{ background: '#DC2626' }}>50% OFF</span>
+                    </div>
+                    <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                      <span className="line-through opacity-50">{fmt(registrationFee * 2)}</span>
+                      <span className="font-semibold" style={{ color: '#00A884' }}>{fmt(registrationFee)}</span>
+                    </div>
                   </div>
                   <div className="flex justify-between font-bold">
                     <span>Total</span>
-                    <span style={{ color: '#00A884' }}>{fmt(price + registrationFee)}</span>
+                    <div className="flex flex-col items-end gap-0.5">
+                      <span className="text-xs font-medium line-through opacity-50">{fmt(price + registrationFee * 2)}</span>
+                      <span style={{ color: '#00A884' }}>{fmt(price + registrationFee)}</span>
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <p className="text-xs font-semibold text-ink-500 mb-2">Included modules:</p>
-                  {selectedPkg.modules?.map((m: any, idx: number) => {
-                    const meta = MODULE_META[m.module_name];
-                    if (!meta) return null;
-                    const Icon = meta.icon;
-                    return (
-                      <div key={`summary-${m.module_name}-${idx}`} className="flex items-center gap-2 text-xs text-ink-600">
-                        <Check size={12} style={{ color: '#00A884' }} />
-                        <Icon size={12} />
-                        {meta.label}
-                      </div>
-                    );
-                  })}
+                  <div className="grid grid-cols-2 md:grid-cols-1 gap-1">
+                    {selectedPkg.modules?.map((m: any, idx: number) => {
+                      const meta = MODULE_META[m.module_name];
+                      if (!meta) return null;
+                      const Icon = meta.icon;
+                      return (
+                        <div key={`summary-${m.module_name}-${idx}`} className="flex items-center gap-2 text-xs text-ink-600">
+                          <Check size={12} style={{ color: '#00A884' }} />
+                          <Icon size={12} />
+                          {meta.label}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
                 <button onClick={() => setStep('package')}
                   className="mt-4 text-xs text-ink-400 hover:text-ink-700 flex items-center gap-1">

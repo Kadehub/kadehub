@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS company_profile (
   logo_url   VARCHAR(255),
   address    TEXT,
   city       VARCHAR(100),
-  country    VARCHAR(100) NOT NULL DEFAULT 'Sri Lanka',
+  country    VARCHAR(100),
   phone      VARCHAR(50),
   email      VARCHAR(255),
   website    VARCHAR(255),

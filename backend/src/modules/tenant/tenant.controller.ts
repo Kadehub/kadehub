@@ -43,6 +43,21 @@ export class TenantController {
     return this.tenantService.updateUser(user.tenant_id, +id, dto);
   }
 
+  @Patch('company/logo')
+  @Roles('ADMIN')
+  @UseInterceptors(FileInterceptor('logo', {
+    storage: memoryStorage(),
+    limits: { fileSize: 2 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      if (!file.mimetype.match(/^image\/(jpeg|png|webp)$/)) return cb(new Error('Images only'), false);
+      cb(null, true);
+    },
+  }))
+  async uploadCompanyLogo(@CurrentUser() user: any, @UploadedFile() file: Express.Multer.File) {
+    const logoUrl = await uploadToCloudinary(file.buffer, 'kadehub/logos', file.originalname);
+    return this.tenantService.updateCompanyLogo(user.tenant_id, logoUrl);
+  }
+
   @Post('users/:id/photo')
   @Roles('ADMIN')
   @UseInterceptors(FileInterceptor('photo', {

@@ -6,10 +6,11 @@ import { Tenant } from '../../database/entities/tenant.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
 import { User } from '../../database/entities/user.entity';
 import { Package } from '../../database/entities/package.entity';
+import { CompanyProfile } from '../../database/entities/company-profile.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Tenant, Subscription, User, Package]), AuthModule],
+  imports: [TypeOrmModule.forFeature([Tenant, Subscription, User, Package, CompanyProfile]), AuthModule],
   controllers: [TenantController],
   providers: [TenantService],
   exports: [TenantService],

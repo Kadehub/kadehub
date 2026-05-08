@@ -1,34 +1,23 @@
-import { v2 as cloudinary } from 'cloudinary';
-import * as fs from 'fs';
+import * as Minio from 'minio';
 import * as path from 'path';
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+const BUCKET = 'kadehub';
+const ALLOWED_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg']);
+
+const minioClient = new Minio.Client({
+  endPoint: 'mo-db.zenova.services',
+  port: 443,
+  useSSL: true,
+  accessKey: 'yaodVODDkdfXWxvoCE99',
+  secretKey: 'GLAn4TM2MQogyckvW7ZeLEfG0vIaTVE2xo4TwEso',
 });
 
-const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
-
 export async function uploadToCloudinary(buffer: Buffer, folder: string, filename?: string): Promise<string> {
-  // Use Cloudinary when credentials are configured
-  if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
-    return new Promise((resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream({ folder, resource_type: 'image' }, (err, result) => {
-          if (err || !result) return reject(err);
-          resolve(result.secure_url);
-        })
-        .end(buffer);
-    });
-  }
-
-  // Local fallback — save to uploads/ and return a relative URL
-  if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-  const ALLOWED_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg']);
   const rawExt = filename ? path.extname(filename).toLowerCase() : '.jpg';
   const ext = ALLOWED_EXTS.has(rawExt) ? rawExt : '.jpg';
-  const safeName = `${folder.replace(/[^a-z0-9]/gi, '-')}-${Date.now()}${ext}`;
-  fs.writeFileSync(path.join(UPLOADS_DIR, safeName), buffer);
-  return `/uploads/${safeName}`;
+  const objectName = `${folder}/${Date.now()}${ext}`;
+
+  await minioClient.putObject(BUCKET, objectName, buffer, buffer.length, { 'Content-Type': `image/${ext.slice(1)}` });
+
+  return `https://mo-db.zenova.services/${BUCKET}/${objectName}`;
 }

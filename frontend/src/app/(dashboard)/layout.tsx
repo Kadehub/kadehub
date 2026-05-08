@@ -6,7 +6,7 @@ import Sidebar from '../../components/ui/Sidebar';
 import LanguageSwitcher from '../../components/ui/LanguageSwitcher';
 import { useLang } from '../../hooks/useLang';
 import { TranslationKey } from '../../lib/i18n';
-import { Wifi, WifiOff, X, Info, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react';
+import { Wifi, WifiOff, X, Info, AlertTriangle, CheckCircle, AlertCircle, Menu } from 'lucide-react';
 import api from '../../lib/api';
 
 const pageTitleKeys: Record<string, TranslationKey> = {
@@ -33,7 +33,7 @@ const ANN_STYLES: Record<string, string> = {
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { token } = useAuthStore();
+  const { token, setLogoUrl } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useLang();
@@ -41,6 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [online, setOnline] = useState(true);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [dismissedIds, setDismissedIds] = useState<number[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => { setHydrated(true); }, []);
   useEffect(() => { if (hydrated && !token) router.push('/login'); }, [hydrated, token, router]);
@@ -55,6 +56,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     api.get('/super-admin/announcements/active').then(({ data }) => setAnnouncements(data)).catch(() => {});
   }, []);
+  useEffect(() => {
+    api.get('/billing/profile').then(({ data }) => setLogoUrl(data.logo_url || null)).catch(() => {});
+  }, []);
 
   if (!hydrated || !token) return null;
 
@@ -65,7 +69,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-screen overflow-hidden bg-ink-50">
-      <Sidebar />
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-20 bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+      <div className={`fixed inset-y-0 left-0 z-30 lg:static lg:z-auto transition-transform duration-200 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
+        <Sidebar onClose={() => setSidebarOpen(false)} />
+      </div>
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Announcement banners */}
         {visible.map(ann => {
@@ -82,7 +94,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           );
         })}
         {/* Top bar */}
-        <header className="flex-shrink-0 h-14 bg-white border-b border-ink-200 flex items-center justify-between px-6">
+        <header className="flex-shrink-0 h-14 bg-white border-b border-ink-200 flex items-center justify-between px-4 lg:px-6">
+          <button className="lg:hidden mr-2 p-1.5 rounded-lg hover:bg-ink-100 text-ink-500" onClick={() => setSidebarOpen(true)}>
+            <Menu size={20} />
+          </button>
           <div>
             <h1 className="text-base font-semibold text-ink-800">{title}</h1>
             <p className="text-2xs text-ink-400">{today}</p>
@@ -100,7 +115,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );

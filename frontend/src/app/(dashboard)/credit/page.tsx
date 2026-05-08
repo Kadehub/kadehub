@@ -70,7 +70,7 @@ export default function CreditPage() {
       )}
 
       <Card padding={false}>
-        <div className="flex items-center gap-2 px-5 py-4 border-b border-ink-100">
+        <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-ink-100">
           <CreditCard size={16} className="text-ink-400" />
           <div className="flex gap-1 ml-2">
             {(['outstanding', 'partial', 'paid', 'all'] as const).map(f => (
@@ -87,7 +87,8 @@ export default function CreditPage() {
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center text-ink-400 text-sm">{t('credit.noCredits')}</div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="border-b border-ink-100">
                 {[t('credit.customer'), t('credit.amountDue'), t('credit.paid'), t('credit.balance'), t('credit.dueDate'), t('credit.status'), ''].map(h => (
@@ -115,6 +116,7 @@ export default function CreditPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
 

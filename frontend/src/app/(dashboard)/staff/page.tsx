@@ -222,8 +222,8 @@ export default function StaffPage() {
 
   return (
     <div className="space-y-5 max-w-6xl">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex gap-1 p-1 rounded-xl bg-white border border-ink-200">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex gap-1 p-1 rounded-xl bg-white border border-ink-200 overflow-x-auto">
           {([
             { key: 'employees',   labelKey: 'staff.employees',   icon: Users },
             { key: 'shifts',      labelKey: 'staff.shifts',      icon: Clock },
@@ -257,7 +257,8 @@ export default function StaffPage() {
         <Card padding={false}>
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             employees.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('staff.noEmployees')}</div> : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[650px]">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('staff.name'), t('staff.empNo'), t('staff.phone'), t('staff.email'), t('staff.role'), t('staff.joined'), ''].map(h => (
@@ -304,6 +305,7 @@ export default function StaffPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
         </Card>
       )}
@@ -313,7 +315,8 @@ export default function StaffPage() {
         <Card padding={false}>
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             shifts.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('staff.noShifts')}</div> : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[650px]">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('staff.cashierCol'), t('staff.opened'), t('staff.closed'), t('staff.openingCash'), t('staff.closingCash'), t('staff.status'), ''].map(h => (
@@ -345,6 +348,7 @@ export default function StaffPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
         </Card>
       )}
@@ -354,7 +358,8 @@ export default function StaffPage() {
         <Card padding={false}>
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             performance.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('staff.noPerformance')}</div> : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[400px]">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('staff.cashierCol'), t('staff.totalSales'), t('staff.revenue'), t('staff.avgSale')].map(h => (
@@ -373,6 +378,7 @@ export default function StaffPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
         </Card>
       )}
@@ -382,7 +388,8 @@ export default function StaffPage() {
         <Card padding={false}>
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             logs.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('staff.noAudit')}</div> : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[600px]">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('staff.time'), t('staff.user'), t('staff.action'), t('staff.entity'), t('staff.details')].map(h => (
@@ -402,6 +409,7 @@ export default function StaffPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
         </Card>
       )}

@@ -17,12 +17,16 @@
     "@nestjs/schedule": "^6.1.3",
     "@nestjs/typeorm": "^10.0.0",
     "@types/multer": "^2.1.0",
-    "bcrypt": "^5.1.0",
+    "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "cloudinary": "^1.41.3",
     "multer": "^2.1.1",
+<<<<<<< HEAD
     "nodemailer": "^8.0.7",
+=======
+    "mysql2": "^3.22.3",
+>>>>>>> 429125eea73f03569c81ff85cfc0269388f7c054
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.11.0",
@@ -33,7 +37,7 @@
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
     "@nestjs/testing": "^10.0.0",
-    "@types/bcrypt": "^5.0.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.0.0",
     "@types/node": "^20.0.0",
     "@types/nodemailer": "^8.0.0",

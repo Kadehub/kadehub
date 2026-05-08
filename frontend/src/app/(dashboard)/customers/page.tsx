@@ -56,7 +56,7 @@ export default function CustomersPage() {
   return (
     <div className="space-y-5 max-w-5xl">
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="kh-card p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#E0F2F1' }}>
             <Users size={18} style={{ color: '#009688' }} />
@@ -88,8 +88,8 @@ export default function CustomersPage() {
 
       {/* Table card */}
       <Card padding={false}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-ink-100">
-          <div className="relative flex-1 max-w-xs">
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-ink-100">
+          <div className="relative w-full sm:flex-1 sm:max-w-xs">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
             <input placeholder={t('customers.searchPlaceholder')} value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -107,7 +107,8 @@ export default function CustomersPage() {
             {search ? t('customers.noMatch') : t('customers.noCustomers')}
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[500px]">
             <thead>
               <tr className="border-b border-ink-100">
                 <th className="text-left px-5 py-3 text-xs font-semibold text-ink-400 uppercase tracking-wide">{t('customers.customer')}</th>
@@ -143,6 +144,7 @@ export default function CustomersPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
 

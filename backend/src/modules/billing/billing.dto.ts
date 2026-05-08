@@ -25,4 +25,8 @@ export class CreateSubscriptionDto {
   gateway: 'paypal' | 'card' | 'bank';
 
   @IsOptional() @IsString() gateway_ref?: string;
+
+  @IsOptional() @IsEnum(['LKR', 'USD']) currency?: 'LKR' | 'USD';
+
+  @IsOptional() @IsNumber() registration_fee?: number;
 }

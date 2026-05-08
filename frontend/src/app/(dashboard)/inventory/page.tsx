@@ -93,7 +93,7 @@ export default function InventoryPage() {
   return (
     <div className="space-y-5 max-w-6xl">
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: t('inventory.totalSkus'),   value: products.length, color: '#009688', bg: '#E0F2F1', icon: Boxes },
           { label: t('inventory.lowStock'),    value: lowCount,         color: '#F59E0B', bg: '#FFF8E1', icon: Boxes },
@@ -121,14 +121,14 @@ export default function InventoryPage() {
 
       {/* Table */}
       <Card padding={false}>
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-ink-100">
-          <div className="relative flex-1 max-w-xs">
+        <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-ink-100">
+          <div className="relative w-full sm:w-auto sm:flex-1 sm:max-w-xs">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
             <input placeholder={t('common.search')} value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-8 pr-3 py-2 border border-ink-200 rounded-lg text-sm bg-white" />
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-wrap">
             {(['all', 'low', 'out'] as Filter[]).map((f) => (
               <button key={f} onClick={() => setFilter(f)}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
@@ -137,16 +137,18 @@ export default function InventoryPage() {
               </button>
             ))}
           </div>
-          <button onClick={fetchAll} className="ml-auto flex items-center gap-1.5 text-xs text-ink-400 hover:text-ink-700 transition-colors">
-            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> {t('common.refresh')}
-          </button>
-          <button onClick={downloadSample} className="flex items-center gap-1.5 text-xs text-ink-400 hover:text-ink-700 transition-colors">
-            <Download size={13} /> {t('inventory.sampleCsv')}
-          </button>
-          <label className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${importing ? 'opacity-50 pointer-events-none' : 'bg-teal-50 text-teal-700 hover:bg-teal-100'}`}>
-            <Upload size={13} /> {importing ? t('inventory.importing') : t('inventory.importCsv')}
-            <input type="file" accept=".csv" className="hidden" onChange={handleCsvImport} />
-          </label>
+          <div className="flex items-center gap-2 ml-auto flex-wrap">
+            <button onClick={fetchAll} className="flex items-center gap-1.5 text-xs text-ink-400 hover:text-ink-700 transition-colors">
+              <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> {t('common.refresh')}
+            </button>
+            <button onClick={downloadSample} className="flex items-center gap-1.5 text-xs text-ink-400 hover:text-ink-700 transition-colors">
+              <Download size={13} /> {t('inventory.sampleCsv')}
+            </button>
+            <label className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${importing ? 'opacity-50 pointer-events-none' : 'bg-teal-50 text-teal-700 hover:bg-teal-100'}`}>
+              <Upload size={13} /> {importing ? t('inventory.importing') : t('inventory.importCsv')}
+              <input type="file" accept=".csv" className="hidden" onChange={handleCsvImport} />
+            </label>
+          </div>
         </div>
 
         {loading ? (
@@ -154,7 +156,8 @@ export default function InventoryPage() {
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center text-ink-400 text-sm">{t('common.noData')}</div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[700px]">
             <thead>
               <tr className="border-b border-ink-100">
                 {[t('inventory.product'), t('inventory.category'), t('inventory.price'), t('inventory.cost'), t('inventory.stock'), t('inventory.reorderAt'), t('inventory.status'), t('common.adjust')].map((h) => (
@@ -215,6 +218,7 @@ export default function InventoryPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
     </div>

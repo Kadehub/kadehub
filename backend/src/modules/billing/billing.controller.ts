@@ -22,8 +22,13 @@ export class BillingController {
 
   // Public — no auth needed to view packages
   @Get('packages')
-  getPackages() {
-    return this.billingService.getPackages();
+  getPackages(@Req() req: any) {
+    const ip =
+      req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+      req.headers['x-real-ip'] ||
+      req.connection?.remoteAddress ||
+      req.ip;
+    return this.billingService.getPackagesWithCurrency(ip);
   }
 
   // Protected routes below

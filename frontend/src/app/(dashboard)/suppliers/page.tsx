@@ -74,7 +74,7 @@ export default function SuppliersPage() {
 
   return (
     <div className="space-y-5 max-w-6xl">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-1 p-1 rounded-xl bg-white border border-ink-200">
           {(['suppliers', 'orders'] as const).map(tabKey => (
             <button key={tabKey} onClick={() => setTab(tabKey)}
@@ -94,7 +94,8 @@ export default function SuppliersPage() {
         <Card padding={false}>
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             suppliers.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('suppliers.noSuppliers')}</div> : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[500px]">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('suppliers.name'), t('suppliers.contact'), t('suppliers.phone'), t('suppliers.email'), t('suppliers.status')].map(h => (
@@ -114,6 +115,7 @@ export default function SuppliersPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
         </Card>
       )}
@@ -122,7 +124,8 @@ export default function SuppliersPage() {
         <Card padding={false}>
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             orders.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('suppliers.noOrders')}</div> : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[600px]">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('suppliers.orderId'), t('suppliers.supplier'), t('suppliers.items'), t('suppliers.total'), t('suppliers.status'), t('suppliers.date'), t('suppliers.actions')].map(h => (
@@ -151,6 +154,7 @@ export default function SuppliersPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
         </Card>
       )}

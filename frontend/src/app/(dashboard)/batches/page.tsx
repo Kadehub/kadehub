@@ -70,7 +70,7 @@ export default function BatchesPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-1 p-1 rounded-xl bg-white border border-ink-200">
           {([
             { key: 'all',      label: `${t('batches.all')} (${batches.length})` },
@@ -90,7 +90,8 @@ export default function BatchesPage() {
       <Card padding={false}>
         {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
           currentData.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('batches.noBatches')}</div> : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr className="border-b border-ink-100">
                   {[t('batches.product'), t('batches.batchNo'), t('batches.qty'), t('batches.cost'), t('batches.mfgDate'), t('batches.expiryDate'), t('batches.status'), ''].map(h => (
@@ -120,6 +121,7 @@ export default function BatchesPage() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
       </Card>
 

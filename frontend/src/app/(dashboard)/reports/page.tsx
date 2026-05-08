@@ -25,7 +25,7 @@ export default function ReportsPage() {
       {/* Tab bar + date range */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         {/* Tabs */}
-        <div className="flex gap-1 p-1 rounded-xl bg-white border border-ink-200 w-fit">
+        <div className="flex gap-1 p-1 rounded-xl bg-white border border-ink-200 w-fit overflow-x-auto">
           {TABS.map(({ key, label, icon: Icon }) => (
             <button key={key} onClick={() => setTab(key)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"

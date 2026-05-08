@@ -7,6 +7,11 @@ import KadeHubLogo from '../../../components/ui/KadeHubLogo';
 import { Input } from '../../../components/ui/Input';
 import { LKR } from '../../../lib/format';
 import toast from 'react-hot-toast';
+
+const formatPrice = (amount: number, currency: string) =>
+  currency === 'USD'
+    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
+    : LKR(amount);
 import {
   Check, ChevronRight, ShoppingCart, Boxes, Users, BarChart2,
   Tag, Receipt, Truck, CreditCard, FlaskConical, UserCog, Star,
@@ -34,6 +39,8 @@ export default function RegisterPage() {
   const { setAuth } = useAuthStore();
   const [step, setStep] = useState<Step>('account');
   const [packages, setPackages] = useState<any[]>([]);
+  const [currency, setCurrency] = useState<string>('LKR');
+  const [registrationFee, setRegistrationFee] = useState<number>(25000);
   const [loading, setLoading] = useState(false);
 
   // Form state
@@ -47,7 +54,12 @@ export default function RegisterPage() {
 
   useEffect(() => {
     api.get('/billing/packages')
-      .then(r => setPackages(Array.isArray(r.data) ? r.data : []))
+      .then(r => {
+        const data = r.data;
+        setPackages(Array.isArray(data) ? data : (data.packages ?? []));
+        if (data.currency) setCurrency(data.currency);
+        if (data.registrationFee != null) setRegistrationFee(data.registrationFee);
+      })
       .catch(() => setPackages([]));
   }, []);
 
@@ -96,6 +108,8 @@ export default function RegisterPage() {
         billing_cycle: billing,
         gateway,
         gateway_ref: gatewayRef,
+        currency,
+        registration_fee: registrationFee,
       });
       setStep('done');
     } catch (err: any) {
@@ -107,6 +121,8 @@ export default function RegisterPage() {
   const price = selectedPkg
     ? billing === 'yearly' ? selectedPkg.price_yearly : selectedPkg.price_monthly
     : 0;
+
+  const fmt = (n: number) => formatPrice(n, currency);
 
   const STEPS: Step[] = ['account', 'company', 'package', 'payment'];
   const stepIdx = STEPS.indexOf(step);
@@ -217,6 +233,10 @@ export default function RegisterPage() {
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-ink-900">Choose your plan</h2>
               <p className="text-ink-400 mt-2">Select the modules your shop needs. Upgrade anytime.</p>
+              {/* Registration fee notice */}
+              <div className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl text-sm font-medium" style={{ background: '#FEF9C3', color: '#92400E' }}>
+                One-time registration fee: <strong>{fmt(registrationFee)}</strong>
+              </div>
               {/* Billing toggle */}
               <div className="inline-flex items-center gap-1 mt-4 p-1 rounded-xl bg-white border border-ink-200">
                 {(['monthly', 'yearly'] as const).map(b => (
@@ -247,10 +267,10 @@ export default function RegisterPage() {
                       <p className="text-xs text-ink-400 mt-1">{pkg.description}</p>
                     </div>
                     <div className="mb-5">
-                      <span className="text-3xl font-extrabold" style={{ color: '#00A884' }}>{LKR(pkgPrice)}</span>
+                      <span className="text-3xl font-extrabold" style={{ color: '#00A884' }}>{fmt(pkgPrice)}</span>
                       <span className="text-ink-400 text-sm ml-1">/{billing === 'yearly' ? 'year' : 'month'}</span>
                       {billing === 'yearly' && (
-                        <p className="text-xs text-ink-400 mt-0.5">{LKR(pkg.price_monthly)}/mo billed annually</p>
+                        <p className="text-xs text-ink-400 mt-0.5">{fmt(pkg.price_monthly)}/mo billed annually</p>
                       )}
                     </div>
                     {/* Modules */}
@@ -342,7 +362,7 @@ export default function RegisterPage() {
                     className="kh-btn-primary w-full py-3 rounded-xl flex items-center justify-center gap-2 text-base font-bold">
                     {loading
                       ? <Loader2 size={18} className="animate-spin" />
-                      : <>Pay {LKR(price)} <ChevronRight size={16} /></>
+                      : <>Pay {fmt(price)} <ChevronRight size={16} /></>
                     }
                   </button>
                   <p className="text-xs text-center text-ink-400">🔒 Secured with 256-bit SSL encryption</p>
@@ -355,7 +375,7 @@ export default function RegisterPage() {
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-ink-600">{selectedPkg.name} Plan</span>
-                    <span className="font-bold text-ink-800">{LKR(price)}</span>
+                    <span className="font-bold text-ink-800">{fmt(price)}</span>
                   </div>
                   <div className="flex justify-between text-xs text-ink-400">
                     <span>Billing</span>
@@ -364,14 +384,18 @@ export default function RegisterPage() {
                   {billing === 'yearly' && (
                     <div className="flex justify-between text-xs" style={{ color: '#00A884' }}>
                       <span>Annual discount</span>
-                      <span>-{LKR(selectedPkg.price_monthly * 12 - selectedPkg.price_yearly)}</span>
+                      <span>-{fmt(selectedPkg.price_monthly * 12 - selectedPkg.price_yearly)}</span>
                     </div>
                   )}
                 </div>
                 <div className="border-t border-ink-100 pt-3 mb-4">
+                  <div className="flex justify-between text-xs text-ink-500 mb-1">
+                    <span>Registration fee (one-time)</span>
+                    <span>{fmt(registrationFee)}</span>
+                  </div>
                   <div className="flex justify-between font-bold">
                     <span>Total</span>
-                    <span style={{ color: '#00A884' }}>{LKR(price)}</span>
+                    <span style={{ color: '#00A884' }}>{fmt(price + registrationFee)}</span>
                   </div>
                 </div>
                 <div className="space-y-1.5">

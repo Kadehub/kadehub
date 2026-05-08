@@ -37,7 +37,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left brand panel */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] flex-shrink-0 p-10 text-white"
         style={{ background: 'linear-gradient(160deg, #004D40 0%, #00796B 50%, #00A884 100%)' }}>
@@ -65,7 +65,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right — login form */}
-      <div className="flex-1 flex items-center justify-center p-6" style={{ background: '#F1F5F9' }}>
+      <div className="flex-1 flex items-center justify-center p-4 lg:p-6" style={{ background: '#F1F5F9' }}>
         <div className="w-full max-w-md">
           <div className="lg:hidden mb-8 flex justify-center">
             <KadeHubLogo width={180} theme="color" />
@@ -107,13 +107,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-ink-100 text-center">
-              <p className="text-xs text-ink-400 mb-1">Demo credentials</p>
-              <code className="text-xs font-mono px-3 py-1.5 rounded-lg inline-block"
-                style={{ background: '#E0F2F1', color: '#00796B' }}>
-                admin@demo.com · Admin@123
-              </code>
-            </div>
+
           </div>
         </div>
       </div>

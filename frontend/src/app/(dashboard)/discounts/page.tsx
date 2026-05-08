@@ -86,7 +86,8 @@ export default function DiscountsPage() {
         ) : discounts.length === 0 ? (
           <div className="py-16 text-center text-ink-400 text-sm">{t('discounts.noDiscounts')}</div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="border-b border-ink-100">
                 {[t('discounts.name'), t('discounts.type'), t('discounts.value'), t('discounts.minPurchase'), t('discounts.validPeriod'), t('discounts.status'), ''].map(h => (
@@ -116,6 +117,7 @@ export default function DiscountsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
 

@@ -6,9 +6,11 @@ import { Input } from '../../../components/ui/Input';
 import { LKR } from '../../../lib/format';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '../../../hooks/useAuth';
 import { Building2, Camera, CreditCard, Package, Check, Star, ArrowLeft, Loader2 } from 'lucide-react';
 
 export default function SettingsPage() {
+  const { setLogoUrl } = useAuthStore();
   const [tab, setTab] = useState<'company' | 'billing'>('company');
 
   // Company
@@ -37,6 +39,7 @@ export default function SettingsPage() {
         tax_number: r.data.tax_number || '',
       });
       setLogoPreview(r.data.logo_url || '');
+      setLogoUrl(r.data.logo_url || null);
     }).catch(() => {});
 
     Promise.all([
@@ -66,6 +69,7 @@ export default function SettingsPage() {
     try {
       const r = await api.post('/billing/profile/logo', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       setLogoPreview(r.data.logo_url);
+      setLogoUrl(r.data.logo_url);
       toast.success('Logo updated');
     } catch { toast.error('Failed to upload logo'); }
   };

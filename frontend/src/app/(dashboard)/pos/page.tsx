@@ -21,10 +21,10 @@ export default function PosPage() {
    * This gives us exactly: 100vh - 56px to work with.
    */
   return (
-    <div className="-m-6 flex overflow-hidden" style={{ height: 'calc(100vh - 56px)' }}>
+    <div className="-m-4 lg:-m-6 flex flex-col lg:flex-row overflow-hidden" style={{ height: 'calc(100vh - 56px)' }}>
 
       {/* Product panel */}
-      <div className="flex-1 min-w-0 flex flex-col overflow-hidden p-6 pr-3">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden p-4 lg:p-6 lg:pr-3" style={{ minHeight: 0 }}>
         {loading ? (
           <div className="flex items-center justify-center flex-1 text-ink-400 text-sm">
             Loading products…
@@ -34,8 +34,9 @@ export default function PosPage() {
         )}
       </div>
 
-      {/* Cart panel — fixed width */}
-      <div className="w-72 xl:w-80 flex-shrink-0 flex flex-col overflow-hidden p-6 pl-3">
+      {/* Cart panel */}
+      <div className="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col overflow-hidden p-4 lg:p-6 lg:pl-3 border-t lg:border-t-0 lg:border-l border-ink-200"
+        style={{ height: '45vh', minHeight: '260px' }}>
         <Cart onSaleComplete={refresh} />
       </div>
     </div>

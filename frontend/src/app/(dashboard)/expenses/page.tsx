@@ -109,7 +109,8 @@ export default function ExpensesPage() {
         ) : expenses.length === 0 ? (
           <div className="py-16 text-center text-ink-400 text-sm">{t('expenses.noExpenses')}</div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[500px]">
             <thead>
               <tr className="border-b border-ink-100">
                 {[t('expenses.date'), t('expenses.category'), t('expenses.description'), t('expenses.amount'), ''].map(h => (
@@ -131,6 +132,7 @@ export default function ExpensesPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
 

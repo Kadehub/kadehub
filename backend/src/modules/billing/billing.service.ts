@@ -8,6 +8,31 @@ import { Subscription } from '../../database/entities/subscription.entity';
 import { PaymentTransaction } from '../../database/entities/payment-transaction.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { UpdateCompanyDto, CreateSubscriptionDto } from './billing.dto';
+import * as https from 'https';
+
+const REGISTRATION_FEE_LKR = 25000;
+const LKR_TO_USD = 0.0033; // ~1 LKR = 0.0033 USD (update periodically)
+
+function fetchJson(url: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    https.get(url, res => {
+      let data = '';
+      res.on('data', chunk => (data += chunk));
+      res.on('end', () => { try { resolve(JSON.parse(data)); } catch { reject(new Error('parse error')); } });
+    }).on('error', reject);
+  });
+}
+
+async function isSriLankanIp(ip: string): Promise<boolean> {
+  try {
+    // Skip private/loopback IPs — treat as LK (local dev)
+    if (!ip || ip === '::1' || ip.startsWith('127.') || ip.startsWith('192.168.') || ip.startsWith('10.')) return true;
+    const data = await fetchJson(`https://ipapi.co/${ip}/json/`);
+    return data?.country_code === 'LK';
+  } catch {
+    return true; // default to LKR on failure
+  }
+}
 
 @Injectable()
 export class BillingService {
@@ -20,15 +45,29 @@ export class BillingService {
     @InjectRepository(Tenant) private tenantRepo: Repository<Tenant>,
   ) {}
 
-  async getPackages() {
+  async getPackagesWithCurrency(ip: string) {
     try {
-      return await this.packageRepo.find({
+      const packages = await this.packageRepo.find({
         where: { is_active: true },
         relations: ['modules'],
         order: { sort_order: 'ASC' },
       });
+      const isLK = await isSriLankanIp(ip);
+      const currency = isLK ? 'LKR' : 'USD';
+      const rate = isLK ? 1 : LKR_TO_USD;
+      const round = (n: number) => isLK ? Math.round(n) : Math.round(n * 100) / 100;
+
+      const registrationFee = round(REGISTRATION_FEE_LKR * rate);
+
+      const converted = packages.map(pkg => ({
+        ...pkg,
+        price_monthly: round(Number(pkg.price_monthly) * rate),
+        price_yearly:  round(Number(pkg.price_yearly)  * rate),
+      }));
+
+      return { currency, registrationFee, packages: converted };
     } catch {
-      return []; // table may not exist yet
+      return { currency: 'LKR', registrationFee: REGISTRATION_FEE_LKR, packages: [] };
     }
   }
 
@@ -95,18 +134,39 @@ export class BillingService {
       });
       if (!pkg) throw new NotFoundException('Package not found');
 
+      const currency = dto.currency || 'LKR';
       const amount = dto.billing_cycle === 'yearly' ? pkg.price_yearly : pkg.price_monthly;
+      const gatewayRef = dto.gateway_ref || `TXN-${Date.now()}`;
 
+      // Record subscription payment
       const tx = this.txRepo.create({
         tenant_id: tenantId,
         package_id: pkg.id,
         amount,
+        currency,
         billing_cycle: dto.billing_cycle,
         gateway: dto.gateway,
-        gateway_ref: dto.gateway_ref || `TXN-${Date.now()}`,
+        gateway_ref: gatewayRef,
         status: 'completed',
+        metadata: { type: 'subscription' },
       });
       await this.txRepo.save(tx);
+
+      // Record one-time registration fee if provided
+      if (dto.registration_fee && dto.registration_fee > 0) {
+        const regTx = this.txRepo.create({
+          tenant_id: tenantId,
+          package_id: pkg.id,
+          amount: dto.registration_fee,
+          currency,
+          billing_cycle: dto.billing_cycle,
+          gateway: dto.gateway,
+          gateway_ref: `REG-${gatewayRef}`,
+          status: 'completed',
+          metadata: { type: 'registration_fee' },
+        });
+        await this.txRepo.save(regTx);
+      }
 
       const expiresAt = new Date();
       if (dto.billing_cycle === 'yearly') expiresAt.setFullYear(expiresAt.getFullYear() + 1);

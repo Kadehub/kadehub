@@ -410,7 +410,7 @@ export default function SettingsPage() {
                 </Card>
               )}
 
-              {/* Package selection */
+              {/* Package selection */}
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <p className="font-semibold text-ink-800">Choose a Plan</p>

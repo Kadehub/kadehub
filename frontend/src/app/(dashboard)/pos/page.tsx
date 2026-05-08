@@ -26,6 +26,7 @@ export default function PosPage() {
       {/* Product panel */}
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden p-4 lg:p-6 lg:pr-3" style={{ minHeight: 0 }}>
         {loading ? (
+          // amazonq-ignore-next-line
           <div className="flex items-center justify-center flex-1 text-ink-400 text-sm">
             Loading products…
           </div>
@@ -36,7 +37,7 @@ export default function PosPage() {
 
       {/* Cart panel */}
       <div className="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col overflow-hidden p-4 lg:p-6 lg:pl-3 border-t lg:border-t-0 lg:border-l border-ink-200"
-        style={{ height: '45vh', minHeight: '260px' }}>
+        style={{ minHeight: '320px' }}>
         <Cart onSaleComplete={refresh} />
       </div>
     </div>

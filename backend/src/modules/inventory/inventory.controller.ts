@@ -32,7 +32,7 @@ export class InventoryController {
   @Roles('ADMIN')
   @UseInterceptors(FileInterceptor('file', {
     storage: memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 1 * 1024 * 1024 },
     fileFilter: (_req, file, cb) => {
       if (!file.originalname.match(/\.csv$/i)) return cb(new Error('Only CSV files allowed'), false);
       cb(null, true);

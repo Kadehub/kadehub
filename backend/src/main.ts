@@ -9,21 +9,22 @@ import * as path from 'path';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.setGlobalPrefix('api');
-  const allowedOrigins = (process.env.FRONTEND_URL || '*').split(',').map(s => s.trim());
+  const allowedOrigins = (process.env.FRONTEND_URL || '').split(',').map(s => s.trim()).filter(Boolean);
   app.enableCors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
+      if (!allowedOrigins.length) return callback(new Error('CORS: FRONTEND_URL not configured'));
       const allowed = allowedOrigins.some(pattern => {
-        if (pattern === '*') return true;
         if (pattern.startsWith('*.')) {
           const base = pattern.slice(2);
-          return origin === `https://${base}` || origin === `http://${base}` || origin.endsWith(`.${base}`);
+          return origin === `https://${base}` || origin.endsWith(`.${base}`);
         }
         return origin === pattern;
       });
       if (allowed) callback(null, true);
       else callback(new Error(`Origin ${origin} not allowed by CORS`));
     },
+    credentials: true,
   });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new AllExceptionsFilter());

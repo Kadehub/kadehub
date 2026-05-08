@@ -68,14 +68,18 @@ export class InventoryService implements OnModuleInit {
   }
 
   async importFromCsv(tenantId: number, csvBuffer: Buffer) {
+    const MAX_ROWS = 500;
+    const ALLOWED_EXTENSIONS = /^\.(csv)$/i;
     const lines = csvBuffer.toString('utf-8').split(/\r?\n/).filter(Boolean);
+    if (lines.length - 1 > MAX_ROWS) throw new Error(`CSV exceeds maximum of ${MAX_ROWS} rows`);
     const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
     const idx = (name: string) => headers.indexOf(name);
+    const sanitize = (val: string) => val.replace(/^[=+\-@\t\r]/, "'");
     const imported: number[] = [];
     const errors: string[] = [];
 
     for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+      const cols = lines[i].split(',').map(c => sanitize(c.trim().replace(/^"|"$/g, '')));
       const name = cols[idx('name')];
       if (!name) { errors.push(`Row ${i + 1}: missing name`); continue; }
       const price = parseFloat(cols[idx('price')]);

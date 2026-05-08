@@ -57,8 +57,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     api.get('/super-admin/announcements/active').then(({ data }) => setAnnouncements(data)).catch(() => {});
   }, []);
   useEffect(() => {
+    if (!token) return;
     api.get('/billing/profile').then(({ data }) => setLogoUrl(data.logo_url || null)).catch(() => {});
-  }, []);
+  }, [token]);
 
   if (!hydrated || !token) return null;
 

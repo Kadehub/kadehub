@@ -16,8 +16,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (r) => r,
   (err) => {
-    const isAuthRoute = err.config?.url?.includes('/auth/');
-    if (err.response?.status === 401 && !isAuthRoute && typeof window !== 'undefined') {
+    const url = err.config?.url || '';
+    const isAuthRoute = url.includes('/auth/');
+    const isBillingProfile = url.includes('/billing/profile');
+    const isAnnouncements = url.includes('/announcements');
+    if (err.response?.status === 401 && !isAuthRoute && !isBillingProfile && !isAnnouncements && typeof window !== 'undefined') {
       localStorage.removeItem('auth-store');
       window.location.href = '/login';
     }

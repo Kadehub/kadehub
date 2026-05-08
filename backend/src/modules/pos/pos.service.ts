@@ -21,14 +21,17 @@ export class PosService {
       throw new BadRequestException('A customer must be selected for credit sales');
 
     const subtotal = dto.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const total = subtotal - (dto.discount || 0);
+    const discount = dto.discount || 0;
+    if (discount > subtotal) throw new BadRequestException('Discount cannot exceed subtotal');
+    if (dto.items.some(i => i.price < 0 || i.quantity <= 0)) throw new BadRequestException('Invalid item price or quantity');
+    const total = Math.max(0, subtotal - discount);
 
     const sale = this.saleRepo.create({
       tenant_id: tenantId,
       user_id: userId,
       customer_id: dto.customer_id || null,
       total_amount: total,
-      discount: dto.discount || 0,
+      discount: discount,
       payment_method: dto.payment_method,
     });
     await this.saleRepo.save(sale);

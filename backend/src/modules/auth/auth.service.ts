@@ -18,15 +18,16 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const slug = dto.shopName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const slug = dto.shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + randomSuffix;
     const existing = await this.userRepo.findOne({ where: { email: dto.email } });
     if (existing) throw new ConflictException('Email already registered');
 
     const tenant = this.tenantRepo.create({ name: dto.shopName, slug });
     await this.tenantRepo.save(tenant);
 
-    const modules = ['pos', 'inventory', 'customer', 'analytics'];
-    await this.subRepo.save(modules.map((m) => this.subRepo.create({ tenant_id: tenant.id, module_name: m })));
+    const modules = ['pos', 'inventory', 'customer', 'analytics', 'expense', 'credit', 'discount', 'supplier', 'batch', 'staff'];
+    await this.subRepo.save(modules.map((m) => this.subRepo.create({ tenant_id: tenant.id, module_name: m, status: 'active', payment_status: 'paid' })));
 
     const hash = await bcrypt.hash(dto.password, 10);
     const user = this.userRepo.create({ tenant_id: tenant.id, name: dto.name, email: dto.email, password_hash: hash, role: 'ADMIN' });

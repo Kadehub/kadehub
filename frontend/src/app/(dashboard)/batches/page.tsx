@@ -91,7 +91,7 @@ export default function BatchesPage() {
         {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
           currentData.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('batches.noBatches')}</div> : (
             <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[700px]">
+            <table className="mob-cards w-full text-sm min-w-[700px] sm:min-w-0">
               <thead>
                 <tr className="border-b border-ink-100">
                   {[t('batches.product'), t('batches.batchNo'), t('batches.qty'), t('batches.cost'), t('batches.mfgDate'), t('batches.expiryDate'), t('batches.status'), ''].map(h => (
@@ -106,13 +106,13 @@ export default function BatchesPage() {
                   const expLabel = days === null ? '' : days < 0 ? `${t('batches.expiredDays')} ${Math.abs(days)}d ${t('batches.expiredDaysAgo')}` : days === 0 ? t('batches.expiresToday') : `${days} ${t('batches.daysLeft')}`;
                   return (
                     <tr key={b.b_id || b.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                      <td className="px-5 py-3.5 font-semibold text-ink-800">{b.p_name || b.product?.name}</td>
-                      <td className="px-5 py-3.5"><code className="text-xs bg-ink-100 px-2 py-0.5 rounded">{b.b_batch_number || b.batch_number}</code></td>
-                      <td className="px-5 py-3.5 font-bold text-ink-700">{b.b_quantity || b.quantity}</td>
-                      <td className="px-5 py-3.5 text-ink-500">{b.b_cost || b.cost ? LKR(+(b.b_cost || b.cost)) : '—'}</td>
-                      <td className="px-5 py-3.5 text-ink-400 text-xs">{b.b_manufactured_date || b.manufactured_date || '—'}</td>
-                      <td className="px-5 py-3.5 text-ink-700 text-xs font-medium">{b.b_expiry_date || b.expiry_date || '—'}</td>
-                      <td className="px-5 py-3.5">{expStatus && <Badge variant={expStatus as any} dot>{expLabel}</Badge>}</td>
+                      <td data-label={t('batches.product')} className="px-5 py-3.5 font-semibold text-ink-800">{b.p_name || b.product?.name}</td>
+                      <td data-label={t('batches.batchNo')} className="px-5 py-3.5"><code className="text-xs bg-ink-100 px-2 py-0.5 rounded">{b.b_batch_number || b.batch_number}</code></td>
+                      <td data-label={t('batches.qty')} className="px-5 py-3.5 font-bold text-ink-700">{b.b_quantity || b.quantity}</td>
+                      <td data-label={t('batches.cost')} className="px-5 py-3.5 text-ink-500">{b.b_cost || b.cost ? LKR(+(b.b_cost || b.cost)) : '—'}</td>
+                      <td data-label={t('batches.mfgDate')} className="px-5 py-3.5 text-ink-400 text-xs">{b.b_manufactured_date || b.manufactured_date || '—'}</td>
+                      <td data-label={t('batches.expiryDate')} className="px-5 py-3.5 text-ink-700 text-xs font-medium">{b.b_expiry_date || b.expiry_date || '—'}</td>
+                      <td data-label={t('batches.status')} className="px-5 py-3.5">{expStatus && <Badge variant={expStatus as any} dot>{expLabel}</Badge>}</td>
                       <td className="px-5 py-3.5">
                         <button onClick={() => remove(b.b_id || b.id)} className="text-ink-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
                       </td>

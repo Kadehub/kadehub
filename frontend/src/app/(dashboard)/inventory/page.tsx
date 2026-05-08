@@ -157,7 +157,7 @@ export default function InventoryPage() {
           <div className="py-16 text-center text-ink-400 text-sm">{t('common.noData')}</div>
         ) : (
           <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[700px]">
+          <table className="mob-cards w-full text-sm min-w-[700px] sm:min-w-0">
             <thead>
               <tr className="border-b border-ink-100">
                 {[t('inventory.product'), t('inventory.category'), t('inventory.price'), t('inventory.cost'), t('inventory.stock'), t('inventory.reorderAt'), t('inventory.status'), t('common.adjust')].map((h) => (
@@ -172,7 +172,7 @@ export default function InventoryPage() {
                 const { variant, label } = statusOf(qty, reorder);
                 return (
                   <tr key={p.id} className="border-b border-ink-50 hover:bg-ink-50 transition-colors last:border-0">
-                    <td className="px-5 py-3.5">
+                    <td data-label={t('inventory.product')} className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <ProductImage imageUrl={p.image_url} category={p.category} name={p.name} size={40} />
                         <div>
@@ -181,19 +181,19 @@ export default function InventoryPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5">
+                    <td data-label={t('inventory.category')} className="px-5 py-3.5">
                       {p.category ? <Badge variant="gray">{p.category}</Badge> : <span className="text-ink-300">—</span>}
                     </td>
-                    <td className="px-5 py-3.5 text-right font-bold" style={{ color: '#FFB703' }}>{LKR(p.price)}</td>
-                    <td className="px-5 py-3.5 text-right text-ink-400">{LKR(p.cost)}</td>
-                    <td className="px-5 py-3.5 text-center">
+                    <td data-label={t('inventory.price')} className="px-5 py-3.5 text-right font-bold" style={{ color: '#FFB703' }}>{LKR(p.price)}</td>
+                    <td data-label={t('inventory.cost')} className="px-5 py-3.5 text-right text-ink-400">{LKR(p.cost)}</td>
+                    <td data-label={t('inventory.stock')} className="px-5 py-3.5 text-center">
                       <span className="text-lg font-extrabold" style={{ color: qty <= 0 ? '#FF6B6B' : qty <= reorder ? '#F59E0B' : '#009688' }}>{qty}</span>
                     </td>
-                    <td className="px-5 py-3.5 text-center text-ink-400">{reorder}</td>
-                    <td className="px-5 py-3.5 text-center"><Badge variant={variant} dot>{label}</Badge></td>
-                    <td className="px-5 py-3.5 text-center">
+                    <td data-label={t('inventory.reorderAt')} className="px-5 py-3.5 text-center text-ink-400">{reorder}</td>
+                    <td data-label={t('inventory.status')} className="px-5 py-3.5 text-center"><Badge variant={variant} dot>{label}</Badge></td>
+                    <td data-label={t('common.adjust')} className="px-5 py-3.5 text-center">
                       {adjustId === p.id ? (
-                        <div className="flex items-center gap-1 justify-center">
+                        <div className="flex items-center gap-1 justify-center flex-wrap">
                           <button onClick={() => setAdjustQty((v) => String((parseInt(v) || 0) - 1))}
                             className="w-6 h-6 rounded border border-ink-200 hover:bg-ink-100 flex items-center justify-center">
                             <Minus size={11} />

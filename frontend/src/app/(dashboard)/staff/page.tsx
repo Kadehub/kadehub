@@ -316,7 +316,7 @@ export default function StaffPage() {
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             shifts.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('staff.noShifts')}</div> : (
               <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[650px]">
+              <table className="mob-cards w-full text-sm min-w-[650px] sm:min-w-0">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('staff.cashierCol'), t('staff.opened'), t('staff.closed'), t('staff.openingCash'), t('staff.closingCash'), t('staff.status'), ''].map(h => (
@@ -327,12 +327,12 @@ export default function StaffPage() {
                 <tbody>
                   {shifts.map(s => (
                     <tr key={s.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                      <td className="px-5 py-3.5 font-semibold text-ink-800">{(s.user as any)?.name || `User #${s.user_id}`}</td>
-                      <td className="px-5 py-3.5 text-ink-500 text-xs">{new Date(s.opened_at).toLocaleString('en-LK')}</td>
-                      <td className="px-5 py-3.5 text-ink-500 text-xs">{s.closed_at ? new Date(s.closed_at).toLocaleString('en-LK') : '—'}</td>
-                      <td className="px-5 py-3.5 font-medium" style={{ color: '#009688' }}>{LKR(s.opening_cash)}</td>
-                      <td className="px-5 py-3.5 font-medium text-ink-700">{s.closing_cash != null ? LKR(s.closing_cash) : '—'}</td>
-                      <td className="px-5 py-3.5">
+                      <td data-label={t('staff.cashierCol')} className="px-5 py-3.5 font-semibold text-ink-800">{(s.user as any)?.name || `User #${s.user_id}`}</td>
+                      <td data-label={t('staff.opened')} className="px-5 py-3.5 text-ink-500 text-xs">{new Date(s.opened_at).toLocaleString('en-LK')}</td>
+                      <td data-label={t('staff.closed')} className="px-5 py-3.5 text-ink-500 text-xs">{s.closed_at ? new Date(s.closed_at).toLocaleString('en-LK') : '—'}</td>
+                      <td data-label={t('staff.openingCash')} className="px-5 py-3.5 font-medium" style={{ color: '#009688' }}>{LKR(s.opening_cash)}</td>
+                      <td data-label={t('staff.closingCash')} className="px-5 py-3.5 font-medium text-ink-700">{s.closing_cash != null ? LKR(s.closing_cash) : '—'}</td>
+                      <td data-label={t('staff.status')} className="px-5 py-3.5">
                         <Badge variant={s.closed_at ? 'gray' : 'teal'} dot>
                           {s.closed_at ? t('staff.closed') : t('staff.open')}
                         </Badge>
@@ -389,7 +389,7 @@ export default function StaffPage() {
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             logs.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('staff.noAudit')}</div> : (
               <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[600px]">
+              <table className="mob-cards w-full text-sm min-w-[600px] sm:min-w-0">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('staff.time'), t('staff.user'), t('staff.action'), t('staff.entity'), t('staff.details')].map(h => (
@@ -400,11 +400,11 @@ export default function StaffPage() {
                 <tbody>
                   {logs.map(l => (
                     <tr key={l.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                      <td className="px-5 py-3.5 text-ink-400 text-xs">{new Date(l.created_at).toLocaleString('en-LK')}</td>
-                      <td className="px-5 py-3.5 font-medium text-ink-700">{l.user_name}</td>
-                      <td className="px-5 py-3.5"><Badge variant="teal">{l.action}</Badge></td>
-                      <td className="px-5 py-3.5 text-ink-500">{l.entity}{l.entity_id ? ` #${l.entity_id}` : ''}</td>
-                      <td className="px-5 py-3.5 text-ink-400 text-xs">{l.details ? JSON.stringify(l.details) : '—'}</td>
+                      <td data-label={t('staff.time')} className="px-5 py-3.5 text-ink-400 text-xs">{new Date(l.created_at).toLocaleString('en-LK')}</td>
+                      <td data-label={t('staff.user')} className="px-5 py-3.5 font-medium text-ink-700">{l.user_name}</td>
+                      <td data-label={t('staff.action')} className="px-5 py-3.5"><Badge variant="teal">{l.action}</Badge></td>
+                      <td data-label={t('staff.entity')} className="px-5 py-3.5 text-ink-500">{l.entity}{l.entity_id ? ` #${l.entity_id}` : ''}</td>
+                      <td data-label={t('staff.details')} className="px-5 py-3.5 text-ink-400 text-xs">{l.details ? JSON.stringify(l.details) : '—'}</td>
                     </tr>
                   ))}
                 </tbody>

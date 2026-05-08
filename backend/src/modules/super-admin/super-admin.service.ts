@@ -13,7 +13,7 @@ import { ApiLog } from '../../database/entities/api-log.entity';
 import { EmailService } from '../../common/email.service';
 import {
   IsString, IsOptional, IsEnum, IsNumber, IsBoolean,
-  IsDateString, IsInt, Min, Max,
+  IsDateString, IsInt, Min, Max, MaxLength, Matches,
 } from 'class-validator';
 
 // ── DTOs ──────────────────────────────────────────────────────────────────────
@@ -31,9 +31,9 @@ export class ChangePlanDto {
 }
 
 export class CreateCouponDto {
-  @IsString() code: string;
+  @IsString() @MaxLength(50) @Matches(/^[A-Z0-9_-]+$/i, { message: 'Code must be alphanumeric' }) code: string;
   @IsEnum(['percentage', 'fixed']) type: string;
-  @IsNumber() value: number;
+  @IsNumber() @Min(0.01) @Max(100) value: number;
   @IsOptional() @IsInt() @Min(1) duration_months?: number;
   @IsOptional() @IsInt() @Min(1) max_uses?: number;
   @IsOptional() @IsDateString() expires_at?: string;
@@ -140,9 +140,13 @@ export class SuperAdminService {
     // Apply coupon if provided
     if (dto.coupon_code) {
       const coupon = await this.validateCoupon(dto.coupon_code);
-      amount = coupon.type === 'percentage'
-        ? amount * (1 - coupon.value / 100)
-        : Math.max(0, amount - coupon.value);
+      if (coupon.type === 'percentage') {
+        if (coupon.value > 100) throw new BadRequestException('Invalid coupon: percentage exceeds 100');
+        amount = amount * (1 - coupon.value / 100);
+      } else {
+        if (coupon.value <= 0) throw new BadRequestException('Invalid coupon: fixed value must be positive');
+        amount = Math.max(0, amount - coupon.value);
+      }
       coupon.used_count += 1;
       await this.couponRepo.save(coupon);
     }

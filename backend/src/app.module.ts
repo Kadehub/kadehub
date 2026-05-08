@@ -1,6 +1,8 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import * as dotenv from 'dotenv';
+dotenv.config(); // must run before any decorator reads process.env
 import { ApiLoggerMiddleware } from './common/middleware/api-logger.middleware';
 import { ApiLog } from './database/entities/api-log.entity';
 import { Coupon } from './database/entities/coupon.entity';
@@ -26,7 +28,17 @@ import { EmailService } from './common/email.service';
 
 @Module({
   imports: [
-    JwtModule.register({ global: true, secret: process.env.JWT_SECRET || 'secret', signOptions: { expiresIn: '7d' } }),
+    JwtModule.register({ 
+      global: true, 
+      secret: (() => {
+        const s = process.env.JWT_SECRET;
+        if (!s) throw new Error('JWT_SECRET environment variable is required');
+        if (process.env.NODE_ENV === 'production' && s === 'your_super_secret_jwt_key_change_in_production')
+          throw new Error('JWT_SECRET must be changed from the default value in production');
+        return s;
+      })(),
+      signOptions: { expiresIn: '7d' } 
+    }),
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({ useFactory: databaseConfig }),
     EventsModule,

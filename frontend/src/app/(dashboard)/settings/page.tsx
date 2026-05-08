@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
+  const [currency, setCurrency] = useState<string>('LKR');
   const [billingLoaded, setBillingLoaded] = useState(false);
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
@@ -49,7 +50,9 @@ export default function SettingsPage() {
     ]).then(([subs, txs, pkgs]) => {
       setSubscriptions(Array.isArray(subs.data) ? subs.data : []);
       setTransactions(Array.isArray(txs.data) ? txs.data : []);
-      setPackages(Array.isArray(pkgs.data) ? pkgs.data : []);
+      // /billing/packages always returns { currency, registrationFee, packages: [...] }
+      setPackages(pkgs.data?.packages ?? []);
+      setCurrency(pkgs.data?.currency ?? 'LKR');
     }).catch(() => {}).finally(() => setBillingLoaded(true));
   }, []);
 
@@ -89,16 +92,7 @@ export default function SettingsPage() {
         gateway_ref: gatewayRef,
       });
       toast.success('Plan upgraded successfully!');
-      setSelectedPkg(null);
-      Promise.all([
-        api.get('/billing/subscriptions'),
-        api.get('/billing/transactions'),
-        api.get('/billing/packages'),
-      ]).then(([subs, txs, pkgs]) => {
-        setSubscriptions(Array.isArray(subs.data) ? subs.data : []);
-        setTransactions(Array.isArray(txs.data) ? txs.data : []);
-        setPackages(Array.isArray(pkgs.data) ? pkgs.data : []);
-      }).catch(() => {});
+      window.location.reload();
     } catch (err: any) {
       const msg = err.response?.data?.message;
       toast.error(Array.isArray(msg) ? msg[0] : msg || 'Payment failed');

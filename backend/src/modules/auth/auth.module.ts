@@ -13,15 +13,9 @@ import { Subscription } from '../../database/entities/subscription.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Tenant, Subscription]),
-    JwtModule.registerAsync({
-      useFactory: () => ({
-        secret: process.env.JWT_SECRET || 'secret',
-        signOptions: { expiresIn: '7d' },
-      }),
-    }),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard, RolesGuard],
-  exports: [JwtModule, JwtAuthGuard, RolesGuard],
+  exports: [JwtAuthGuard, RolesGuard],
 })
 export class AuthModule {}

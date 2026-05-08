@@ -88,7 +88,7 @@ export default function CreditPage() {
           <div className="py-16 text-center text-ink-400 text-sm">{t('credit.noCredits')}</div>
         ) : (
           <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[600px]">
+          <table className="mob-cards w-full text-sm min-w-[600px] sm:min-w-0">
             <thead>
               <tr className="border-b border-ink-100">
                 {[t('credit.customer'), t('credit.amountDue'), t('credit.paid'), t('credit.balance'), t('credit.dueDate'), t('credit.status'), ''].map(h => (
@@ -99,12 +99,12 @@ export default function CreditPage() {
             <tbody>
               {filtered.map(c => (
                 <tr key={c.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                  <td className="px-5 py-3.5 font-semibold text-ink-800">{c.customer?.name || `#${c.customer_id}`}</td>
-                  <td className="px-5 py-3.5 font-bold" style={{ color: '#FF6B6B' }}>{LKR(c.amount_due)}</td>
-                  <td className="px-5 py-3.5 text-ink-500">{LKR(c.amount_paid)}</td>
-                  <td className="px-5 py-3.5 font-bold" style={{ color: '#F59E0B' }}>{LKR(c.amount_due - c.amount_paid)}</td>
-                  <td className="px-5 py-3.5 text-ink-400 text-xs">{c.due_date || '—'}</td>
-                  <td className="px-5 py-3.5"><Badge variant={statusVariant(c.status) as any} dot>{c.status}</Badge></td>
+                  <td data-label={t('credit.customer')} className="px-5 py-3.5 font-semibold text-ink-800">{c.customer?.name || `#${c.customer_id}`}</td>
+                  <td data-label={t('credit.amountDue')} className="px-5 py-3.5 font-bold" style={{ color: '#FF6B6B' }}>{LKR(c.amount_due)}</td>
+                  <td data-label={t('credit.paid')} className="px-5 py-3.5 text-ink-500">{LKR(c.amount_paid)}</td>
+                  <td data-label={t('credit.balance')} className="px-5 py-3.5 font-bold" style={{ color: '#F59E0B' }}>{LKR(c.amount_due - c.amount_paid)}</td>
+                  <td data-label={t('credit.dueDate')} className="px-5 py-3.5 text-ink-400 text-xs">{c.due_date || '—'}</td>
+                  <td data-label={t('credit.status')} className="px-5 py-3.5"><Badge variant={statusVariant(c.status) as any} dot>{c.status}</Badge></td>
                   <td className="px-5 py-3.5">
                     {c.status !== 'paid' && (
                       <Button size="xs" icon={<DollarSign size={12} />} onClick={() => { setPayModal(c); setPayForm({ amount: String(c.amount_due - c.amount_paid), payment_method: 'CASH' }); }}>

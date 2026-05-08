@@ -25,8 +25,10 @@ export async function uploadToCloudinary(buffer: Buffer, folder: string, filenam
 
   // Local fallback — save to uploads/ and return a relative URL
   if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-  const ext = filename ? path.extname(filename) : '.jpg';
-  const name = `${folder.replace(/\//g, '-')}-${Date.now()}${ext}`;
-  fs.writeFileSync(path.join(UPLOADS_DIR, name), buffer);
-  return `/uploads/${name}`;
+  const ALLOWED_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg']);
+  const rawExt = filename ? path.extname(filename).toLowerCase() : '.jpg';
+  const ext = ALLOWED_EXTS.has(rawExt) ? rawExt : '.jpg';
+  const safeName = `${folder.replace(/[^a-z0-9]/gi, '-')}-${Date.now()}${ext}`;
+  fs.writeFileSync(path.join(UPLOADS_DIR, safeName), buffer);
+  return `/uploads/${safeName}`;
 }

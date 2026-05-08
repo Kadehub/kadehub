@@ -1,6 +1,22 @@
 -- ============================================================
 -- KadeHub - Full Database Schema
 -- Run this BEFORE the seed files (01 → 05)
+-- ------------------------------------------------------------
+-- Tables (in creation order):
+--   Core    : tenant
+--   Billing : package, package_module, subscription,
+--             payment_transaction
+--   Auth    : user
+--   Tenant  : company_profile
+--   Inventory: product, inventory, batch
+--   CRM     : customer
+--   Supplier: supplier, purchase_order, purchase_order_item
+--   POS     : sale, sale_item
+--   Credit  : credit_sale, credit_payment
+--   Expense : expense
+--   Discount: discount
+--   Staff   : shift, audit_log
+--   SuperAdmin: announcement, coupon, api_log
 -- ============================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -12,6 +28,8 @@ CREATE TABLE IF NOT EXISTS `tenant` (
   `id`         INT          NOT NULL AUTO_INCREMENT,
   `name`       VARCHAR(255) NOT NULL,
   `slug`       VARCHAR(255) NOT NULL UNIQUE,
+  `status`     ENUM('active', 'blocked', 'suspended') NOT NULL DEFAULT 'active',
+  `plan_note`  TEXT,
   `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -20,15 +38,16 @@ CREATE TABLE IF NOT EXISTS `tenant` (
 -- Billing: package
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `package` (
-  `id`            INT            NOT NULL AUTO_INCREMENT,
-  `name`          VARCHAR(255)   NOT NULL,
-  `slug`          VARCHAR(255)   NOT NULL UNIQUE,
-  `description`   TEXT,
-  `price_monthly` DECIMAL(10,2)  NOT NULL,
-  `price_yearly`  DECIMAL(10,2)  NOT NULL,
-  `is_active`     TINYINT(1)     NOT NULL DEFAULT 1,
-  `is_popular`    TINYINT(1)     NOT NULL DEFAULT 0,
-  `sort_order`    INT            NOT NULL DEFAULT 0,
+  `id`             INT            NOT NULL AUTO_INCREMENT,
+  `name`           VARCHAR(255)   NOT NULL,
+  `slug`           VARCHAR(255)   NOT NULL UNIQUE,
+  `description`    TEXT,
+  `price_monthly`  DECIMAL(10,2)  NOT NULL,
+  `price_yearly`   DECIMAL(10,2)  NOT NULL,
+  `is_active`      TINYINT(1)     NOT NULL DEFAULT 1,
+  `is_popular`     TINYINT(1)     NOT NULL DEFAULT 0,
+  `sort_order`     INT            NOT NULL DEFAULT 0,
+  `employee_limit` INT            NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -52,7 +71,10 @@ CREATE TABLE IF NOT EXISTS `user` (
   `name`          VARCHAR(255) NOT NULL,
   `email`         VARCHAR(255) NOT NULL,
   `password_hash` VARCHAR(255) NOT NULL,
-  `role`          ENUM('ADMIN','CASHIER') NOT NULL DEFAULT 'CASHIER',
+  `role`          ENUM('SUPER_ADMIN','ADMIN','CASHIER') NOT NULL DEFAULT 'CASHIER',
+  `phone`         VARCHAR(50),
+  `emp_no`        VARCHAR(100),
+  `photo_url`     VARCHAR(255),
   `created_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_user_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenant` (`id`) ON DELETE CASCADE
@@ -364,6 +386,52 @@ CREATE TABLE IF NOT EXISTS `audit_log` (
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_al_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenant` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_al_user`   FOREIGN KEY (`user_id`)   REFERENCES `user`   (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- Super Admin: announcement
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `announcement` (
+  `id`         INT          NOT NULL AUTO_INCREMENT,
+  `title`      VARCHAR(255) NOT NULL,
+  `message`    TEXT         NOT NULL,
+  `type`       ENUM('info', 'warning', 'success', 'error') NOT NULL DEFAULT 'info',
+  `is_active`  TINYINT(1)   NOT NULL DEFAULT 1,
+  `expires_at` DATETIME,
+  `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- Super Admin: coupon
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `coupon` (
+  `id`              INT           NOT NULL AUTO_INCREMENT,
+  `code`            VARCHAR(50)   NOT NULL UNIQUE,
+  `type`            ENUM('percentage','fixed') NOT NULL,
+  `value`           DECIMAL(10,2) NOT NULL,
+  `duration_months` INT,
+  `max_uses`        INT,
+  `used_count`      INT           NOT NULL DEFAULT 0,
+  `is_active`       TINYINT(1)    NOT NULL DEFAULT 1,
+  `expires_at`      DATETIME,
+  `created_at`      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- Super Admin: api_log
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `api_log` (
+  `id`          INT          NOT NULL AUTO_INCREMENT,
+  `tenant_id`   INT,
+  `method`      VARCHAR(10)  NOT NULL,
+  `path`        VARCHAR(255) NOT NULL,
+  `status_code` INT          NOT NULL DEFAULT 200,
+  `response_ms` INT          NOT NULL DEFAULT 0,
+  `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  INDEX `idx_api_log_tenant_date` (`tenant_id`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;

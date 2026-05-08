@@ -13,22 +13,27 @@ import * as https from 'https';
 const REGISTRATION_FEE_LKR = 25000;
 const LKR_TO_USD = 0.0033; // ~1 LKR = 0.0033 USD (update periodically)
 
-function fetchJson(url: string): Promise<any> {
+function fetchJson(url: string, timeoutMs = 5000): Promise<any> {
   return new Promise((resolve, reject) => {
-    https.get(url, res => {
+    const req = https.get(url, res => {
       let data = '';
       res.on('data', chunk => (data += chunk));
       res.on('end', () => { try { resolve(JSON.parse(data)); } catch { reject(new Error('parse error')); } });
-    }).on('error', reject);
+    });
+    req.on('error', reject);
+    req.setTimeout(timeoutMs, () => { req.destroy(); reject(new Error('request timeout')); });
   });
 }
 
 async function isSriLankanIp(ip: string): Promise<boolean> {
   try {
-    // Skip private/loopback IPs — treat as LK (local dev)
-    if (!ip || ip === '::1' || ip.startsWith('127.') || ip.startsWith('192.168.') || ip.startsWith('10.')) return true;
+    // Skip private/loopback IPs in development only
+    if (process.env.NODE_ENV !== 'production') {
+      if (!ip || ip === '::1' || ip.startsWith('127.') || ip.startsWith('192.168.') || ip.startsWith('10.')) return true;
+    }
     const data = await fetchJson(`https://ipapi.co/${ip}/json/`);
-    return data?.country_code === 'LK';
+    if (!data || typeof data.country_code !== 'string') return true;
+    return data.country_code === 'LK';
   } catch {
     return true; // default to LKR on failure
   }

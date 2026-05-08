@@ -67,6 +67,36 @@ input:focus, select:focus, textarea:focus {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 99px; }
 
+/* ── Responsive table → card stack on mobile ── */
+@media (max-width: 639px) {
+  .mob-cards thead { display: none; }
+  .mob-cards tbody tr {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-100);
+    gap: 4px;
+  }
+  .mob-cards tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 0;
+    font-size: 0.8125rem;
+  }
+  .mob-cards tbody td[data-label]::before {
+    content: attr(data-label);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+    margin-right: 8px;
+  }
+  .mob-cards tbody td:empty { display: none; }
+}
+
 /* ── Utility classes ── */
 @layer components {
   .kh-card {

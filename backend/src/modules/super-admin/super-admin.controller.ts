@@ -99,12 +99,11 @@ export class SuperAdminController {
   }
 
   // ── Announcements ──────────────────────────────────────────────────────────
-  @Get('announcements')
-  getAnnouncements(@CurrentUser() u: any) { this.guard(u); return this.service.getAnnouncements(); }
-
-  // Public endpoint — shops fetch active announcements
   @Get('announcements/active')
   getActiveAnnouncements() { return this.service.getAnnouncements(true); }
+
+  @Get('announcements')
+  getAnnouncements(@CurrentUser() u: any) { this.guard(u); return this.service.getAnnouncements(); }
 
   @Post('announcements')
   createAnnouncement(@CurrentUser() u: any, @Body() dto: CreateAnnouncementDto) {

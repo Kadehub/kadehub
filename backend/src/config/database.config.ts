@@ -8,7 +8,7 @@ export const databaseConfig = (): TypeOrmModuleOptions => {
       url: process.env.DATABASE_URL,
       entities: [__dirname + '/../**/*.entity{.ts,.js}'],
       synchronize: false,
-      ssl: { rejectUnauthorized: false },
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : { rejectUnauthorized: false },
       extra: { max: 5 },
     };
   }
@@ -23,6 +23,6 @@ export const databaseConfig = (): TypeOrmModuleOptions => {
     database: process.env.DB_DATABASE || 'kadehub',
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     synchronize: false,
-    logging: process.env.NODE_ENV === 'development',
+    logging: false,
   };
 };

@@ -87,7 +87,7 @@ export default function DiscountsPage() {
           <div className="py-16 text-center text-ink-400 text-sm">{t('discounts.noDiscounts')}</div>
         ) : (
           <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[600px]">
+          <table className="mob-cards w-full text-sm min-w-[600px] sm:min-w-0">
             <thead>
               <tr className="border-b border-ink-100">
                 {[t('discounts.name'), t('discounts.type'), t('discounts.value'), t('discounts.minPurchase'), t('discounts.validPeriod'), t('discounts.status'), ''].map(h => (
@@ -98,12 +98,12 @@ export default function DiscountsPage() {
             <tbody>
               {discounts.map(d => (
                 <tr key={d.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                  <td className="px-5 py-3.5 font-semibold text-ink-800">{d.name}</td>
-                  <td className="px-5 py-3.5"><Badge variant={d.type === 'percentage' ? 'teal' : 'amber'}>{d.type}</Badge></td>
-                  <td className="px-5 py-3.5 font-bold" style={{ color: '#009688' }}>{d.type === 'percentage' ? `${d.value}%` : LKR(d.value)}</td>
-                  <td className="px-5 py-3.5 text-ink-500">{d.min_purchase > 0 ? LKR(d.min_purchase) : '—'}</td>
-                  <td className="px-5 py-3.5 text-ink-400 text-xs">{d.valid_from || d.valid_to ? `${d.valid_from || '∞'} → ${d.valid_to || '∞'}` : t('discounts.always')}</td>
-                  <td className="px-5 py-3.5"><Badge variant={isValid(d) ? 'teal' : 'gray'} dot>{isValid(d) ? t('discounts.active') : t('discounts.inactive')}</Badge></td>
+                  <td data-label={t('discounts.name')} className="px-5 py-3.5 font-semibold text-ink-800">{d.name}</td>
+                  <td data-label={t('discounts.type')} className="px-5 py-3.5"><Badge variant={d.type === 'percentage' ? 'teal' : 'amber'}>{d.type}</Badge></td>
+                  <td data-label={t('discounts.value')} className="px-5 py-3.5 font-bold" style={{ color: '#009688' }}>{d.type === 'percentage' ? `${d.value}%` : LKR(d.value)}</td>
+                  <td data-label={t('discounts.minPurchase')} className="px-5 py-3.5 text-ink-500">{d.min_purchase > 0 ? LKR(d.min_purchase) : '—'}</td>
+                  <td data-label={t('discounts.validPeriod')} className="px-5 py-3.5 text-ink-400 text-xs">{d.valid_from || d.valid_to ? `${d.valid_from || '∞'} → ${d.valid_to || '∞'}` : t('discounts.always')}</td>
+                  <td data-label={t('discounts.status')} className="px-5 py-3.5"><Badge variant={isValid(d) ? 'teal' : 'gray'} dot>{isValid(d) ? t('discounts.active') : t('discounts.inactive')}</Badge></td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2">
                       <button onClick={() => openEdit(d)} className="text-ink-400 hover:text-ink-700 transition-colors"><Pencil size={14} /></button>

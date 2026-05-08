@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtModule } from '@nestjs/jwt';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SuperAdminController } from './super-admin.controller';
 import { SuperAdminService } from './super-admin.service';
@@ -17,7 +16,6 @@ import { EmailService } from '../../common/email.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Tenant, User, Subscription, PaymentTransaction, Package, Coupon, Announcement, ApiLog]),
-    JwtModule.register({ secret: process.env.JWT_SECRET || 'secret', signOptions: { expiresIn: '7d' } }),
     ScheduleModule.forRoot(),
   ],
   controllers: [SuperAdminController],

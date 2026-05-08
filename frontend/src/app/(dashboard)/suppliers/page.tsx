@@ -125,7 +125,7 @@ export default function SuppliersPage() {
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             orders.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('suppliers.noOrders')}</div> : (
               <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[600px]">
+              <table className="mob-cards w-full text-sm min-w-[600px] sm:min-w-0">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('suppliers.orderId'), t('suppliers.supplier'), t('suppliers.items'), t('suppliers.total'), t('suppliers.status'), t('suppliers.date'), t('suppliers.actions')].map(h => (
@@ -136,12 +136,12 @@ export default function SuppliersPage() {
                 <tbody>
                   {orders.map(o => (
                     <tr key={o.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                      <td className="px-5 py-3.5 text-ink-400 text-xs">#{o.id}</td>
-                      <td className="px-5 py-3.5 font-semibold text-ink-800">{o.supplier?.name}</td>
-                      <td className="px-5 py-3.5 text-ink-500">{o.items?.length || 0}</td>
-                      <td className="px-5 py-3.5 font-bold" style={{ color: '#009688' }}>{LKR(o.total_amount)}</td>
-                      <td className="px-5 py-3.5"><Badge variant={statusVariant(o.status) as any} dot>{o.status}</Badge></td>
-                      <td className="px-5 py-3.5 text-ink-400 text-xs">{new Date(o.created_at).toLocaleDateString('en-LK')}</td>
+                      <td data-label={t('suppliers.orderId')} className="px-5 py-3.5 text-ink-400 text-xs">#{o.id}</td>
+                      <td data-label={t('suppliers.supplier')} className="px-5 py-3.5 font-semibold text-ink-800">{o.supplier?.name}</td>
+                      <td data-label={t('suppliers.items')} className="px-5 py-3.5 text-ink-500">{o.items?.length || 0}</td>
+                      <td data-label={t('suppliers.total')} className="px-5 py-3.5 font-bold" style={{ color: '#009688' }}>{LKR(o.total_amount)}</td>
+                      <td data-label={t('suppliers.status')} className="px-5 py-3.5"><Badge variant={statusVariant(o.status) as any} dot>{o.status}</Badge></td>
+                      <td data-label={t('suppliers.date')} className="px-5 py-3.5 text-ink-400 text-xs">{new Date(o.created_at).toLocaleDateString('en-LK')}</td>
                       <td className="px-5 py-3.5">
                         {o.status === 'pending' && (
                           <div className="flex gap-1">

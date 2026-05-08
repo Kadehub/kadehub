@@ -63,16 +63,15 @@ jobs:
             docker rm kadehub-be kadehub-fe || true
 
             docker run -d --name kadehub-be \
+              -p 3001:3001 \
               --env-file /home/deploy/AppData/KadeHub/Env/dev.env \
               -e NODE_ENV=production \
               -e PORT=3001 \
-              --network kadehub-network \
               --restart unless-stopped \
               nethun/dev:kadehub-be
 
             docker run -d --name kadehub-fe \
               -p 3000:3000 \
-              --network kadehub-network \
               --restart unless-stopped \
               nethun/dev:kadehub-fe
 

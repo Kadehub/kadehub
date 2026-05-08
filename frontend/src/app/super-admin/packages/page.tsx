@@ -25,8 +25,7 @@ export default function PackagesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {packages.map((pkg: any) => (
-            <div key={pkg.id} className={`kh-card p-6 relative ${pkg.is_popular ? 'ring-2' : ''}`}
-              style={pkg.is_popular ? { ringColor: '#00796B' } : {}}>
+            <div key={pkg.id} className={`kh-card p-6 relative ${pkg.is_popular ? 'ring-2 ring-teal-600' : ''}`}>
               {pkg.is_popular && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold text-white"
                   style={{ background: 'linear-gradient(135deg,#00796B,#00A884)' }}>Most Popular</span>

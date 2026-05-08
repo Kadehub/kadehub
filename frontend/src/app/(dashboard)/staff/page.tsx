@@ -258,7 +258,7 @@ export default function StaffPage() {
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             employees.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('staff.noEmployees')}</div> : (
               <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[650px]">
+              <table className="mob-cards w-full text-sm">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('staff.name'), t('staff.empNo'), t('staff.phone'), t('staff.email'), t('staff.role'), t('staff.joined'), ''].map(h => (
@@ -269,7 +269,7 @@ export default function StaffPage() {
                 <tbody>
                   {employees.map(emp => (
                     <tr key={emp.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                      <td className="px-5 py-3.5">
+                      <td data-label={t('staff.name')} className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
                           {emp.photo_url ? (
                             <img src={resolvePhoto(emp.photo_url)} alt={emp.name}
@@ -283,17 +283,17 @@ export default function StaffPage() {
                           <span className="font-semibold text-ink-800">{emp.name}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td data-label={t('staff.empNo')} className="px-5 py-3.5">
                         <code className="text-xs text-ink-500 bg-ink-100 px-1.5 py-0.5 rounded">{emp.emp_no || '—'}</code>
                       </td>
-                      <td className="px-5 py-3.5 text-ink-500">{emp.phone || '—'}</td>
-                      <td className="px-5 py-3.5 text-ink-500">{emp.email}</td>
-                      <td className="px-5 py-3.5">
+                      <td data-label={t('staff.phone')} className="px-5 py-3.5 text-ink-500">{emp.phone || '—'}</td>
+                      <td data-label={t('staff.email')} className="px-5 py-3.5 text-ink-500">{emp.email}</td>
+                      <td data-label={t('staff.role')} className="px-5 py-3.5">
                         <Badge variant={emp.role === 'ADMIN' ? 'teal' : 'gray'}>
                           {emp.role === 'ADMIN' ? t('staff.admin') : t('staff.cashier')}
                         </Badge>
                       </td>
-                      <td className="px-5 py-3.5 text-ink-400 text-xs">
+                      <td data-label={t('staff.joined')} className="px-5 py-3.5 text-ink-400 text-xs">
                         {new Date(emp.created_at).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </td>
                       <td className="px-5 py-3.5 text-right">
@@ -316,7 +316,7 @@ export default function StaffPage() {
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             shifts.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('staff.noShifts')}</div> : (
               <div className="overflow-x-auto">
-              <table className="mob-cards w-full text-sm min-w-[650px] sm:min-w-0">
+              <table className="mob-cards w-full text-sm">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('staff.cashierCol'), t('staff.opened'), t('staff.closed'), t('staff.openingCash'), t('staff.closingCash'), t('staff.status'), ''].map(h => (
@@ -389,7 +389,7 @@ export default function StaffPage() {
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             logs.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('staff.noAudit')}</div> : (
               <div className="overflow-x-auto">
-              <table className="mob-cards w-full text-sm min-w-[600px] sm:min-w-0">
+              <table className="mob-cards w-full text-sm">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('staff.time'), t('staff.user'), t('staff.action'), t('staff.entity'), t('staff.details')].map(h => (

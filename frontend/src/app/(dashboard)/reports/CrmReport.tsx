@@ -96,7 +96,8 @@ export default function CrmReport({ from, to }: Props) {
         {topCustomers.length === 0 ? (
           <p className="text-center text-ink-300 text-sm py-10">No data for this period</p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="mob-cards w-full text-sm">
             <thead>
               <tr className="border-b border-ink-100">
                 {['#', 'Customer', 'Phone', 'Visits', 'Avg Spend', 'Total Spend', 'Loyalty Pts'].map((h) => (
@@ -107,8 +108,8 @@ export default function CrmReport({ from, to }: Props) {
             <tbody>
               {topCustomers.map((c, i) => (
                 <tr key={c.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                  <td className="px-4 py-3 text-ink-400 text-xs font-bold">{i + 1}</td>
-                  <td className="px-4 py-3">
+                  <td data-label="#" className="px-4 py-3 text-ink-400 text-xs font-bold">{i + 1}</td>
+                  <td data-label="Customer" className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                         style={{ background: 'linear-gradient(135deg,#00796B,#00A884)' }}>
@@ -117,11 +118,11 @@ export default function CrmReport({ from, to }: Props) {
                       <span className="font-semibold text-ink-800">{c.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-ink-500">{c.phone || '—'}</td>
-                  <td className="px-4 py-3 text-center font-bold text-ink-700">{c.visit_count}</td>
-                  <td className="px-4 py-3 text-right text-ink-500">{LKR(+c.avg_spend)}</td>
-                  <td className="px-4 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+c.total_spend)}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td data-label="Phone" className="px-4 py-3 text-ink-500">{c.phone || '—'}</td>
+                  <td data-label="Visits" className="px-4 py-3 text-center font-bold text-ink-700">{c.visit_count}</td>
+                  <td data-label="Avg Spend" className="px-4 py-3 text-right text-ink-500">{LKR(+c.avg_spend)}</td>
+                  <td data-label="Total Spend" className="px-4 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+c.total_spend)}</td>
+                  <td data-label="Points" className="px-4 py-3 text-right">
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
                       style={{ background: '#FFF8E1', color: '#F59E0B' }}>
                       ★ {c.loyalty_points}
@@ -131,6 +132,7 @@ export default function CrmReport({ from, to }: Props) {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
     </div>

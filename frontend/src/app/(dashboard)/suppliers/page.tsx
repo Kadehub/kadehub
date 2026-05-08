@@ -95,7 +95,7 @@ export default function SuppliersPage() {
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             suppliers.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('suppliers.noSuppliers')}</div> : (
               <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[500px]">
+              <table className="mob-cards w-full text-sm">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('suppliers.name'), t('suppliers.contact'), t('suppliers.phone'), t('suppliers.email'), t('suppliers.status')].map(h => (
@@ -106,11 +106,11 @@ export default function SuppliersPage() {
                 <tbody>
                   {suppliers.map(s => (
                     <tr key={s.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                      <td className="px-5 py-3.5 font-semibold text-ink-800">{s.name}</td>
-                      <td className="px-5 py-3.5 text-ink-500">{s.contact_person || '—'}</td>
-                      <td className="px-5 py-3.5 text-ink-500">{s.phone || '—'}</td>
-                      <td className="px-5 py-3.5 text-ink-500">{s.email || '—'}</td>
-                      <td className="px-5 py-3.5"><Badge variant={s.is_active ? 'teal' : 'gray'} dot>{s.is_active ? t('suppliers.active') : t('suppliers.inactive')}</Badge></td>
+                      <td data-label={t('suppliers.name')} className="px-5 py-3.5 font-semibold text-ink-800">{s.name}</td>
+                      <td data-label={t('suppliers.contact')} className="px-5 py-3.5 text-ink-500">{s.contact_person || '—'}</td>
+                      <td data-label={t('suppliers.phone')} className="px-5 py-3.5 text-ink-500">{s.phone || '—'}</td>
+                      <td data-label={t('suppliers.email')} className="px-5 py-3.5 text-ink-500">{s.email || '—'}</td>
+                      <td data-label={t('suppliers.status')} className="px-5 py-3.5"><Badge variant={s.is_active ? 'teal' : 'gray'} dot>{s.is_active ? t('suppliers.active') : t('suppliers.inactive')}</Badge></td>
                     </tr>
                   ))}
                 </tbody>
@@ -125,7 +125,7 @@ export default function SuppliersPage() {
           {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
             orders.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('suppliers.noOrders')}</div> : (
               <div className="overflow-x-auto">
-              <table className="mob-cards w-full text-sm min-w-[600px] sm:min-w-0">
+              <table className="mob-cards w-full text-sm">
                 <thead>
                   <tr className="border-b border-ink-100">
                     {[t('suppliers.orderId'), t('suppliers.supplier'), t('suppliers.items'), t('suppliers.total'), t('suppliers.status'), t('suppliers.date'), t('suppliers.actions')].map(h => (

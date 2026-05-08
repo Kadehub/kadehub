@@ -82,7 +82,8 @@ export default function InventoryReport() {
             ))}
           </div>
         </div>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="mob-cards w-full text-sm">
           <thead>
             <tr className="border-b border-ink-100">
               {['Product', 'Category', 'Stock', 'Reorder At', 'Status', 'Cost Value', 'Retail Value'].map((h) => (
@@ -95,28 +96,29 @@ export default function InventoryReport() {
               const { v, l } = statusOf(+p.quantity, +p.reorder_level);
               return (
                 <tr key={i} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                  <td className="px-4 py-3">
+                  <td data-label="Product" className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <ProductImage category={p.category} name={p.name} size={32} />
                       <span className="font-semibold text-ink-800">{p.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3">{p.category ? <Badge variant="gray">{p.category}</Badge> : '—'}</td>
-                  <td className="px-4 py-3 text-center">
+                  <td data-label="Category" className="px-4 py-3">{p.category ? <Badge variant="gray">{p.category}</Badge> : '—'}</td>
+                  <td data-label="Stock" className="px-4 py-3 text-center">
                     <span className="text-base font-extrabold"
                       style={{ color: +p.quantity <= 0 ? '#FF6B6B' : +p.quantity <= +p.reorder_level ? '#F59E0B' : '#00A884' }}>
                       {p.quantity}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center text-ink-400">{p.reorder_level}</td>
-                  <td className="px-4 py-3 text-center"><Badge variant={v} dot>{l}</Badge></td>
-                  <td className="px-4 py-3 text-right text-ink-500">{LKR(+p.cost_value || 0)}</td>
-                  <td className="px-4 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+p.stock_value || 0)}</td>
+                  <td data-label="Reorder" className="px-4 py-3 text-center text-ink-400">{p.reorder_level}</td>
+                  <td data-label="Status" className="px-4 py-3 text-center"><Badge variant={v} dot>{l}</Badge></td>
+                  <td data-label="Cost" className="px-4 py-3 text-right text-ink-500">{LKR(+p.cost_value || 0)}</td>
+                  <td data-label="Retail" className="px-4 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+p.stock_value || 0)}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+        </div>
       </Card>
     </div>
   );

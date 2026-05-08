@@ -108,7 +108,7 @@ export default function CustomersPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[500px]">
+          <table className="mob-cards w-full text-sm">
             <thead>
               <tr className="border-b border-ink-100">
                 <th className="text-left px-5 py-3 text-xs font-semibold text-ink-400 uppercase tracking-wide">{t('customers.customer')}</th>
@@ -120,7 +120,7 @@ export default function CustomersPage() {
             <tbody>
               {filtered.map((c) => (
                 <tr key={c.id} className="border-b border-ink-50 hover:bg-ink-50 transition-colors last:border-0">
-                  <td className="px-5 py-3.5">
+                  <td data-label={t('customers.customer')} className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
                       style={{ background: 'linear-gradient(135deg,#00796B,#009688)' }}>
@@ -129,15 +129,15 @@ export default function CustomersPage() {
                       <span className="font-semibold text-ink-800">{c.name}</span>
                     </div>
                   </td>
-                  <td className="px-5 py-3.5 text-ink-500">{c.phone || <span className="text-ink-300">—</span>}</td>
-                  <td className="px-5 py-3.5 text-center">
+                  <td data-label={t('customers.phone')} className="px-5 py-3.5 text-ink-500">{c.phone || <span className="text-ink-300">—</span>}</td>
+                  <td data-label={t('customers.loyaltyPoints')} className="px-5 py-3.5 text-center">
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
                       style={{ background: '#FFF8E1', color: '#F59E0B' }}>
                       <Star size={11} fill="currentColor" />
                       {c.loyalty_points}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-ink-400 text-xs">
+                  <td data-label={t('customers.memberSince')} className="px-5 py-3.5 text-ink-400 text-xs">
                     {new Date(c.created_at).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: 'numeric' })}
                   </td>
                 </tr>

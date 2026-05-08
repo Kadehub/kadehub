@@ -110,7 +110,7 @@ export default function ExpensesPage() {
           <div className="py-16 text-center text-ink-400 text-sm">{t('expenses.noExpenses')}</div>
         ) : (
           <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[500px]">
+          <table className="mob-cards w-full text-sm">
             <thead>
               <tr className="border-b border-ink-100">
                 {[t('expenses.date'), t('expenses.category'), t('expenses.description'), t('expenses.amount'), ''].map(h => (
@@ -121,10 +121,10 @@ export default function ExpensesPage() {
             <tbody>
               {expenses.map(e => (
                 <tr key={e.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                  <td className="px-5 py-3.5 text-ink-500 text-xs">{e.expense_date}</td>
-                  <td className="px-5 py-3.5"><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-ink-100 text-ink-600">{e.category}</span></td>
-                  <td className="px-5 py-3.5 text-ink-700">{e.description}</td>
-                  <td className="px-5 py-3.5 text-right font-bold" style={{ color: '#FF6B6B' }}>{LKR(e.amount)}</td>
+                  <td data-label={t('expenses.date')} className="px-5 py-3.5 text-ink-500 text-xs">{e.expense_date}</td>
+                  <td data-label={t('expenses.category')} className="px-5 py-3.5"><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-ink-100 text-ink-600">{e.category}</span></td>
+                  <td data-label={t('expenses.description')} className="px-5 py-3.5 text-ink-700">{e.description}</td>
+                  <td data-label={t('expenses.amount')} className="px-5 py-3.5 text-right font-bold" style={{ color: '#FF6B6B' }}>{LKR(e.amount)}</td>
                   <td className="px-5 py-3.5 text-right">
                     <button onClick={() => remove(e.id)} className="text-ink-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
                   </td>

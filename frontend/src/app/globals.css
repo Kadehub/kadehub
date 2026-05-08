@@ -69,20 +69,24 @@ input:focus, select:focus, textarea:focus {
 
 /* ── Responsive table → card stack on mobile ── */
 @media (max-width: 639px) {
+  .mob-cards { display: block; }
   .mob-cards thead { display: none; }
+  .mob-cards tbody { display: block; }
   .mob-cards tbody tr {
     display: flex;
     flex-direction: column;
     padding: 12px 16px;
     border-bottom: 1px solid var(--gray-100);
     gap: 4px;
+    margin-bottom: 0;
   }
   .mob-cards tbody td {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 2px 0;
+    padding: 4px 0 !important;
     font-size: 0.8125rem;
+    border: none !important;
   }
   .mob-cards tbody td[data-label]::before {
     content: attr(data-label);
@@ -93,8 +97,10 @@ input:focus, select:focus, textarea:focus {
     letter-spacing: 0.04em;
     flex-shrink: 0;
     margin-right: 8px;
+    min-width: 80px;
   }
   .mob-cards tbody td:empty { display: none; }
+  .mob-cards tbody td > * { flex-shrink: 0; }
 }
 
 /* ── Utility classes ── */

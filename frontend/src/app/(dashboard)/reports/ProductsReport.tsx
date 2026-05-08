@@ -61,7 +61,8 @@ export default function ProductsReport({ from, to }: Props) {
           {categories.length === 0 ? (
             <p className="text-center text-ink-300 text-sm py-12">No data</p>
           ) : (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="mob-cards w-full text-sm">
               <thead>
                 <tr className="border-b border-ink-100">
                   {['Category', 'Units Sold', 'Revenue'].map((h) => (
@@ -72,19 +73,20 @@ export default function ProductsReport({ from, to }: Props) {
               <tbody>
                 {categories.map((c, i) => (
                   <tr key={i} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                    <td className="px-5 py-2.5">
+                    <td data-label="Category" className="px-5 py-2.5">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                           style={{ background: COLORS[i % COLORS.length] }} />
                         <span className="font-medium text-ink-700">{c.category}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-2.5 text-center text-ink-600">{c.total_qty}</td>
-                    <td className="px-5 py-2.5 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+c.revenue)}</td>
+                    <td data-label="Units" className="px-5 py-2.5 text-center text-ink-600">{c.total_qty}</td>
+                    <td data-label="Revenue" className="px-5 py-2.5 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+c.revenue)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </Card>
       </div>
@@ -97,7 +99,8 @@ export default function ProductsReport({ from, to }: Props) {
         {topProducts.length === 0 ? (
           <p className="text-center text-ink-300 text-sm py-12">No sales data for this period</p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="mob-cards w-full text-sm">
             <thead>
               <tr className="border-b border-ink-100">
                 {['#', 'Product', 'Category', 'Units Sold', 'Avg Price', 'Revenue', 'Share'].map((h) => (
@@ -110,20 +113,20 @@ export default function ProductsReport({ from, to }: Props) {
                 const pct = totalQty > 0 ? Math.round((+p.total_qty / totalQty) * 100) : 0;
                 return (
                   <tr key={p.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                    <td className="px-4 py-3 text-ink-400 text-xs font-bold">{i + 1}</td>
-                    <td className="px-4 py-3">
+                    <td data-label="#" className="px-4 py-3 text-ink-400 text-xs font-bold">{i + 1}</td>
+                    <td data-label="Product" className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <ProductImage category={p.category} name={p.name} size={32} />
                         <span className="font-semibold text-ink-800">{p.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td data-label="Category" className="px-4 py-3">
                       {p.category ? <Badge variant="gray">{p.category}</Badge> : <span className="text-ink-300">—</span>}
                     </td>
-                    <td className="px-4 py-3 text-right font-bold text-ink-700">{p.total_qty}</td>
-                    <td className="px-4 py-3 text-right text-ink-500">{LKR(+p.avg_price)}</td>
-                    <td className="px-4 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+p.revenue)}</td>
-                    <td className="px-4 py-3">
+                    <td data-label="Units" className="px-4 py-3 text-right font-bold text-ink-700">{p.total_qty}</td>
+                    <td data-label="Avg Price" className="px-4 py-3 text-right text-ink-500">{LKR(+p.avg_price)}</td>
+                    <td data-label="Revenue" className="px-4 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+p.revenue)}</td>
+                    <td data-label="Share" className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-1.5 bg-ink-100 rounded-full overflow-hidden">
                           <div className="h-full rounded-full" style={{ width: `${pct}%`, background: '#00A884' }} />
@@ -136,6 +139,7 @@ export default function ProductsReport({ from, to }: Props) {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
     </div>

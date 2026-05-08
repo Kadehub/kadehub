@@ -136,7 +136,8 @@ export default function PosSalesReport({ from, to }: Props) {
         {sales.length === 0 ? (
           <p className="text-center text-ink-300 text-sm py-10">No sales in this period</p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="mob-cards w-full text-sm">
             <thead>
               <tr className="border-b border-ink-100">
                 {['#', 'Date & Time', 'Cashier', 'Customer', 'Payment', 'Total'].map((h) => (
@@ -147,13 +148,13 @@ export default function PosSalesReport({ from, to }: Props) {
             <tbody>
               {sales.map((s) => (
                 <tr key={s.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                  <td className="px-4 py-2.5 text-ink-400 text-xs">#{s.id}</td>
-                  <td className="px-4 py-2.5 text-ink-600 text-xs">
+                  <td data-label="#" className="px-4 py-2.5 text-ink-400 text-xs">#{s.id}</td>
+                  <td data-label="Date" className="px-4 py-2.5 text-ink-600 text-xs">
                     {new Date(s.created_at).toLocaleString('en-LK', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </td>
-                  <td className="px-4 py-2.5 text-ink-700">{s.cashier || '—'}</td>
-                  <td className="px-4 py-2.5 text-ink-500">{s.customer || <span className="text-ink-300">Walk-in</span>}</td>
-                  <td className="px-4 py-2.5">
+                  <td data-label="Cashier" className="px-4 py-2.5 text-ink-700">{s.cashier || '—'}</td>
+                  <td data-label="Customer" className="px-4 py-2.5 text-ink-500">{s.customer || <span className="text-ink-300">Walk-in</span>}</td>
+                  <td data-label="Payment" className="px-4 py-2.5">
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
                       style={{
                         background: s.payment_method === 'CASH' ? '#E0F2F1' : s.payment_method === 'CARD' ? '#EFF6FF' : '#FFF8E1',
@@ -162,11 +163,12 @@ export default function PosSalesReport({ from, to }: Props) {
                       {s.payment_method}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+s.total_amount)}</td>
+                  <td data-label="Total" className="px-4 py-2.5 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+s.total_amount)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
     </div>

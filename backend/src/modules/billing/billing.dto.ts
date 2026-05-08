@@ -21,12 +21,23 @@ export class CreateSubscriptionDto {
   @IsEnum(['monthly', 'yearly'])
   billing_cycle: 'monthly' | 'yearly';
 
-  @IsEnum(['paypal', 'card', 'bank'])
-  gateway: 'paypal' | 'card' | 'bank';
+  @IsEnum(['paypal', 'card', 'bank', 'onepay'])
+  gateway: 'paypal' | 'card' | 'bank' | 'onepay';
 
   @IsOptional() @IsString() gateway_ref?: string;
 
   @IsOptional() @IsEnum(['LKR', 'USD']) currency?: 'LKR' | 'USD';
+
+  @IsOptional() @IsNumber() registration_fee?: number;
+}
+
+export class InitiateOnepayDto {
+  @Type(() => Number)
+  @IsNumber()
+  package_id: number;
+
+  @IsEnum(['monthly', 'yearly'])
+  billing_cycle: 'monthly' | 'yearly';
 
   @IsOptional() @IsNumber() registration_fee?: number;
 }

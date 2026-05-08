@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAuthStore } from '../../hooks/useAuth';
 import Sidebar from '../../components/ui/Sidebar';
 import LanguageSwitcher from '../../components/ui/LanguageSwitcher';
@@ -33,18 +33,28 @@ const ANN_STYLES: Record<string, string> = {
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { token, setLogoUrl } = useAuthStore();
-  const router = useRouter();
+  const token = useAuthStore((s) => s.token);
+  const setLogoUrl = useAuthStore((s) => s.setLogoUrl);
   const pathname = usePathname();
   const { t } = useLang();
-  const [hydrated, setHydrated] = useState(false);
   const [online, setOnline] = useState(true);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [dismissedIds, setDismissedIds] = useState<number[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setHydrated(true); }, []);
-  useEffect(() => { if (hydrated && !token) router.push('/login'); }, [hydrated, token, router]);
+  // Wait for client-side mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Redirect if no token after mount
+  useEffect(() => {
+    if (mounted && !token) {
+      window.location.href = '/login';
+    }
+  }, [mounted, token]);
+
   useEffect(() => {
     setOnline(navigator.onLine);
     const on = () => setOnline(true);
@@ -54,14 +64,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, []);
   useEffect(() => {
+    if (!token) return;
     api.get('/super-admin/announcements/active').then(({ data }) => setAnnouncements(data)).catch(() => {});
-  }, []);
+  }, [token]);
   useEffect(() => {
     if (!token) return;
     api.get('/billing/profile').then(({ data }) => setLogoUrl(data.logo_url || null)).catch(() => {});
   }, [token]);
 
-  if (!hydrated || !token) return null;
+  // Don't render until mounted and authenticated
+  if (!mounted || !token) return null;
 
   const titleKey = Object.entries(pageTitleKeys).find(([k]) => pathname.startsWith(k))?.[1];
   const title = titleKey ? t(titleKey) : 'KadeHub';
@@ -72,14 +84,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex h-screen overflow-hidden bg-ink-50">
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-20 bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
-      <div className={`fixed inset-y-0 left-0 z-30 lg:static lg:z-auto transition-transform duration-200 ${
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 lg:static lg:z-auto transition-transform duration-300 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
         <Sidebar onClose={() => setSidebarOpen(false)} />
       </div>
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      {/* Main content area */}
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden w-full">
         {/* Announcement banners */}
         {visible.map(ann => {
           const Icon = ANN_ICONS[ann.type] || Info;

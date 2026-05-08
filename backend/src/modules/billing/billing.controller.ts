@@ -1,12 +1,12 @@
 import {
   Controller, Get, Post, Patch, Body, UseGuards,
-  UsePipes, ValidationPipe, UseInterceptors, UploadedFile, Req,
+  UsePipes, ValidationPipe, UseInterceptors, UploadedFile, Req, Param, HttpCode,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { BillingService } from './billing.service';
-import { UpdateCompanyDto, CreateSubscriptionDto } from './billing.dto';
+import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto } from './billing.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -75,5 +75,28 @@ export class BillingController {
   @UseGuards(JwtAuthGuard)
   getTransactions(@CurrentUser() user: any) {
     return this.billingService.getTransactions(user.tenant_id);
+  }
+
+  // ── OnePay endpoints ──
+
+  /** Step 1: Create OnePay transaction, get redirect URL */
+  @Post('onepay/initiate')
+  @UseGuards(JwtAuthGuard)
+  initiateOnepay(@CurrentUser() user: any, @Body() dto: InitiateOnepayDto) {
+    return this.billingService.initiateOnepay(user.tenant_id, dto);
+  }
+
+  /** Step 2: Verify payment after user returns from OnePay */
+  @Get('onepay/verify/:ref')
+  @UseGuards(JwtAuthGuard)
+  verifyOnepay(@CurrentUser() user: any, @Param('ref') ref: string) {
+    return this.billingService.verifyOnepayReturn(ref, user.tenant_id);
+  }
+
+  /** Webhook: OnePay calls this when payment status changes (no auth) */
+  @Post('onepay/webhook')
+  @HttpCode(200)
+  onepayWebhook(@Body() body: any) {
+    return this.billingService.handleOnepayWebhook(body);
   }
 }

@@ -157,7 +157,7 @@ export default function InventoryPage() {
           <div className="py-16 text-center text-ink-400 text-sm">{t('common.noData')}</div>
         ) : (
           <div className="overflow-x-auto">
-          <table className="mob-cards w-full text-sm min-w-[700px] sm:min-w-0">
+          <table className="mob-cards w-full text-sm">
             <thead>
               <tr className="border-b border-ink-100">
                 {[t('inventory.product'), t('inventory.category'), t('inventory.price'), t('inventory.cost'), t('inventory.stock'), t('inventory.reorderAt'), t('inventory.status'), t('common.adjust')].map((h) => (

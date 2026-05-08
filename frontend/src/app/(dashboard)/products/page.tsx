@@ -144,7 +144,8 @@ export default function ProductsPage() {
             <p className="text-sm text-ink-400">{search ? 'No products match your search' : 'No products yet'}</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="mob-cards w-full text-sm">
             <thead>
               <tr className="border-b border-ink-100">
                 {['Product', 'Barcode', 'Category', 'Price', 'Cost', 'Stock', 'Status', ''].map((h) => (
@@ -160,22 +161,22 @@ export default function ProductsPage() {
                 const statusLabel = qty <= 0 ? 'Out of stock' : qty <= reorder ? 'Low stock' : 'In stock';
                 return (
                   <tr key={p.id} className="border-b border-ink-50 hover:bg-ink-50 transition-colors last:border-0">
-                    <td className="px-4 py-3">
+                    <td data-label="Product" className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <ProductImage imageUrl={p.image_url} category={p.category} name={p.name} size={40} />
                         <p className="font-semibold text-ink-800">{p.name}</p>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td data-label="Barcode" className="px-4 py-3">
                       <code className="text-xs text-ink-400 bg-ink-100 px-1.5 py-0.5 rounded">{p.barcode || '—'}</code>
                     </td>
-                    <td className="px-4 py-3">
+                    <td data-label="Category" className="px-4 py-3">
                       {p.category ? <Badge variant="gray">{p.category}</Badge> : <span className="text-ink-300">—</span>}
                     </td>
-                    <td className="px-4 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(p.price)}</td>
-                    <td className="px-4 py-3 text-right text-ink-400">{LKR(p.cost)}</td>
-                    <td className="px-4 py-3 text-center font-bold text-ink-700">{qty}</td>
-                    <td className="px-4 py-3 text-center"><Badge variant={statusVariant} dot>{statusLabel}</Badge></td>
+                    <td data-label="Price" className="px-4 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(p.price)}</td>
+                    <td data-label="Cost" className="px-4 py-3 text-right text-ink-400">{LKR(p.cost)}</td>
+                    <td data-label="Stock" className="px-4 py-3 text-center font-bold text-ink-700">{qty}</td>
+                    <td data-label="Status" className="px-4 py-3 text-center"><Badge variant={statusVariant} dot>{statusLabel}</Badge></td>
                     <td className="px-4 py-3 text-right">
                       <Button size="xs" variant="ghost" icon={<Pencil size={13} />} onClick={() => openEdit(p)}>
                         Edit
@@ -186,6 +187,7 @@ export default function ProductsPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
 

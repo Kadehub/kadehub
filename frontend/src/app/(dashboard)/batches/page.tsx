@@ -91,7 +91,7 @@ export default function BatchesPage() {
         {loading ? <div className="py-16 text-center text-ink-400 text-sm">{t('common.loading')}</div> :
           currentData.length === 0 ? <div className="py-16 text-center text-ink-400 text-sm">{t('batches.noBatches')}</div> : (
             <div className="overflow-x-auto">
-            <table className="mob-cards w-full text-sm min-w-[700px] sm:min-w-0">
+            <table className="mob-cards w-full text-sm">
               <thead>
                 <tr className="border-b border-ink-100">
                   {[t('batches.product'), t('batches.batchNo'), t('batches.qty'), t('batches.cost'), t('batches.mfgDate'), t('batches.expiryDate'), t('batches.status'), ''].map(h => (

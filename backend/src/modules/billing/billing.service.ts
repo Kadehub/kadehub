@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Package } from '../../database/entities/package.entity';
@@ -7,11 +7,12 @@ import { CompanyProfile } from '../../database/entities/company-profile.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
 import { PaymentTransaction } from '../../database/entities/payment-transaction.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
-import { UpdateCompanyDto, CreateSubscriptionDto } from './billing.dto';
+import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto } from './billing.dto';
 import * as https from 'https';
+import * as crypto from 'crypto';
 
 const REGISTRATION_FEE_LKR = 25000;
-const LKR_TO_USD = 0.0033; // ~1 LKR = 0.0033 USD (update periodically)
+const LKR_TO_USD = 0.0033;
 
 function fetchJson(url: string, timeoutMs = 5000): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -209,5 +210,216 @@ export class BillingService {
     } catch {
       return [];
     }
+  }
+
+  // ── OnePay Integration ──────────────────────────────────────────────────────
+
+  async initiateOnepay(tenantId: number, dto: InitiateOnepayDto) {
+    const pkg = await this.packageRepo.findOne({
+      where: { id: dto.package_id },
+      relations: ['modules'],
+    });
+    if (!pkg) throw new NotFoundException('Package not found');
+
+    const appId   = process.env.ONEPAY_APP_ID;
+    const appToken = process.env.ONEPAY_APP_TOKEN;
+    const hashSalt = process.env.ONEPAY_HASH_SALT;
+    if (!appId || !appToken || !hashSalt) {
+      throw new BadRequestException('OnePay credentials not configured. Set ONEPAY_APP_ID, ONEPAY_APP_TOKEN, ONEPAY_HASH_SALT in .env');
+    }
+
+    const amount = dto.billing_cycle === 'yearly'
+      ? Number(pkg.price_yearly)
+      : Number(pkg.price_monthly);
+    const totalAmount = amount + (dto.registration_fee ?? 0);
+
+    // Create a pending transaction first so we have a reference
+    const ref = `KH-${tenantId}-${Date.now()}`;
+    const tx = this.txRepo.create({
+      tenant_id: tenantId,
+      package_id: pkg.id,
+      amount: totalAmount,
+      currency: 'LKR',
+      billing_cycle: dto.billing_cycle,
+      gateway: 'onepay',
+      gateway_ref: ref,
+      status: 'pending',
+      metadata: {
+        package_id: dto.package_id,
+        billing_cycle: dto.billing_cycle,
+        registration_fee: dto.registration_fee ?? 0,
+      },
+    });
+    await this.txRepo.save(tx);
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3001';
+
+    // Build OnePay payload per docs
+    const payload = {
+      amount: totalAmount,
+      app_id: appId,
+      reference: ref,
+      customer_first_name: 'KadeHub',
+      customer_last_name: 'Shop',
+      customer_phone_number: '0000000000',
+      customer_email: 'billing@kadehub.lk',
+      transaction_redirect_url: `${appUrl}/settings?tab=billing&status=success&ref=${ref}`,
+      currency: 'LKR',
+    };
+
+    // Generate hash: SHA256(app_id + amount + reference + hash_salt)
+    const hashStr = `${appId}${totalAmount}${ref}${hashSalt}`;
+    const hash = crypto.createHash('sha256').update(hashStr).digest('hex');
+
+    // Call OnePay API to create transaction
+    const onepayRes = await this.callOnepayApi(
+      'https://merchant-api-live-v2.onepay.lk/api/ipg/gateway/request-transaction/?hash=' + hash,
+      appToken,
+      payload,
+    );
+
+    if (!onepayRes?.data?.gateway?.redirect_url) {
+      // Update tx to failed
+      tx.status = 'failed';
+      await this.txRepo.save(tx);
+      throw new BadRequestException(onepayRes?.message || 'OnePay transaction creation failed');
+    }
+
+    // Store OnePay transaction token
+    tx.metadata = { ...tx.metadata, onepay_token: onepayRes.data.ipg_transaction_id };
+    await this.txRepo.save(tx);
+
+    return {
+      payment_url: onepayRes.data.gateway.redirect_url,
+      reference: ref,
+      amount: totalAmount,
+    };
+  }
+
+  async handleOnepayWebhook(body: any) {
+    const hashSalt = process.env.ONEPAY_HASH_SALT;
+    const appId    = process.env.ONEPAY_APP_ID;
+
+    // Verify hash from OnePay
+    if (hashSalt && appId && body.ipg_transaction_id) {
+      const expectedHash = crypto
+        .createHash('sha256')
+        .update(`${appId}${body.amount}${body.reference}${hashSalt}`)
+        .digest('hex');
+      if (body.hash && body.hash !== expectedHash) {
+        throw new BadRequestException('Invalid webhook hash');
+      }
+    }
+
+    const tx = await this.txRepo.findOne({
+      where: { gateway_ref: body.reference },
+    });
+    if (!tx) return { received: true };
+
+    const isSuccess = body.status_code === '2' || body.payment_status === 'CAPTURED';
+
+    tx.status = isSuccess ? 'completed' : 'failed';
+    tx.metadata = { ...tx.metadata, webhook: body };
+    await this.txRepo.save(tx);
+
+    if (isSuccess) {
+      await this.activateSubscription(tx);
+    }
+
+    return { received: true };
+  }
+
+  async verifyOnepayReturn(ref: string, tenantId: number) {
+    const tx = await this.txRepo.findOne({
+      where: { gateway_ref: ref, tenant_id: tenantId },
+      relations: ['package'],
+    });
+    if (!tx) throw new NotFoundException('Transaction not found');
+
+    // If already completed (webhook fired), return success
+    if (tx.status === 'completed') {
+      return { status: 'completed', transaction: tx };
+    }
+
+    // Poll OnePay for status
+    const appToken = process.env.ONEPAY_APP_TOKEN;
+    const appId    = process.env.ONEPAY_APP_ID;
+    const hashSalt = process.env.ONEPAY_HASH_SALT;
+
+    if (appToken && appId && hashSalt && tx.metadata?.onepay_token) {
+      try {
+        const hash = crypto
+          .createHash('sha256')
+          .update(`${appId}${tx.metadata.onepay_token}${hashSalt}`)
+          .digest('hex');
+        const res = await this.callOnepayApi(
+          `https://merchant-api-live-v2.onepay.lk/api/ipg/gateway/query-transaction/?hash=${hash}`,
+          appToken,
+          { app_id: appId, ipg_transaction_id: tx.metadata.onepay_token },
+        );
+        const isSuccess = res?.data?.payment_status === 'CAPTURED' || res?.data?.status_code === '2';
+        if (isSuccess && tx.status !== 'completed') {
+          tx.status = 'completed';
+          await this.txRepo.save(tx);
+          await this.activateSubscription(tx);
+        }
+      } catch { /* ignore poll errors */ }
+    }
+
+    return { status: tx.status, transaction: tx };
+  }
+
+  private async activateSubscription(tx: PaymentTransaction) {
+    const pkg = await this.packageRepo.findOne({
+      where: { id: tx.package_id },
+      relations: ['modules'],
+    });
+    if (!pkg) return;
+
+    const expiresAt = new Date();
+    if (tx.billing_cycle === 'yearly') expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+    else expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+    await this.subRepo.delete({ tenant_id: tx.tenant_id });
+
+    const subs = pkg.modules.map(m => this.subRepo.create({
+      tenant_id: tx.tenant_id,
+      module_name: m.module_name,
+      status: 'active',
+      package_id: pkg.id,
+      billing_cycle: tx.billing_cycle,
+      started_at: new Date(),
+      expires_at: expiresAt,
+      payment_status: 'paid',
+      payment_ref: tx.gateway_ref,
+    }));
+    await this.subRepo.save(subs);
+  }
+
+  private callOnepayApi(url: string, appToken: string, body: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const data = JSON.stringify(body);
+      const urlObj = new URL(url);
+      const options = {
+        hostname: urlObj.hostname,
+        path: urlObj.pathname + urlObj.search,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': appToken,
+          'Content-Length': Buffer.byteLength(data),
+        },
+      };
+      const req = https.request(options, res => {
+        let raw = '';
+        res.on('data', c => raw += c);
+        res.on('end', () => { try { resolve(JSON.parse(raw)); } catch { reject(new Error('parse error')); } });
+      });
+      req.on('error', reject);
+      req.setTimeout(10000, () => { req.destroy(); reject(new Error('timeout')); });
+      req.write(data);
+      req.end();
+    });
   }
 }

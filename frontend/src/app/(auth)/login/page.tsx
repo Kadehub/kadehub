@@ -1,9 +1,9 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import KadeHubLogo from '../../../components/ui/KadeHubLogo';
 import { Input } from '../../../components/ui/Input';
 import { ShoppingCart, Boxes, Users, BarChart2, ArrowRight } from 'lucide-react';
-import { useState } from 'react';
 import { useAuthStore } from '../../../hooks/useAuth';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
@@ -18,8 +18,13 @@ const features = [
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const { setAuth } = useAuthStore();
+  const { setAuth, token } = useAuthStore();
   const router = useRouter();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (token) router.replace('/pos');
+  }, [token, router]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +95,6 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {/* Register CTA */}
             <div className="mt-6 pt-5 border-t border-ink-100">
               <div className="flex items-center justify-between">
                 <div>
@@ -106,8 +110,6 @@ export default function LoginPage() {
                 </a>
               </div>
             </div>
-
-
           </div>
         </div>
       </div>

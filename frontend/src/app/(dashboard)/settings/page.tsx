@@ -24,11 +24,12 @@ export default function SettingsPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
   const [currency, setCurrency] = useState<string>('LKR');
+  const [regFee, setRegFee] = useState<number>(50000);
   const [billingLoaded, setBillingLoaded] = useState(false);
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
   const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '' });
-  const [gateway, setGateway] = useState<'card' | 'paypal'>('card');
+  const [gateway, setGateway] = useState<'onepay' | 'card' | 'paypal'>('onepay');
   const [paying, setPaying] = useState(false);
 
   useEffect(() => {
@@ -53,6 +54,7 @@ export default function SettingsPage() {
       // /billing/packages always returns { currency, registrationFee, packages: [...] }
       setPackages(pkgs.data?.packages ?? []);
       setCurrency(pkgs.data?.currency ?? 'LKR');
+      setRegFee(pkgs.data?.registrationFee ?? 50000);
     }).catch(() => {}).finally(() => setBillingLoaded(true));
   }, []);
 
@@ -82,6 +84,18 @@ export default function SettingsPage() {
     if (!selectedPkg) return;
     setPaying(true);
     try {
+      if (gateway === 'onepay') {
+        // OnePay: get redirect URL from backend
+        const res = await api.post('/billing/onepay/initiate', {
+          package_id: selectedPkg.id,
+          billing_cycle: billing,
+          registration_fee: regFee / 2,
+        });
+        // Redirect to OnePay hosted payment page
+        window.location.href = res.data.payment_url;
+        return;
+      }
+      // Legacy card/paypal flow
       const gatewayRef = gateway === 'paypal'
         ? `PAYPAL-${Date.now()}`
         : `CARD-${card.number.slice(-4)}-${Date.now()}`;
@@ -90,6 +104,7 @@ export default function SettingsPage() {
         billing_cycle: billing,
         gateway,
         gateway_ref: gatewayRef,
+        registration_fee: regFee / 2,
       });
       toast.success('Plan upgraded successfully!');
       window.location.reload();
@@ -108,16 +123,51 @@ export default function SettingsPage() {
     api.get('/tenant/users').then(r => setUserCount(Array.isArray(r.data) ? r.data.length : null)).catch(() => {});
   }, []);
 
+  // Handle OnePay return redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const ref    = params.get('ref');
+    if (status === 'success' && ref) {
+      setTab('billing');
+      api.get(`/billing/onepay/verify/${ref}`)
+        .then(r => {
+          if (r.data.status === 'completed') {
+            toast.success('Payment successful! Your plan is now active.');
+          } else {
+            toast.error('Payment is still being processed. Please wait a moment.');
+          }
+        })
+        .catch(() => toast.error('Could not verify payment.'))
+        .finally(() => {
+          // Clean URL
+          window.history.replaceState({}, '', '/settings?tab=billing');
+          setBillingLoaded(false);
+          Promise.all([
+            api.get('/billing/subscriptions'),
+            api.get('/billing/transactions'),
+            api.get('/billing/packages'),
+          ]).then(([subs, txs, pkgs]) => {
+            setSubscriptions(Array.isArray(subs.data) ? subs.data : []);
+            setTransactions(Array.isArray(txs.data) ? txs.data : []);
+            setPackages(pkgs.data?.packages ?? []);
+            setCurrency(pkgs.data?.currency ?? 'LKR');
+            setRegFee(pkgs.data?.registrationFee ?? 50000);
+          }).finally(() => setBillingLoaded(true));
+        });
+    }
+  }, []);
+
   return (
     <div className="space-y-5 max-w-4xl">
       {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-xl bg-white border border-ink-200 w-fit">
+      <div className="flex gap-1 p-1 rounded-xl bg-white border border-ink-200 w-full sm:w-fit overflow-x-auto">
         {[
           { key: 'company', label: 'Company Profile', icon: Building2 },
           { key: 'billing', label: 'Billing & Plan', icon: CreditCard },
         ].map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key as any)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all flex-1 sm:flex-none justify-center"
             style={{ background: tab === key ? '#00A884' : 'transparent', color: tab === key ? 'white' : '#64748B' }}>
             <Icon size={15} />{label}
           </button>
@@ -146,7 +196,7 @@ export default function SettingsPage() {
               <p className="text-xs text-ink-400 mt-0.5">PNG, JPG or SVG · Max 5MB</p>
             </div>
           </div>
-          <form onSubmit={saveProfile} className="grid grid-cols-2 gap-4">
+          <form onSubmit={saveProfile} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-2">
               <Input label="Business Address" placeholder="No 45, Main Street"
                 value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
@@ -186,17 +236,44 @@ export default function SettingsPage() {
                 {/* Payment form */}
                 <div className="md:col-span-3 space-y-4">
                   {/* Gateway selector */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {(['card', 'paypal'] as const).map(g => (
-                      <button key={g} onClick={() => setGateway(g)}
-                        className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 text-sm font-semibold transition-all"
-                        style={{ borderColor: gateway === g ? '#00A884' : '#E2E8F0', background: gateway === g ? '#E0F2F1' : 'white', color: gateway === g ? '#00A884' : '#64748B' }}>
-                        {g === 'card' ? <CreditCard size={15} /> : <span className="font-extrabold text-blue-600 text-xs">PayPal</span>}
-                        {g === 'card' ? 'Credit / Debit Card' : 'PayPal'}
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { key: 'onepay', label: 'OnePay', badge: 'Recommended' },
+                      { key: 'card',   label: 'Card',   badge: null },
+                      { key: 'paypal', label: 'PayPal', badge: null },
+                    ] as const).map(g => (
+                      <button key={g.key} onClick={() => setGateway(g.key)}
+                        className="relative flex flex-col items-center justify-center gap-1 py-3 rounded-xl border-2 text-xs font-semibold transition-all"
+                        style={{ borderColor: gateway === g.key ? '#00A884' : '#E2E8F0', background: gateway === g.key ? '#E0F2F1' : 'white', color: gateway === g.key ? '#00A884' : '#64748B' }}>
+                        {g.badge && (
+                          <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-white text-2xs font-bold"
+                            style={{ background: '#009688', fontSize: '9px' }}>{g.badge}</span>
+                        )}
+                        {g.key === 'onepay' && <img src="https://onepay.lk/wp-content/uploads/2021/06/onepay-logo.png" alt="OnePay" className="h-5 object-contain" onError={e => { (e.target as HTMLImageElement).style.display='none'; }} />}
+                        {g.key === 'card' && <CreditCard size={16} />}
+                        {g.key === 'paypal' && <span className="font-extrabold text-blue-600" style={{ fontSize: '11px' }}>PayPal</span>}
+                        {g.key !== 'onepay' && g.label}
                       </button>
                     ))}
                   </div>
+
                   <form onSubmit={submitPayment} className="space-y-3">
+                    {gateway === 'onepay' && (
+                      <div className="rounded-xl p-4 text-center space-y-2" style={{ background: '#E0F2F1', border: '1.5px solid #B2DFDB' }}>
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#009688' }}>
+                            <span className="text-white text-xs font-bold">OP</span>
+                          </div>
+                          <p className="font-bold text-ink-800">Pay with OnePay</p>
+                        </div>
+                        <p className="text-xs text-ink-500">Sri Lanka's trusted payment gateway. Supports Visa, Mastercard, LANKAQR & internet banking.</p>
+                        <div className="flex justify-center gap-2 pt-1">
+                          {['VISA', 'MC', 'QR', 'Bank'].map(m => (
+                            <span key={m} className="px-2 py-0.5 rounded text-xs font-bold bg-white border border-ink-200 text-ink-600">{m}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {gateway === 'card' && (
                       <>
                         <Input label="Card Number" placeholder="1234 5678 9012 3456" required maxLength={19}
@@ -219,9 +296,14 @@ export default function SettingsPage() {
                     <button type="submit" disabled={paying}
                       className="w-full py-3 rounded-xl text-base font-bold flex items-center justify-center gap-2 text-white transition-all"
                       style={{ background: '#00A884' }}>
-                      {paying ? <Loader2 size={18} className="animate-spin" /> : <>Pay {LKR(price)}</>}
+                      {paying
+                        ? <Loader2 size={18} className="animate-spin" />
+                        : gateway === 'onepay'
+                          ? <>Proceed to OnePay &rarr;</>
+                          : <>Pay {LKR(price + (regFee / 2))}</>
+                      }
                     </button>
-                    <p className="text-xs text-center text-ink-400">🔒 Secured with 256-bit SSL encryption</p>
+                    <p className="text-xs text-center text-ink-400">🔒 Secured payment via OnePay</p>
                   </form>
                 </div>
                 {/* Order summary */}
@@ -231,12 +313,24 @@ export default function SettingsPage() {
                     <span className="text-ink-600">{selectedPkg.name} Plan</span>
                     <span className="font-bold">{LKR(price)}</span>
                   </div>
-                  <div className="flex justify-between text-xs text-ink-400 mb-3">
+                  <div className="flex justify-between text-xs text-ink-400 mb-1">
                     <span>Billing</span><span className="capitalize">{billing}</span>
+                  </div>
+                  {/* Registration fee with discount */}
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-ink-500">Registration fee</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="line-through text-ink-300">{LKR(regFee)}</span>
+                      <span className="font-bold" style={{ color: '#FF6B6B' }}>{LKR(regFee / 2)}</span>
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs text-green-600 font-semibold mb-3">
+                    <span>🎉 50% discount applied</span>
+                    <span>-{LKR(regFee / 2)}</span>
                   </div>
                   <div className="border-t border-ink-200 pt-3 mb-3 flex justify-between font-bold">
                     <span>Total</span>
-                    <span style={{ color: '#00A884' }}>{LKR(price)}</span>
+                    <span style={{ color: '#00A884' }}>{LKR(price + (regFee / 2))}</span>
                   </div>
                   <p className="text-xs font-semibold text-ink-500 mb-2">Included modules:</p>
                   {selectedPkg.modules?.map((m: any) => (
@@ -312,6 +406,25 @@ export default function SettingsPage() {
                   </div>
                 </Card>
               )}
+
+              {/* Registration fee promo banner */}
+              <div className="rounded-xl p-4 flex items-center gap-4"
+                style={{ background: 'linear-gradient(135deg, #FFF8E1 0%, #FFF3CD 100%)', border: '1.5px solid #FFD54F' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: '#FFB703' }}>
+                  <span className="text-lg">🎉</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-ink-800">Limited Time — 50% Off Registration Fee!</p>
+                  <p className="text-xs text-ink-500 mt-0.5">One-time setup fee</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xs font-semibold text-ink-400 line-through">{LKR(regFee)}</p>
+                  <p className="text-xl font-extrabold" style={{ color: '#FF6B6B' }}>{LKR(regFee / 2)}</p>
+                  <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold text-white mt-0.5"
+                    style={{ background: '#FF6B6B' }}>50% OFF</span>
+                </div>
+              </div>
 
               {/* Package selection */}
               <div>
@@ -390,7 +503,8 @@ export default function SettingsPage() {
                 {transactions.length === 0 ? (
                   <p className="text-center text-ink-300 text-sm py-10">No transactions yet</p>
                 ) : (
-                  <table className="w-full text-sm">
+                  <div className="overflow-x-auto">
+                  <table className="mob-cards w-full text-sm">
                     <thead>
                       <tr className="border-b border-ink-100">
                         {['Date', 'Plan', 'Billing', 'Gateway', 'Amount', 'Status'].map(h => (
@@ -401,12 +515,12 @@ export default function SettingsPage() {
                     <tbody>
                       {transactions.map(tx => (
                         <tr key={tx.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
-                          <td className="px-5 py-3 text-ink-500 text-xs">{new Date(tx.created_at).toLocaleDateString('en-LK')}</td>
-                          <td className="px-5 py-3 font-medium text-ink-700">{tx.package?.name}</td>
-                          <td className="px-5 py-3 text-ink-500 capitalize">{tx.billing_cycle}</td>
-                          <td className="px-5 py-3 text-ink-500 capitalize">{tx.gateway}</td>
-                          <td className="px-5 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(tx.amount)}</td>
-                          <td className="px-5 py-3">
+                          <td data-label="Date" className="px-5 py-3 text-ink-500 text-xs">{new Date(tx.created_at).toLocaleDateString('en-LK')}</td>
+                          <td data-label="Plan" className="px-5 py-3 font-medium text-ink-700">{tx.package?.name}</td>
+                          <td data-label="Billing" className="px-5 py-3 text-ink-500 capitalize">{tx.billing_cycle}</td>
+                          <td data-label="Gateway" className="px-5 py-3 text-ink-500 capitalize">{tx.gateway}</td>
+                          <td data-label="Amount" className="px-5 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(tx.amount)}</td>
+                          <td data-label="Status" className="px-5 py-3">
                             <span className="px-2 py-0.5 rounded-full text-xs font-semibold"
                               style={{ background: tx.status === 'completed' ? '#E0F2F1' : '#FFF0F0', color: tx.status === 'completed' ? '#00796B' : '#E53E3E' }}>
                               {tx.status}
@@ -416,6 +530,7 @@ export default function SettingsPage() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 )}
               </Card>
             </>

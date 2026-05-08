@@ -103,10 +103,10 @@ export default function Cart({ onSaleComplete }: Props) {
 
   return (
     <>
-      <div className="flex flex-col h-full kh-card overflow-hidden">
+      <div className="flex flex-col h-full kh-card overflow-hidden lg:kh-card">
 
-        {/* Header */}
-        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-ink-100">
+        {/* Header — hidden on mobile (drawer has its own header) */}
+        <div className="hidden lg:flex flex-shrink-0 items-center justify-between px-4 py-3 border-b border-ink-100">
           <div className="flex items-center gap-2">
             <ShoppingBag size={16} style={{ color: '#00A884' }} />
             <span className="font-semibold text-ink-800 text-sm">Cart</span>

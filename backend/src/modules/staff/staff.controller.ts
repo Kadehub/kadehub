@@ -3,11 +3,12 @@ import { StaffService } from './staff.service';
 import { OpenShiftDto, CloseShiftDto } from './staff.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { TrialGuard } from '../../common/guards/trial.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('staff')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, TrialGuard)
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class StaffController {
   constructor(private svc: StaffService) {}

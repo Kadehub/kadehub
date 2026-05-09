@@ -10,7 +10,7 @@ export class PaymentTransaction {
   @Column('decimal', { precision: 10, scale: 2, transformer: { to: v => v, from: v => parseFloat(v) } }) amount: number;
   @Column({ default: 'LKR' }) currency: string;
   @Column({ type: 'enum', enum: ['monthly', 'yearly'] }) billing_cycle: string;
-  @Column({ type: 'enum', enum: ['paypal', 'card', 'bank'] }) gateway: string;
+  @Column({ type: 'enum', enum: ['paypal', 'card', 'bank', 'bank_transfer', 'onepay'] }) gateway: string;
   @Column({ nullable: true }) gateway_ref: string;
   @Column({ type: 'enum', enum: ['pending', 'completed', 'failed', 'refunded'], default: 'pending' }) status: string;
   @Column({ type: 'json', nullable: true }) metadata: any;

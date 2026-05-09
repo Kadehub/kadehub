@@ -7,7 +7,7 @@ import { CompanyProfile } from '../../database/entities/company-profile.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
 import { PaymentTransaction } from '../../database/entities/payment-transaction.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
-import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto } from './billing.dto';
+import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto, BankTransferDto } from './billing.dto';
 import * as https from 'https';
 import * as crypto from 'crypto';
 
@@ -210,6 +210,80 @@ export class BillingService {
     } catch {
       return [];
     }
+  }
+
+  // ── Bank Transfer Self-Service ─────────────────────────────────────────────
+
+  async bankTransferSubscribe(tenantId: number, dto: BankTransferDto) {
+    const pkg = await this.packageRepo.findOne({ where: { id: dto.package_id }, relations: ['modules'] });
+    if (!pkg) throw new NotFoundException('Package not found');
+
+    const amount = dto.billing_cycle === 'yearly' ? Number(pkg.price_yearly) : Number(pkg.price_monthly);
+    const ref = `BT-${tenantId}-${Date.now()}`;
+
+    const tx = this.txRepo.create({
+      tenant_id: tenantId,
+      package_id: pkg.id,
+      amount,
+      currency: 'LKR',
+      billing_cycle: dto.billing_cycle,
+      gateway: 'bank_transfer' as any,
+      gateway_ref: ref,
+      status: 'completed',
+      metadata: { depositor_name: dto.depositor_name, slip_reference: dto.slip_reference, notes: dto.notes || '' },
+    });
+    await this.txRepo.save(tx);
+
+    // Activate subscription immediately
+    const expiresAt = new Date();
+    if (dto.billing_cycle === 'yearly') expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+    else expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+    await this.subRepo.delete({ tenant_id: tenantId });
+    const subs = pkg.modules.map(m => this.subRepo.create({
+      tenant_id: tenantId,
+      module_name: m.module_name,
+      status: 'active',
+      package_id: pkg.id,
+      billing_cycle: dto.billing_cycle,
+      started_at: new Date(),
+      expires_at: expiresAt,
+      payment_status: 'paid',
+      payment_ref: ref,
+    }));
+    await this.subRepo.save(subs);
+
+    // Notify admin by email (non-blocking)
+    this.sendBankTransferNotification(tenantId, pkg.name, amount, dto).catch(() => {});
+
+    return { ok: true, reference: ref, expires_at: expiresAt, package: pkg.name };
+  }
+
+  private async sendBankTransferNotification(tenantId: number, pkgName: string, amount: number, dto: BankTransferDto) {
+    const nodemailer = await import('nodemailer');
+    const transporter = nodemailer.default.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+    });
+    await transporter.sendMail({
+      from: `"KadeHub Billing" <${process.env.GMAIL_USER}>`,
+      to: 'official.kadehub@gmail.com',
+      subject: `New Bank Transfer — ${pkgName} (Tenant #${tenantId})`,
+      html: `
+        <div style="font-family:sans-serif;max-width:500px">
+          <h2 style="color:#0d6e5a">New Bank Transfer Subscription</h2>
+          <table style="width:100%;border-collapse:collapse">
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Tenant ID</td><td style="font-weight:600">#${tenantId}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Package</td><td style="font-weight:600">${pkgName} (${dto.billing_cycle})</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Amount</td><td style="font-weight:600">LKR ${amount.toLocaleString()}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Depositor</td><td style="font-weight:600">${dto.depositor_name}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Slip Ref</td><td style="font-weight:600">${dto.slip_reference}</td></tr>
+            ${dto.notes ? `<tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Notes</td><td style="font-weight:600">${dto.notes}</td></tr>` : ''}
+          </table>
+          <p style="color:#6b7280;font-size:12px;margin-top:16px">Subscription has been activated automatically. Verify the slip and revoke if fraudulent.</p>
+        </div>
+      `,
+    });
   }
 
   // ── OnePay Integration ──────────────────────────────────────────────────────

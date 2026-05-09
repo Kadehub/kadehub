@@ -11,7 +11,7 @@ export class Subscription {
   @Column({ type: 'enum', enum: ['monthly', 'yearly'], nullable: true }) billing_cycle: string;
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' }) started_at: Date;
   @Column({ nullable: true, type: 'timestamp' }) expires_at: Date;
-  @Column({ type: 'enum', enum: ['pending', 'paid', 'failed'], default: 'pending' }) payment_status: string;
+  @Column({ type: 'enum', enum: ['pending', 'paid', 'failed', 'trial'], default: 'pending' }) payment_status: string;
   @Column({ nullable: true }) payment_ref: string;
   @ManyToOne(() => Tenant) @JoinColumn({ name: 'tenant_id' }) tenant: Tenant;
 }

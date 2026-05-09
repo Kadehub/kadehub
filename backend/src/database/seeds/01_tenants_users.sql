@@ -8,11 +8,11 @@ INSERT INTO `package` (id, name, slug, description, price_monthly, price_yearly,
 (3, 'Enterprise', 'enterprise', 'Multi-user with analytics',      9999.00,  99990.00,  1, 0, 3, NULL);
 
 INSERT INTO `package_module` (id, package_id, module_name) VALUES
-(1,1,'pos'),(2,1,'inventory'),
-(3,2,'pos'),(4,2,'inventory'),(5,2,'customer'),(6,2,'supplier'),(7,2,'expense'),
+(1,1,'pos'),(2,1,'inventory'),(18,1,'reports_basic'),
+(3,2,'pos'),(4,2,'inventory'),(5,2,'customer'),(6,2,'supplier'),(7,2,'expense'),(19,2,'reports_basic'),
 (8,3,'pos'),(9,3,'inventory'),(10,3,'customer'),(11,3,'supplier'),
 (12,3,'expense'),(13,3,'analytics'),(14,3,'staff'),(15,3,'credit'),
-(16,3,'discount'),(17,3,'batch');
+(16,3,'discount'),(17,3,'batch'),(20,3,'reports_basic');
 
 INSERT INTO `tenant` (id, name, slug, created_at) VALUES
 (1, 'Perera Grocery',  'perera-grocery',  '2024-01-10 08:00:00'),

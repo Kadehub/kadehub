@@ -65,6 +65,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
   useEffect(() => {
     if (!token) return;
+    api.get('/billing/subscriptions').then(({ data }) => {
+      const now = new Date();
+      const hasPaid = data.some((s: any) => s.payment_status === 'paid');
+      const trialActive = data.some((s: any) => s.payment_status === 'trial' && (!s.expires_at || new Date(s.expires_at) > now));
+      if (!hasPaid && !trialActive) window.location.href = '/subscribe';
+    }).catch((err: any) => {
+      if (err?.response?.status === 402) window.location.href = '/subscribe';
+    });
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
     api.get('/super-admin/announcements/active').then(({ data }) => setAnnouncements(data)).catch(() => {});
   }, [token]);
   useEffect(() => {

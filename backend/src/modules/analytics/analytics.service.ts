@@ -233,4 +233,33 @@ export class AnalyticsService {
   async getDailySummary(tenantId: number, date: string) {
     return this.getSummary(tenantId, date, date);
   }
+
+  // Free basic report — today's sales + stock snapshot
+  async getBasicReport(tenantId: number, from: string, to: string) {
+    const sales = await this.saleRepo
+      .createQueryBuilder('s')
+      .where('s.tenant_id = :tenantId', { tenantId })
+      .andWhere('DATE(s.created_at) BETWEEN :from AND :to', { from, to })
+      .andWhere('s.status = :status', { status: 'completed' })
+      .select([
+        'COUNT(s.id) as total_sales',
+        'COALESCE(SUM(s.total_amount), 0) as revenue',
+        'COALESCE(SUM(s.discount), 0) as total_discount',
+      ])
+      .getRawOne();
+
+    const stock = await this.productRepo
+      .createQueryBuilder('p')
+      .innerJoin('p.inventory', 'i')
+      .where('p.tenant_id = :tenantId', { tenantId })
+      .andWhere('p.is_active = true')
+      .select([
+        'COUNT(p.id) as total_products',
+        'SUM(CASE WHEN i.quantity <= i.reorder_level THEN 1 ELSE 0 END) as low_stock',
+        'SUM(CASE WHEN i.quantity <= 0 THEN 1 ELSE 0 END) as out_of_stock',
+      ])
+      .getRawOne();
+
+    return { ...sales, ...stock };
+  }
 }

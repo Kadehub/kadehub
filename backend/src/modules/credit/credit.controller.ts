@@ -2,10 +2,11 @@ import { Controller, Get, Post, Body, Param, UseGuards, UsePipes, ValidationPipe
 import { CreditService } from './credit.service';
 import { CreateCreditSaleDto, RecordPaymentDto } from './credit.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { TrialGuard } from '../../common/guards/trial.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('credit')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TrialGuard)
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class CreditController {
   constructor(private svc: CreditService) {}

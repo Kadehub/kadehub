@@ -21,8 +21,8 @@ export class CreateSubscriptionDto {
   @IsEnum(['monthly', 'yearly'])
   billing_cycle: 'monthly' | 'yearly';
 
-  @IsEnum(['paypal', 'card', 'bank', 'onepay'])
-  gateway: 'paypal' | 'card' | 'bank' | 'onepay';
+  @IsEnum(['paypal', 'card', 'bank', 'bank_transfer', 'onepay'])
+  gateway: 'paypal' | 'card' | 'bank' | 'bank_transfer' | 'onepay';
 
   @IsOptional() @IsString() gateway_ref?: string;
 
@@ -40,4 +40,21 @@ export class InitiateOnepayDto {
   billing_cycle: 'monthly' | 'yearly';
 
   @IsOptional() @IsNumber() registration_fee?: number;
+}
+
+export class BankTransferDto {
+  @Type(() => Number)
+  @IsInt() @Min(1)
+  package_id: number;
+
+  @IsEnum(['monthly', 'yearly'])
+  billing_cycle: 'monthly' | 'yearly';
+
+  @IsString()
+  depositor_name: string;
+
+  @IsString()
+  slip_reference: string;
+
+  @IsOptional() @IsString() notes?: string;
 }

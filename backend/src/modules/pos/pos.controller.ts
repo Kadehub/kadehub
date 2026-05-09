@@ -2,10 +2,11 @@ import { Controller, Post, Get, Body, Param, Query, UseGuards, UsePipes, Validat
 import { PosService } from './pos.service';
 import { CreateSaleDto } from './pos.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { TrialGuard } from '../../common/guards/trial.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('pos')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TrialGuard)
 export class PosController {
   constructor(private posService: PosService) {}
 

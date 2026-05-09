@@ -27,7 +27,9 @@ export class AuthService {
     await this.tenantRepo.save(tenant);
 
     const modules = ['pos', 'inventory', 'customer', 'analytics', 'expense', 'credit', 'discount', 'supplier', 'batch', 'staff'];
-    await this.subRepo.save(modules.map((m) => this.subRepo.create({ tenant_id: tenant.id, module_name: m, status: 'active', payment_status: 'paid' })));
+    const trialExpires = new Date();
+    trialExpires.setDate(trialExpires.getDate() + 14);
+    await this.subRepo.save(modules.map((m) => this.subRepo.create({ tenant_id: tenant.id, module_name: m, status: 'active', payment_status: 'trial', expires_at: trialExpires })));
 
     const hash = await bcrypt.hash(dto.password, 10);
     const user = this.userRepo.create({ tenant_id: tenant.id, name: dto.name, email: dto.email, password_hash: hash, role: 'ADMIN' });

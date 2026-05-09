@@ -8,12 +8,13 @@ import { InventoryService } from './inventory.service';
 import { CreateProductDto, UpdateProductDto, AdjustStockDto } from './inventory.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { TrialGuard } from '../../common/guards/trial.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { uploadToCloudinary } from '../../common/cloudinary';
 
 @Controller('inventory')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, TrialGuard)
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class InventoryController {
   constructor(private inventoryService: InventoryService) {}

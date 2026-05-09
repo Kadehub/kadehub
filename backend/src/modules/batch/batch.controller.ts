@@ -2,10 +2,11 @@ import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, UsePipes,
 import { BatchService } from './batch.service';
 import { CreateBatchDto } from './batch.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { TrialGuard } from '../../common/guards/trial.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('batches')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TrialGuard)
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class BatchController {
   constructor(private svc: BatchService) {}

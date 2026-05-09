@@ -2,10 +2,11 @@ import { Controller, Get, Post, Body, Param, Query, UseGuards, UsePipes, Validat
 import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './customer.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { TrialGuard } from '../../common/guards/trial.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('customers')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TrialGuard)
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class CustomerController {
   constructor(private customerService: CustomerService) {}

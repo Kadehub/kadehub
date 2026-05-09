@@ -3,11 +3,12 @@ import { SupplierService } from './supplier.service';
 import { CreateSupplierDto, UpdateSupplierDto, CreatePurchaseOrderDto } from './supplier.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { TrialGuard } from '../../common/guards/trial.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('suppliers')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, TrialGuard)
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class SupplierController {
   constructor(private svc: SupplierService) {}

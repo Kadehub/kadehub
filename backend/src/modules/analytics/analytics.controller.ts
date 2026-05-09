@@ -1,10 +1,11 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { TrialGuard } from '../../common/guards/trial.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('analytics')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TrialGuard)
 export class AnalyticsController {
   constructor(private analyticsService: AnalyticsService) {}
 
@@ -82,5 +83,12 @@ export class AnalyticsController {
   daily(@CurrentUser() u: any, @Query('date') date?: string) {
     const today = new Date().toISOString().split('T')[0];
     return this.analyticsService.getDailySummary(u.tenant_id, date || today);
+  }
+
+  // Free basic report — available on all plans (no subscription guard)
+  @Get('basic-report')
+  basicReport(@CurrentUser() u: any, @Query('from') from?: string, @Query('to') to?: string) {
+    const d = this.dates(from, to);
+    return this.analyticsService.getBasicReport(u.tenant_id, d.from, d.to);
   }
 }

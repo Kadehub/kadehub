@@ -34,10 +34,14 @@ interface ProductImageProps {
 export function ProductImage({ imageUrl, category, name, size = 48, className = '' }: ProductImageProps) {
   const cfg = getCategoryConfig(category);
 
+  // Normalize double-bucket URLs from old uploads (kadehub/kadehub/... → kadehub/...)
+  const normalizeUrl = (url: string) =>
+    url.replace(/(https:\/\/[^/]+\/kadehub\/)kadehub\//, '$1');
+
   // Relative paths (local uploads) need the backend base URL
   const resolvedUrl = imageUrl
     ? imageUrl.startsWith('http')
-      ? imageUrl
+      ? normalizeUrl(imageUrl)
       : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') ?? 'http://localhost:3001'}${imageUrl}`
     : null;
 

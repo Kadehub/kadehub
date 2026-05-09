@@ -455,6 +455,10 @@ export default function SettingsPage() {
                           </span>
                         </div>
                         <div className="flex-1 space-y-1 mb-4 mt-2">
+                          <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: '#00796B' }}>
+                            <Check size={11} style={{ color: '#00796B' }} /> Basic Report
+                            <span className="px-1.5 py-0.5 rounded-full text-white font-bold" style={{ background: '#00A884', fontSize: '9px' }}>FREE</span>
+                          </div>
                           {pkg.modules?.map((m: any) => (
                             <div key={m.module_name} className="flex items-center gap-2 text-xs text-ink-600">
                               <Check size={11} style={{ color: '#00A884' }} /> {m.module_name}

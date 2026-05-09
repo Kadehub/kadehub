@@ -6,7 +6,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { BillingService } from './billing.service';
-import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto } from './billing.dto';
+import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto, BankTransferDto } from './billing.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -75,6 +75,12 @@ export class BillingController {
   @UseGuards(JwtAuthGuard)
   getTransactions(@CurrentUser() user: any) {
     return this.billingService.getTransactions(user.tenant_id);
+  }
+
+  @Post('subscribe/bank-transfer')
+  @UseGuards(JwtAuthGuard)
+  bankTransfer(@CurrentUser() user: any, @Body() dto: BankTransferDto) {
+    return this.billingService.bankTransferSubscribe(user.tenant_id, dto);
   }
 
   // ── OnePay endpoints ──

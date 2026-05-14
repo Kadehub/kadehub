@@ -61,6 +61,13 @@ export class SupplierService {
     return this.orderRepo.save(order);
   }
 
+  async attachInvoice(id: number, tenantId: number, invoiceUrl: string) {
+    const order = await this.orderRepo.findOne({ where: { id, tenant_id: tenantId } });
+    if (!order) throw new NotFoundException('Order not found');
+    order.invoice_url = invoiceUrl;
+    return this.orderRepo.save(order);
+  }
+
   async cancelOrder(id: number, tenantId: number) {
     const order = await this.orderRepo.findOne({ where: { id, tenant_id: tenantId } });
     if (!order) throw new NotFoundException('Order not found');

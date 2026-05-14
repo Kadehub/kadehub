@@ -34,3 +34,27 @@ ALTER TABLE `subscription`
 
 ALTER TABLE `payment_transaction`
   MODIFY COLUMN `gateway` ENUM('paypal','card','bank','bank_transfer','onepay') NOT NULL;
+
+-- ------------------------------------------------------------
+-- [2025-01-XX] Staff PIN login, supplier invoice attachment,
+--              sale void status, custom expense categories
+-- ------------------------------------------------------------
+
+ALTER TABLE `user`
+  ADD COLUMN IF NOT EXISTS `pin` VARCHAR(6) NULL DEFAULT NULL AFTER `password_hash`;
+
+ALTER TABLE `purchase_order`
+  ADD COLUMN IF NOT EXISTS `invoice_url` VARCHAR(255) NULL DEFAULT NULL AFTER `notes`;
+
+ALTER TABLE `sale`
+  MODIFY COLUMN `status` ENUM('completed','refunded','voided') NOT NULL DEFAULT 'completed';
+
+CREATE TABLE IF NOT EXISTS `expense_category` (
+  `id`         INT          NOT NULL AUTO_INCREMENT,
+  `tenant_id`  INT          NOT NULL,
+  `name`       VARCHAR(100) NOT NULL,
+  `is_active`  TINYINT(1)   NOT NULL DEFAULT 1,
+  `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_expc_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenant` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

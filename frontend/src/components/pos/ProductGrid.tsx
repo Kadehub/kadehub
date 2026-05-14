@@ -1,10 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Product } from '../../types';
 import { useCartStore } from '../../hooks/useCart';
 import { LKR } from '../../lib/format';
-import { Search, Tag } from 'lucide-react';
+import { Search, Tag, ScanLine } from 'lucide-react';
 import { ProductImage } from '../ui/ProductImage';
+import api from '../../lib/api';
+import toast from 'react-hot-toast';
 
 interface Props { products: Product[]; }
 
@@ -13,7 +15,31 @@ const CATEGORIES = ['All', 'Grocery', 'Dairy', 'Bakery', 'Beverages', 'Snacks', 
 export default function ProductGrid({ products }: Props) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
+  const [barcodeInput, setBarcodeInput] = useState('');
+  const [scanMode, setScanMode] = useState(false);
+  const barcodeRef = useRef<HTMLInputElement>(null);
   const addItem = useCartStore((s) => s.addItem);
+
+  const handleBarcodeScan = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return;
+    const barcode = barcodeInput.trim();
+    if (!barcode) return;
+    // First try local products
+    const local = products.find(p => p.barcode === barcode);
+    if (local) {
+      addItem(local);
+      toast.success(`Added: ${local.name}`);
+      setBarcodeInput('');
+      return;
+    }
+    // Fallback to API
+    try {
+      const r = await api.get(`/inventory/products/barcode/${barcode}`);
+      if (r.data) { addItem(r.data); toast.success(`Added: ${r.data.name}`); }
+      else toast.error('Product not found');
+    } catch { toast.error('Product not found'); }
+    setBarcodeInput('');
+  };
 
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || (p.barcode || '').includes(search);
@@ -23,16 +49,45 @@ export default function ProductGrid({ products }: Props) {
 
   return (
     <div className="flex flex-col h-full gap-3">
-      {/* Search */}
-      <div className="relative">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
-        <input
-          id="product-search"
-          className="w-full pl-9 pr-3 py-2.5 border border-ink-200 rounded-xl bg-white text-sm placeholder:text-ink-400"
-          placeholder="Search products or scan barcode… (F2)"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      {/* Search + Barcode toggle */}
+      <div className="flex gap-2">
+        {scanMode ? (
+          <div className="relative flex-1">
+            <ScanLine size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#00A884' }} />
+            <input
+              ref={barcodeRef}
+              autoFocus
+              className="w-full pl-9 pr-3 py-2.5 border-2 rounded-xl bg-white text-sm"
+              style={{ borderColor: '#00A884' }}
+              placeholder="Scan barcode or type & press Enter…"
+              value={barcodeInput}
+              onChange={(e) => setBarcodeInput(e.target.value)}
+              onKeyDown={handleBarcodeScan}
+            />
+          </div>
+        ) : (
+          <div className="relative flex-1">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
+            <input
+              id="product-search"
+              className="w-full pl-9 pr-3 py-2.5 border border-ink-200 rounded-xl bg-white text-sm placeholder:text-ink-400"
+              placeholder="Search products… (F2)"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        )}
+        <button
+          onClick={() => { setScanMode(s => !s); setBarcodeInput(''); setSearch(''); setTimeout(() => barcodeRef.current?.focus(), 50); }}
+          className="flex-shrink-0 px-3 py-2 rounded-xl border text-xs font-semibold transition-all"
+          style={{
+            background: scanMode ? '#00A884' : 'white',
+            color: scanMode ? 'white' : '#475569',
+            borderColor: scanMode ? '#00A884' : '#E2E8F0',
+          }}
+          title="Toggle barcode scanner mode">
+          <ScanLine size={16} />
+        </button>
       </div>
 
       {/* Category pills */}

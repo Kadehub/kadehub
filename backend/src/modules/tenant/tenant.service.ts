@@ -25,6 +25,7 @@ export class UpdateUserDto {
   @IsOptional() @IsString() role?: 'ADMIN' | 'CASHIER';
   @IsOptional() @IsString() phone?: string;
   @IsOptional() @IsString() emp_no?: string;
+  @IsOptional() @IsString() pin?: string;
 }
 
 @Injectable()
@@ -57,6 +58,7 @@ export class TenantService {
     if (dto.role) user.role = dto.role;
     if (dto.phone !== undefined) user.phone = dto.phone;
     if (dto.emp_no !== undefined) user.emp_no = dto.emp_no;
+    if (dto.pin !== undefined) user.pin = dto.pin || null;
     if (dto.password) user.password_hash = await bcrypt.hash(dto.password, 10);
     return this.userRepo.save(user);
   }

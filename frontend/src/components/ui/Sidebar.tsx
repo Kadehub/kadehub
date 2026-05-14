@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   ShoppingCart, Package, Users, BarChart2, LogOut, Boxes,
   ChevronRight, Truck, Receipt, Tag, CreditCard, FlaskConical,
-  UserCog, Settings, X,
+  UserCog, Settings, X, LayoutDashboard,
 } from 'lucide-react';
 import KadeHubLogo from './KadeHubLogo';
 import { useSubscribedModules } from '../../hooks/useSubscribedModules';
@@ -13,6 +13,7 @@ import { useLang } from '../../hooks/useLang';
 import { TranslationKey } from '../../lib/i18n';
 
 const ALL_NAV: { href: string; labelKey: TranslationKey; icon: any; module: string; groupKey: TranslationKey }[] = [
+  { href: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, module: 'pos', groupKey: 'nav.operations' },
   { href: '/pos',       labelKey: 'nav.pos',       icon: ShoppingCart, module: 'pos',       groupKey: 'nav.operations' },
   { href: '/products',  labelKey: 'nav.products',  icon: Package,      module: 'inventory', groupKey: 'nav.operations' },
   { href: '/inventory', labelKey: 'nav.inventory', icon: Boxes,        module: 'inventory', groupKey: 'nav.operations' },

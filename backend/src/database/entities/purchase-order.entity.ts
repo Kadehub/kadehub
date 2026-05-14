@@ -13,6 +13,7 @@ export class PurchaseOrder {
   @Column({ type: 'enum', enum: ['pending', 'received', 'cancelled'], default: 'pending' }) status: string;
   @Column('decimal', { precision: 10, scale: 2, default: 0, transformer: { to: v => v, from: v => parseFloat(v) } }) total_amount: number;
   @Column({ type: 'text', nullable: true }) notes: string;
+  @Column({ nullable: true }) invoice_url: string;
   @CreateDateColumn() created_at: Date;
   @Column({ type: 'timestamp', nullable: true }) received_at: Date;
   @ManyToOne(() => Tenant) @JoinColumn({ name: 'tenant_id' }) tenant: Tenant;

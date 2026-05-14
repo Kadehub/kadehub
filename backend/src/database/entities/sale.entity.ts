@@ -27,7 +27,7 @@ export class Sale {
   @Column({ type: 'enum', enum: ['CASH', 'CARD', 'LANKAQR', 'CREDIT'] })
   payment_method: string;
 
-  @Column({ type: 'enum', enum: ['completed', 'refunded'], default: 'completed' })
+  @Column({ type: 'enum', enum: ['completed', 'refunded', 'voided'], default: 'completed' })
   status: string;
 
   @CreateDateColumn()

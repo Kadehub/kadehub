@@ -6,7 +6,7 @@ import * as bcrypt from 'bcryptjs';
 import { User } from '../../database/entities/user.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { LoginDto, RegisterDto, PinLoginDto } from './auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -59,5 +59,13 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
       user: { id: user.id, name: user.name, role: user.role, tenant_id: user.tenant_id },
     };
+  }
+
+  async pinLogin(dto: PinLoginDto) {
+    const tenant = await this.tenantRepo.findOne({ where: { slug: dto.tenant_slug } });
+    if (!tenant) throw new UnauthorizedException('Shop not found');
+    const user = await this.userRepo.findOne({ where: { tenant_id: tenant.id, pin: dto.pin } });
+    if (!user) throw new UnauthorizedException('Invalid PIN');
+    return this.signToken(user);
   }
 }

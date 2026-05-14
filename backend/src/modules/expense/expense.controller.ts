@@ -16,6 +16,18 @@ export class ExpenseController {
     return { from: from || today, to: to || today };
   }
 
+  @Get('categories') getCategories(@CurrentUser() u: any) {
+    return this.svc.getCategories(u.tenant_id);
+  }
+
+  @Post('categories') addCategory(@CurrentUser() u: any, @Body('name') name: string) {
+    return this.svc.addCategory(u.tenant_id, name);
+  }
+
+  @Delete('categories/:id') deleteCategory(@CurrentUser() u: any, @Param('id') id: string) {
+    return this.svc.deleteCategory(+id, u.tenant_id);
+  }
+
   @Get() getAll(@CurrentUser() u: any, @Query('from') from?: string, @Query('to') to?: string) {
     const d = this.dates(from, to);
     return this.svc.getExpenses(u.tenant_id, d.from, d.to);

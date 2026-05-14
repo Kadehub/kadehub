@@ -11,7 +11,7 @@ import { ProductImage, getCategoryConfig } from '../../../components/ui/ProductI
 import { LKR } from '../../../lib/format';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
-import { Plus, Search, Package, Pencil, Camera, X } from 'lucide-react';
+import { Plus, Search, Package, Pencil, Camera, X, Trash2 } from 'lucide-react';
 
 const CATEGORIES = ['Grocery', 'Dairy', 'Bakery', 'Beverages', 'Snacks', 'Pharmacy', 'Personal Care', 'Household', 'Vegetables', 'Fruits', 'Meat', 'Other'];
 const EMPTY_FORM = { name: '', barcode: '', price: '', cost: '', category: 'Grocery', initialStock: '0', reorderLevel: '10' };
@@ -26,6 +26,8 @@ export default function ProductsPage() {
   const [addImage, setAddImage] = useState<File | null>(null);
   const [addPreview, setAddPreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
+
+  const [deleting, setDeleting] = useState<number | null>(null);
 
   // Edit modal
   const [editProduct, setEditProduct] = useState<Product | null>(null);
@@ -83,6 +85,17 @@ export default function ProductsPage() {
         ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') ?? 'http://localhost:3001'}${raw}`
         : raw
     );
+  };
+
+  const deleteProduct = async (id: number) => {
+    if (!confirm('Delete this product? This cannot be undone.')) return;
+    setDeleting(id);
+    try {
+      await api.patch(`/inventory/products/${id}/delete`);
+      toast.success('Product deleted');
+      refresh();
+    } catch { toast.error('Failed to delete product'); }
+    finally { setDeleting(null); }
   };
 
   const submitEdit = async (e: React.FormEvent) => {
@@ -178,9 +191,13 @@ export default function ProductsPage() {
                     <td data-label="Stock" className="px-4 py-3 text-center font-bold text-ink-700">{qty}</td>
                     <td data-label="Status" className="px-4 py-3 text-center"><Badge variant={statusVariant} dot>{statusLabel}</Badge></td>
                     <td className="px-4 py-3 text-right">
-                      <Button size="xs" variant="ghost" icon={<Pencil size={13} />} onClick={() => openEdit(p)}>
-                        Edit
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button size="xs" variant="ghost" icon={<Pencil size={13} />} onClick={() => openEdit(p)}>Edit</Button>
+                        <button onClick={() => deleteProduct(p.id)} disabled={deleting === p.id}
+                          className="p-1.5 rounded-lg text-ink-300 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-40">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

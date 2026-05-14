@@ -234,6 +234,24 @@ export class AnalyticsService {
     return this.getSummary(tenantId, date, date);
   }
 
+  // Free basic sales list — available on all plans
+  async getBasicSales(tenantId: number, from: string, to: string, limit = 100) {
+    return this.saleRepo
+      .createQueryBuilder('s')
+      .leftJoin('s.user', 'u')
+      .leftJoin('s.customer', 'c')
+      .where('s.tenant_id = :tenantId', { tenantId })
+      .andWhere('DATE(s.created_at) BETWEEN :from AND :to', { from, to })
+      .select([
+        's.id as id', 's.total_amount as total_amount', 's.discount as discount',
+        's.payment_method as payment_method', 's.status as status',
+        's.created_at as created_at', 'u.name as cashier', 'c.name as customer',
+      ])
+      .orderBy('s.created_at', 'DESC')
+      .limit(limit)
+      .getRawMany();
+  }
+
   // Free basic report — today's sales + stock snapshot
   async getBasicReport(tenantId: number, from: string, to: string) {
     const sales = await this.saleRepo

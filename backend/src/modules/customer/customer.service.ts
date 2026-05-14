@@ -1,9 +1,10 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Customer } from '../../database/entities/customer.entity';
+import { Sale } from '../../database/entities/sale.entity';
 import { AppEventEmitter, SALE_COMPLETED } from '../../common/events/app-event-emitter';
-import { CreateCustomerDto } from './customer.dto';
+import { CreateCustomerDto, UpdateCustomerDto } from './customer.dto';
 
 const POINTS_PER_100 = 1;
 
@@ -11,6 +12,7 @@ const POINTS_PER_100 = 1;
 export class CustomerService implements OnModuleInit {
   constructor(
     @InjectRepository(Customer) private customerRepo: Repository<Customer>,
+    @InjectRepository(Sale) private saleRepo: Repository<Sale>,
     private events: AppEventEmitter,
   ) {}
 
@@ -35,7 +37,25 @@ export class CustomerService implements OnModuleInit {
     return this.customerRepo.save(customer);
   }
 
+  async updateCustomer(id: number, tenantId: number, dto: UpdateCustomerDto) {
+    const customer = await this.customerRepo.findOne({ where: { id, tenant_id: tenantId } });
+    if (!customer) throw new NotFoundException('Customer not found');
+    Object.assign(customer, dto);
+    return this.customerRepo.save(customer);
+  }
+
   async getCustomer(id: number, tenantId: number) {
     return this.customerRepo.findOne({ where: { id, tenant_id: tenantId } });
+  }
+
+  async getPurchaseHistory(customerId: number, tenantId: number) {
+    return this.saleRepo.createQueryBuilder('s')
+      .where('s.tenant_id = :tenantId', { tenantId })
+      .andWhere('s.customer_id = :customerId', { customerId })
+      .select(['s.id as id', 's.total_amount as total_amount', 's.discount as discount',
+        's.payment_method as payment_method', 's.status as status', 's.created_at as created_at'])
+      .orderBy('s.created_at', 'DESC')
+      .limit(50)
+      .getRawMany();
   }
 }

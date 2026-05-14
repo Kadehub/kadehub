@@ -25,4 +25,9 @@ export class PosController {
   getReceipt(@CurrentUser() user: any, @Param('id') id: string) {
     return this.posService.getReceipt(+id, user.tenant_id);
   }
+
+  @Patch('sales/:id/void')
+  voidSale(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.posService.voidSale(+id, user.tenant_id);
+  }
 }

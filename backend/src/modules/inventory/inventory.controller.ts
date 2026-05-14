@@ -82,6 +82,12 @@ export class InventoryController {
     return this.inventoryService.adjustStock(+id, user.tenant_id, dto);
   }
 
+  @Patch('products/:id/delete')
+  @Roles('ADMIN')
+  deleteProduct(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.inventoryService.deleteProduct(+id, user.tenant_id);
+  }
+
   @Get('low-stock')
   getLowStock(@CurrentUser() user: any) {
     return this.inventoryService.getLowStock(user.tenant_id);

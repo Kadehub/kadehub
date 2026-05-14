@@ -1,7 +1,7 @@
 'use client';
 import { useRef } from 'react';
 import { LKR } from '../../../lib/format';
-import { Printer, Download, X, ShoppingBag, Store, FileText } from 'lucide-react';
+import { Printer, Download, X, ShoppingBag, Store, FileText, MessageCircle } from 'lucide-react';
 
 export interface ReceiptData {
   id: number;
@@ -82,6 +82,25 @@ export default function ReceiptModal({ data, onClose }: Props) {
 
   const company = data.company || { name: 'KadeHub Shop' };
 
+  const shareWhatsApp = () => {
+    const subtotal = data.items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const lines = [
+      `🧾 *Receipt #${data.id}* — ${company.name}`,
+      `📅 ${dateStr} at ${timeStr}`,
+      ``,
+      ...data.items.map(i => `• ${i.product.name}  ×${i.quantity}  ${LKR(i.price * i.quantity)}`),
+      ``,
+      data.discount > 0 ? `Discount: -${LKR(data.discount)}` : null,
+      `*Total: ${LKR(data.total_amount)}*`,
+      `Payment: ${data.payment_method}`,
+      data.customer ? `Customer: ${data.customer.name}` : null,
+      ``,
+      `_Powered by KadeHub_`,
+    ].filter(Boolean).join('\n');
+    const phone = data.customer?.phone?.replace(/\D/g, '') || '';
+    window.open(`https://wa.me/${phone ? `94${phone.slice(-9)}` : ''}?text=${encodeURIComponent(lines)}`, '_blank');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
       <div className="absolute inset-0 bg-ink-900/50 backdrop-blur-sm" onClick={onClose} />
@@ -147,11 +166,17 @@ export default function ReceiptModal({ data, onClose }: Props) {
 
         {/* Footer */}
         <div className="flex-shrink-0 px-6 py-4 border-t border-ink-100 flex items-center justify-between bg-ink-50">
-          <p className="text-xs text-ink-400">Sale completed · {data.payment_method} · {LKR(data.total_amount)}</p>
-          <button onClick={onClose}
-            className="kh-btn-primary px-5 py-2 rounded-xl text-sm">
-            Done
-          </button>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-ink-400">Sale completed · {data.payment_method} · {LKR(data.total_amount)}</p>
+            <button onClick={shareWhatsApp}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+              style={{ background: '#E7F9EF', color: '#25D366' }}
+              title="Share via WhatsApp">
+              <MessageCircle size={13} />
+              WhatsApp
+            </button>
+          </div>
+          <button onClick={onClose} className="kh-btn-primary px-5 py-2 rounded-xl text-sm">Done</button>
         </div>
       </div>
     </div>

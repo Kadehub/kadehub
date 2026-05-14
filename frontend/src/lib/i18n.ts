@@ -8,6 +8,7 @@ export const translations = {
     'nav.supplyChain': 'Supply Chain',
     'nav.insights': 'Insights',
     // Nav items
+    'nav.dashboard': 'Dashboard',
     'nav.pos': 'POS',
     'nav.products': 'Products',
     'nav.inventory': 'Inventory',
@@ -22,6 +23,7 @@ export const translations = {
     'nav.settings': 'Settings',
     'nav.signOut': 'Sign out',
     // Page titles
+    'page.dashboard': 'Dashboard',
     'page.pos': 'Point of Sale',
     'page.products': 'Products',
     'page.inventory': 'Inventory',
@@ -247,6 +249,7 @@ export const translations = {
     'nav.supplyChain': 'සැපයුම් දාමය',
     'nav.insights': 'විශ්ලේෂණ',
     // Nav items
+    'nav.dashboard': 'උපකරණ පුවරුව',
     'nav.pos': 'විකුණුම් කවුළුව',
     'nav.products': 'නිෂ්පාදන',
     'nav.inventory': 'තොගය',
@@ -261,6 +264,7 @@ export const translations = {
     'nav.settings': 'සැකසුම්',
     'nav.signOut': 'ඉවත් වන්න',
     // Page titles
+    'page.dashboard': 'උපකරණ පුවරුව',
     'page.pos': 'විකුණුම් කවුළුව',
     'page.products': 'නිෂ්පාදන',
     'page.inventory': 'තොග කළමනාකරණය',

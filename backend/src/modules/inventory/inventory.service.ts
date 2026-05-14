@@ -120,4 +120,11 @@ export class InventoryService implements OnModuleInit {
       .select(['p.id', 'p.name', 'i.quantity', 'i.reorder_level'])
       .getRawMany();
   }
+
+  async deleteProduct(productId: number, tenantId: number) {
+    const product = await this.productRepo.findOne({ where: { id: productId, tenant_id: tenantId } });
+    if (!product) throw new NotFoundException('Product not found');
+    product.is_active = false;
+    return this.productRepo.save(product);
+  }
 }

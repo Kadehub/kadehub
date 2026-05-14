@@ -8,32 +8,44 @@ import { Input } from '../../../components/ui/Input';
 import { LKR } from '../../../lib/format';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, Receipt } from 'lucide-react';
+import { Plus, Trash2, Receipt, Settings } from 'lucide-react';
 import { useLang } from '../../../hooks/useLang';
 
-const CATEGORIES = ['Rent', 'Utilities', 'Salaries', 'Transport', 'Maintenance', 'Marketing', 'Other'];
 const today = () => new Date().toISOString().split('T')[0];
 
 export default function ExpensesPage() {
   const { t } = useLang();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [summary, setSummary] = useState<{ category: string; total: string; count: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [from, setFrom] = useState(today());
   const [to, setTo] = useState(today());
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showCatModal, setShowCatModal] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ category: 'Rent', description: '', amount: '', expense_date: today() });
+  const [newCat, setNewCat] = useState('');
+  const [form, setForm] = useState({ category: '', description: '', amount: '', expense_date: today() });
+
+  const fetchCategories = async () => {
+    const r = await api.get('/expenses/categories');
+    const cats = Array.isArray(r.data) ? r.data : [];
+    setCategories(cats);
+    if (cats.length > 0 && !form.category) setForm(f => ({ ...f, category: cats[0].name }));
+    return cats;
+  };
 
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [e, s] = await Promise.all([
+      const [e, s, cats] = await Promise.all([
         api.get(`/expenses?from=${from}&to=${to}`),
         api.get(`/expenses/summary?from=${from}&to=${to}`),
+        fetchCategories(),
       ]);
       setExpenses(Array.isArray(e.data) ? e.data : []);
       setSummary(Array.isArray(s.data) ? s.data : []);
+      if (cats.length > 0) setForm(f => ({ ...f, category: f.category || cats[0].name }));
     } catch { setExpenses([]); setSummary([]); }
     finally { setLoading(false); }
   };
@@ -47,7 +59,6 @@ export default function ExpensesPage() {
       await api.post('/expenses', { ...form, amount: +form.amount });
       toast.success('Expense recorded');
       setShowModal(false);
-      setForm({ category: 'Rent', description: '', amount: '', expense_date: today() });
       fetchAll();
     } catch { toast.error('Failed to save expense'); }
     finally { setSaving(false); }
@@ -59,10 +70,26 @@ export default function ExpensesPage() {
       await api.delete(`/expenses/${id}`);
       toast.success('Deleted');
       fetchAll();
-    } catch (err: any) {
-      const msg = err.response?.data?.message;
-      toast.error(Array.isArray(msg) ? msg[0] : msg || 'Failed');
-    }
+    } catch { toast.error('Failed'); }
+  };
+
+  const addCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCat.trim()) return;
+    try {
+      await api.post('/expenses/categories', { name: newCat.trim() });
+      toast.success('Category added');
+      setNewCat('');
+      fetchCategories();
+    } catch { toast.error('Failed'); }
+  };
+
+  const deleteCategory = async (id: number) => {
+    if (!confirm('Remove this category?')) return;
+    try {
+      await api.delete(`/expenses/categories/${id}`);
+      fetchCategories();
+    } catch { toast.error('Failed'); }
   };
 
   const totalAmount = expenses.reduce((s, e) => s + e.amount, 0);
@@ -78,9 +105,14 @@ export default function ExpensesPage() {
           <label className="text-xs text-ink-500 font-medium">{t('expenses.to')}</label>
           <input type="date" value={to} onChange={e => setTo(e.target.value)} className="border border-ink-200 rounded-lg px-3 py-1.5 text-sm" />
         </div>
-        <Button size="sm" icon={<Plus size={15} />} onClick={() => setShowModal(true)} className="ml-auto">
-          {t('expenses.addExpense')}
-        </Button>
+        <div className="flex gap-2 ml-auto">
+          <Button size="sm" variant="outline" icon={<Settings size={14} />} onClick={() => setShowCatModal(true)}>
+            Categories
+          </Button>
+          <Button size="sm" icon={<Plus size={15} />} onClick={() => setShowModal(true)}>
+            {t('expenses.addExpense')}
+          </Button>
+        </div>
       </div>
 
       {summary.length > 0 && (
@@ -126,7 +158,7 @@ export default function ExpensesPage() {
                   <td data-label={t('expenses.description')} className="px-5 py-3.5 text-ink-700">{e.description}</td>
                   <td data-label={t('expenses.amount')} className="px-5 py-3.5 text-right font-bold" style={{ color: '#FF6B6B' }}>{LKR(e.amount)}</td>
                   <td className="px-5 py-3.5 text-right">
-                    <button onClick={() => remove(e.id)} aria-label="Delete expense" className="text-ink-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
+                    <button onClick={() => remove(e.id)} className="text-ink-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
                   </td>
                 </tr>
               ))}
@@ -136,13 +168,14 @@ export default function ExpensesPage() {
         )}
       </Card>
 
+      {/* Add expense modal */}
       <Modal open={showModal} onClose={() => setShowModal(false)} title={t('expenses.addExpense')}>
         <form onSubmit={submit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-ink-600 mb-1">{t('expenses.category')}</label>
             <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
               className="w-full border border-ink-200 rounded-lg px-3 py-2 text-sm">
-              {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
             </select>
           </div>
           <Input label={t('expenses.description')} required value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
@@ -153,6 +186,27 @@ export default function ExpensesPage() {
             <Button type="submit" className="flex-1" loading={saving}>{t('expenses.save')}</Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Manage categories modal */}
+      <Modal open={showCatModal} onClose={() => setShowCatModal(false)} title="Manage Expense Categories">
+        <div className="space-y-4">
+          <form onSubmit={addCategory} className="flex gap-2">
+            <input value={newCat} onChange={e => setNewCat(e.target.value)} placeholder="New category name…"
+              className="flex-1 border border-ink-200 rounded-lg px-3 py-2 text-sm" required />
+            <Button type="submit" size="sm" icon={<Plus size={14} />}>Add</Button>
+          </form>
+          <div className="space-y-1 max-h-64 overflow-y-auto">
+            {categories.map(c => (
+              <div key={c.id} className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-ink-50">
+                <span className="text-sm text-ink-700">{c.name}</span>
+                <button onClick={() => deleteCategory(c.id)} className="text-ink-300 hover:text-red-500 transition-colors">
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       </Modal>
     </div>
   );

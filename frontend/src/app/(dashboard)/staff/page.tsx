@@ -14,7 +14,7 @@ import { useLang } from '../../../hooks/useLang';
 
 const today = () => new Date().toISOString().split('T')[0];
 
-const EMPTY_EMP = { name: '', email: '', password: '', role: 'CASHIER', phone: '', emp_no: '' };
+const EMPTY_EMP = { name: '', email: '', password: '', role: 'CASHIER', phone: '', emp_no: '', pin: '' };
 
 function resolvePhoto(url?: string) {
   if (!url) return '';
@@ -208,6 +208,12 @@ export default function StaffPage() {
           <Input label={mode === 'add' ? t('staff.password') : t('staff.newPassword')}
             type="password" placeholder="Min 6 characters" required={mode === 'add'}
             value={empForm.password} onChange={e => setEmpForm(f => ({ ...f, password: e.target.value }))} />
+        </div>
+        <div className="col-span-2">
+          <Input label="POS PIN (4–6 digits, optional)" placeholder="e.g. 1234"
+            maxLength={6} value={(empForm as any).pin || ''}
+            onChange={e => setEmpForm(f => ({ ...f, pin: e.target.value.replace(/\D/g, '').slice(0, 6) } as any))} />
+          <p className="text-xs text-ink-400 mt-1">Cashiers can use this PIN to log in quickly at the POS screen.</p>
         </div>
       </div>
 

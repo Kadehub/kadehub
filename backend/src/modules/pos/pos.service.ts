@@ -72,6 +72,21 @@ export class PosService {
     });
   }
 
+  async voidSale(saleId: number, tenantId: number) {
+    const sale = await this.saleRepo.findOne({
+      where: { id: saleId, tenant_id: tenantId },
+      relations: ['items'],
+    });
+    if (!sale) throw new BadRequestException('Sale not found');
+    if (sale.status === 'voided') throw new BadRequestException('Sale already voided');
+    // Restore stock
+    for (const item of sale.items) {
+      await this.inventoryRepo.increment({ product_id: item.product_id }, 'quantity', item.quantity);
+    }
+    sale.status = 'voided';
+    return this.saleRepo.save(sale);
+  }
+
   async getSales(tenantId: number, date?: string) {
     const qb = this.saleRepo.createQueryBuilder('s')
       .where('s.tenant_id = :tenantId', { tenantId })

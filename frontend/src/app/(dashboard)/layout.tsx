@@ -10,6 +10,7 @@ import { Wifi, WifiOff, X, Info, AlertTriangle, CheckCircle, AlertCircle, Menu }
 import api from '../../lib/api';
 
 const pageTitleKeys: Record<string, TranslationKey> = {
+  '/dashboard': 'page.dashboard',
   '/pos':       'page.pos',
   '/products':  'page.products',
   '/inventory': 'page.inventory',

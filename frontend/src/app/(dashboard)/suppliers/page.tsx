@@ -9,7 +9,7 @@ import { Input } from '../../../components/ui/Input';
 import { LKR } from '../../../lib/format';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
-import { Plus, Truck, ShoppingBag, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { Plus, Truck, ShoppingBag, CheckCircle, XCircle, Trash2, Paperclip, ExternalLink } from 'lucide-react';
 import { useLang } from '../../../hooks/useLang';
 
 export default function SuppliersPage() {
@@ -24,6 +24,8 @@ export default function SuppliersPage() {
   const [saving, setSaving] = useState(false);
   const [supplierForm, setSupplierForm] = useState({ name: '', contact_person: '', phone: '', email: '', address: '' });
   const [orderForm, setOrderForm] = useState({ supplier_id: '', notes: '', items: [{ product_id: '', quantity: '1', cost: '' }] });
+
+  const [uploadingInvoice, setUploadingInvoice] = useState<number | null>(null);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -69,6 +71,18 @@ export default function SuppliersPage() {
     if (!confirm('Cancel this order?')) return;
     try { await api.patch(`/suppliers/orders/${id}/cancel`); toast.success('Cancelled'); fetchAll(); }
     catch (err: any) { const msg = err.response?.data?.message; toast.error(Array.isArray(msg) ? msg[0] : msg || 'Failed'); }
+  };
+
+  const uploadInvoice = async (orderId: number, file: File) => {
+    setUploadingInvoice(orderId);
+    const fd = new FormData();
+    fd.append('invoice', file);
+    try {
+      await api.post(`/suppliers/orders/${orderId}/invoice`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      toast.success('Invoice attached');
+      fetchAll();
+    } catch { toast.error('Failed to upload invoice'); }
+    finally { setUploadingInvoice(null); }
   };
 
   const addOrderItem = () => setOrderForm(f => ({ ...f, items: [...f.items, { product_id: '', quantity: '1', cost: '' }] }));
@@ -153,6 +167,19 @@ export default function SuppliersPage() {
                             <button onClick={() => cancelOrder(o.id)} aria-label="Cancel order" className="text-red-400 hover:text-red-600"><XCircle size={16} /></button>
                           </div>
                         )}
+                        <div className="flex gap-1 mt-1">
+                          {(o as any).invoice_url ? (
+                            <a href={(o as any).invoice_url} target="_blank" rel="noreferrer"
+                              className="text-blue-500 hover:text-blue-700" title="View invoice">
+                              <ExternalLink size={14} />
+                            </a>
+                          ) : null}
+                          <label className={`cursor-pointer text-ink-400 hover:text-teal-600 transition-colors ${uploadingInvoice === o.id ? 'opacity-40 pointer-events-none' : ''}`} title="Attach invoice">
+                            <Paperclip size={14} />
+                            <input type="file" accept="image/*,.pdf" className="hidden"
+                              onChange={e => { const f = e.target.files?.[0]; if (f) uploadInvoice(o.id, f); e.target.value = ''; }} />
+                          </label>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -1,4 +1,6 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, UsePipes, ValidationPipe, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { SupplierService } from './supplier.service';
 import { CreateSupplierDto, UpdateSupplierDto, CreatePurchaseOrderDto } from './supplier.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -6,6 +8,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { TrialGuard } from '../../common/guards/trial.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { uploadToCloudinary } from '../../common/cloudinary';
 
 @Controller('suppliers')
 @UseGuards(JwtAuthGuard, RolesGuard, TrialGuard)
@@ -35,5 +38,20 @@ export class SupplierController {
 
   @Patch('orders/:id/cancel') @Roles('ADMIN') cancel(@CurrentUser() u: any, @Param('id') id: string) {
     return this.svc.cancelOrder(+id, u.tenant_id);
+  }
+
+  @Post('orders/:id/invoice')
+  @Roles('ADMIN')
+  @UseInterceptors(FileInterceptor('invoice', {
+    storage: memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      if (!file.mimetype.match(/^(image\/(jpeg|png|webp)|application\/pdf)$/)) return cb(new Error('Images or PDF only'), false);
+      cb(null, true);
+    },
+  }))
+  async uploadInvoice(@CurrentUser() u: any, @Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+    const url = await uploadToCloudinary(file.buffer, 'kadehub/invoices', file.originalname);
+    return this.svc.attachInvoice(+id, u.tenant_id, url);
   }
 }

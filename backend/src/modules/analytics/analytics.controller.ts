@@ -85,6 +85,13 @@ export class AnalyticsController {
     return this.analyticsService.getDailySummary(u.tenant_id, date || today);
   }
 
+  // Free basic sales list — available on all plans (no subscription guard)
+  @Get('basic-sales')
+  basicSales(@CurrentUser() u: any, @Query('from') from?: string, @Query('to') to?: string) {
+    const d = this.dates(from, to);
+    return this.analyticsService.getBasicSales(u.tenant_id, d.from, d.to);
+  }
+
   // Free basic report — available on all plans (no subscription guard)
   @Get('basic-report')
   basicReport(@CurrentUser() u: any, @Query('from') from?: string, @Query('to') to?: string) {

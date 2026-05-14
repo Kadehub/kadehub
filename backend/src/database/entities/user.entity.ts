@@ -12,6 +12,7 @@ export class User {
   @Column({ nullable: true }) phone: string;
   @Column({ nullable: true }) emp_no: string;
   @Column({ nullable: true }) photo_url: string;
+  @Column({ nullable: true }) pin: string;
   @CreateDateColumn() created_at: Date;
   @ManyToOne(() => Tenant) @JoinColumn({ name: 'tenant_id' }) tenant: Tenant;
 }

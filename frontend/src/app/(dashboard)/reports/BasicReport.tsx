@@ -5,6 +5,7 @@ import { LKR } from '../../../lib/format';
 import api from '../../../lib/api';
 import { ShoppingCart, TrendingUp, Package, AlertTriangle, FileText, Ban } from 'lucide-react';
 import ReceiptModal, { ReceiptData } from '../../../components/pos/receipt/ReceiptModal';
+import toast from 'react-hot-toast';
 
 interface Props { from: string; to: string; }
 

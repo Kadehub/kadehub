@@ -608,12 +608,20 @@ function Footer() {
           {/* Contact */}
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16, fontFamily: 'Poppins,sans-serif' }}>Contact</div>
-            <a href="https://wa.me/94702470064" target="_blank" rel="noreferrer"
-              style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'rgba(255,255,255,0.65)', textDecoration: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 500, transition: 'color 0.2s' }}
-              onMouseEnter={e => e.currentTarget.style.color = '#25d366'}
-              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.65)'}>
-              <span style={{ fontSize: 18 }}>💬</span> WhatsApp: +94 70 247 0064
-            </a>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <a href="https://wa.me/94702470064" target="_blank" rel="noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'rgba(255,255,255,0.65)', textDecoration: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 500, transition: 'color 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#25d366'}
+                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.65)'}>
+                <span style={{ fontSize: 18 }}>💬</span> WhatsApp: +94 70 247 0064
+              </a>
+              <a href="mailto:official.kadehub@gmail.com"
+                style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'rgba(255,255,255,0.65)', textDecoration: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 500, transition: 'color 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#f5a623'}
+                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.65)'}>
+                <span style={{ fontSize: 18 }}>📧</span> official.kadehub@gmail.com
+              </a>
+            </div>
           </div>
         </div>
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 28, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>

@@ -60,7 +60,10 @@ export default function StaffPage() {
       setLogs(Array.isArray(l.data) ? l.data : []);
       setPerformance(Array.isArray(p.data) ? p.data : []);
       setEmployees(Array.isArray(e.data) ? e.data : []);
-    } catch { }
+    } catch (err: any) {
+      const msg = err.response?.data?.message;
+      toast.error(Array.isArray(msg) ? msg[0] : msg || 'Failed to load staff data');
+    }
     finally { setLoading(false); }
   };
 

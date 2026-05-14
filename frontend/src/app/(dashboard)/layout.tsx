@@ -43,6 +43,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // Detect logout in another tab
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === 'auth-store' && !e.newValue) {
+        window.location.href = '/login';
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
+
   // Wait for client-side mount
   useEffect(() => {
     setMounted(true);

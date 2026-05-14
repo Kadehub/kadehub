@@ -28,7 +28,7 @@ export default function CreditPage() {
       const [c, s] = await Promise.all([api.get('/credit'), api.get('/credit/summary')]);
       setCredits(Array.isArray(c.data) ? c.data : []);
       setSummary(s.data);
-    } catch { setCredits([]); }
+    } catch { setCredits([]); setSummary(null); }
     finally { setLoading(false); }
   };
 

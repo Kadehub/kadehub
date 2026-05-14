@@ -5,12 +5,13 @@ import { PosService } from './pos.service';
 import { Sale } from '../../database/entities/sale.entity';
 import { SaleItem } from '../../database/entities/sale-item.entity';
 import { CreditSale } from '../../database/entities/credit-sale.entity';
+import { Inventory } from '../../database/entities/inventory.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
 import { TrialGuard } from '../../common/guards/trial.guard';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Sale, SaleItem, CreditSale, Subscription]), AuthModule],
+  imports: [TypeOrmModule.forFeature([Sale, SaleItem, CreditSale, Inventory, Subscription]), AuthModule],
   controllers: [PosController],
   providers: [PosService, TrialGuard],
 })

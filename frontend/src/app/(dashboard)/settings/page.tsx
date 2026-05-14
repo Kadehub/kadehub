@@ -28,8 +28,6 @@ export default function SettingsPage() {
   const [billingLoaded, setBillingLoaded] = useState(false);
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
-  const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '' });
-  const [gateway, setGateway] = useState<'onepay' | 'card' | 'paypal'>('onepay');
   const [paying, setPaying] = useState(false);
 
   useEffect(() => {
@@ -84,34 +82,17 @@ export default function SettingsPage() {
     if (!selectedPkg) return;
     setPaying(true);
     try {
-      if (gateway === 'onepay') {
-        // OnePay: get redirect URL from backend
-        const res = await api.post('/billing/onepay/initiate', {
-          package_id: selectedPkg.id,
-          billing_cycle: billing,
-          ...(!activeSub && { registration_fee: regFee / 2 }),
-        });
-        // Redirect to OnePay hosted payment page
-        window.location.href = res.data.payment_url;
-        return;
-      }
-      // Legacy card/paypal flow
-      const gatewayRef = gateway === 'paypal'
-        ? `PAYPAL-${Date.now()}`
-        : `CARD-${card.number.slice(-4)}-${Date.now()}`;
-      await api.post('/billing/subscribe', {
+      const res = await api.post('/billing/onepay/initiate', {
         package_id: selectedPkg.id,
         billing_cycle: billing,
-        gateway,
-        gateway_ref: gatewayRef,
-        ...(!activeSub && { registration_fee: regFee / 2 }),
+        ...(!activeSub && { registration_fee: regFee }),
       });
-      toast.success('Plan upgraded successfully!');
-      window.location.reload();
+      window.location.href = res.data.payment_url;
     } catch (err: any) {
       const msg = err.response?.data?.message;
       toast.error(Array.isArray(msg) ? msg[0] : msg || 'Payment failed');
-    } finally { setPaying(false); }
+      setPaying(false);
+    }
   };
 
   const activeSub = subscriptions[0];
@@ -235,75 +216,22 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
                 {/* Payment form */}
                 <div className="md:col-span-3 space-y-4">
-                  {/* Gateway selector */}
-                  <div className="grid grid-cols-3 gap-2">
-                    {([
-                      { key: 'onepay', label: 'OnePay', badge: 'Recommended' },
-                      { key: 'card',   label: 'Card',   badge: null },
-                      { key: 'paypal', label: 'PayPal', badge: null },
-                    ] as const).map(g => (
-                      <button key={g.key} onClick={() => setGateway(g.key)}
-                        className="relative flex flex-col items-center justify-center gap-1 py-3 rounded-xl border-2 text-xs font-semibold transition-all"
-                        style={{ borderColor: gateway === g.key ? '#00A884' : '#E2E8F0', background: gateway === g.key ? '#E0F2F1' : 'white', color: gateway === g.key ? '#00A884' : '#64748B' }}>
-                        {g.badge && (
-                          <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-white text-2xs font-bold"
-                            style={{ background: '#009688', fontSize: '9px' }}>{g.badge}</span>
-                        )}
-                        {g.key === 'onepay' && <img src="https://onepay.lk/wp-content/uploads/2021/06/onepay-logo.png" alt="OnePay" className="h-5 object-contain" onError={e => { (e.target as HTMLImageElement).style.display='none'; }} />}
-                        {g.key === 'card' && <CreditCard size={16} />}
-                        {g.key === 'paypal' && <span className="font-extrabold text-blue-600" style={{ fontSize: '11px' }}>PayPal</span>}
-                        {g.key !== 'onepay' && g.label}
-                      </button>
-                    ))}
+                  <div className="rounded-xl p-5 text-center space-y-3" style={{ background: '#E0F2F1', border: '1.5px solid #B2DFDB' }}>
+                    <p className="font-bold text-ink-800">Pay securely with OnePay</p>
+                    <p className="text-xs text-ink-500">Supports Visa, Mastercard, LANKAQR &amp; internet banking.</p>
+                    <div className="flex justify-center gap-2">
+                      {['VISA', 'MC', 'QR', 'Bank'].map(m => (
+                        <span key={m} className="px-2 py-0.5 rounded text-xs font-bold bg-white border border-ink-200 text-ink-600">{m}</span>
+                      ))}
+                    </div>
                   </div>
-
                   <form onSubmit={submitPayment} className="space-y-3">
-                    {gateway === 'onepay' && (
-                      <div className="rounded-xl p-4 text-center space-y-2" style={{ background: '#E0F2F1', border: '1.5px solid #B2DFDB' }}>
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#009688' }}>
-                            <span className="text-white text-xs font-bold">OP</span>
-                          </div>
-                          <p className="font-bold text-ink-800">Pay with OnePay</p>
-                        </div>
-                        <p className="text-xs text-ink-500">Trusted payment gateway. Supports Visa, Mastercard, LANKAQR & internet banking.</p>
-                        <div className="flex justify-center gap-2 pt-1">
-                          {['VISA', 'MC', 'QR', 'Bank'].map(m => (
-                            <span key={m} className="px-2 py-0.5 rounded text-xs font-bold bg-white border border-ink-200 text-ink-600">{m}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {gateway === 'card' && (
-                      <>
-                        <Input label="Card Number" placeholder="1234 5678 9012 3456" required maxLength={19}
-                          value={card.number} onChange={e => setCard(c => ({ ...c, number: e.target.value }))} />
-                        <Input label="Cardholder Name" placeholder="NIMAL PERERA" required
-                          value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value }))} />
-                        <div className="grid grid-cols-2 gap-3">
-                          <Input label="Expiry (MM/YY)" placeholder="04/28" required
-                            value={card.expiry} onChange={e => setCard(c => ({ ...c, expiry: e.target.value }))} />
-                          <Input label="CVV" placeholder="123" required type="password" maxLength={4}
-                            value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value }))} />
-                        </div>
-                      </>
-                    )}
-                    {gateway === 'paypal' && (
-                      <div className="p-4 rounded-xl text-center" style={{ background: '#EFF6FF' }}>
-                        <p className="text-sm text-blue-700 font-medium">You will be redirected to PayPal to complete payment.</p>
-                      </div>
-                    )}
                     <button type="submit" disabled={paying}
                       className="w-full py-3 rounded-xl text-base font-bold flex items-center justify-center gap-2 text-white transition-all"
                       style={{ background: '#00A884' }}>
-                      {paying
-                        ? <Loader2 size={18} className="animate-spin" />
-                        : gateway === 'onepay'
-                          ? <>Proceed to OnePay &rarr;</>
-                          : <>Pay {LKR(!activeSub ? price + regFee / 2 : price)}</>
-                      }
+                      {paying ? <Loader2 size={18} className="animate-spin" /> : <>Proceed to OnePay &rarr;</>}
                     </button>
-                    <p className="text-xs text-center text-ink-400">🔒 Secured payment via OnePay</p>
+                    <p className="text-xs text-center text-ink-400">🔒 Secured via OnePay</p>
                   </form>
                 </div>
                 {/* Order summary */}
@@ -321,19 +249,19 @@ export default function SettingsPage() {
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-ink-500">Registration fee</span>
                         <span className="flex items-center gap-1.5">
-                          <span className="line-through text-ink-300">{LKR(regFee)}</span>
-                          <span className="font-bold" style={{ color: '#FF6B6B' }}>{LKR(regFee / 2)}</span>
+                          <span className="line-through text-ink-300">{LKR(regFee * 2)}</span>
+                          <span className="font-bold" style={{ color: '#FF6B6B' }}>{LKR(regFee)}</span>
                         </span>
                       </div>
                       <div className="flex justify-between text-xs text-green-600 font-semibold mb-3">
                         <span>🎉 50% discount applied</span>
-                        <span>-{LKR(regFee / 2)}</span>
+                        <span>-{LKR(regFee)}</span>
                       </div>
                     </>
                   )}
                   <div className="border-t border-ink-200 pt-3 mb-3 flex justify-between font-bold">
                     <span>Total</span>
-                    <span style={{ color: '#00A884' }}>{LKR(!activeSub ? price + regFee / 2 : price)}</span>
+                    <span style={{ color: '#00A884' }}>{LKR(!activeSub ? price + regFee : price)}</span>
                   </div>
                   <p className="text-xs font-semibold text-ink-500 mb-2">Included modules:</p>
                   {selectedPkg.modules?.map((m: any) => (

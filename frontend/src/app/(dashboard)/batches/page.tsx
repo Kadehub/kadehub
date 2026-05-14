@@ -34,7 +34,11 @@ export default function BatchesPage() {
       setExpiring(Array.isArray(ex.data) ? ex.data : []);
       setExpired(Array.isArray(exp.data) ? exp.data : []);
       setProducts(Array.isArray(p.data) ? p.data : []);
-    } catch (err: any) { toast.error('Failed to load'); }
+    } catch (err: any) {
+      const msg = err.response?.data?.message;
+      toast.error(Array.isArray(msg) ? msg[0] : msg || 'Failed to load batches');
+      setBatches([]); setExpiring([]); setExpired([]);
+    }
     finally { setLoading(false); }
   };
 
@@ -114,7 +118,7 @@ export default function BatchesPage() {
                       <td data-label={t('batches.expiryDate')} className="px-5 py-3.5 text-ink-700 text-xs font-medium">{b.b_expiry_date || b.expiry_date || '—'}</td>
                       <td data-label={t('batches.status')} className="px-5 py-3.5">{expStatus && <Badge variant={expStatus as any} dot>{expLabel}</Badge>}</td>
                       <td className="px-5 py-3.5">
-                        <button onClick={() => remove(b.b_id || b.id)} className="text-ink-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
+                        <button onClick={() => remove(b.b_id || b.id)} aria-label="Delete batch" className="text-ink-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
                       </td>
                     </tr>
                   );

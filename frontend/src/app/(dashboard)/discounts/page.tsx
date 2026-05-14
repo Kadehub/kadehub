@@ -106,11 +106,11 @@ export default function DiscountsPage() {
                   <td data-label={t('discounts.status')} className="px-5 py-3.5"><Badge variant={isValid(d) ? 'teal' : 'gray'} dot>{isValid(d) ? t('discounts.active') : t('discounts.inactive')}</Badge></td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2">
-                      <button onClick={() => openEdit(d)} className="text-ink-400 hover:text-ink-700 transition-colors"><Pencil size={14} /></button>
-                      <button onClick={() => toggle(d)} className="text-ink-400 hover:text-ink-700 transition-colors">
+                      <button onClick={() => openEdit(d)} aria-label={`Edit discount ${d.name}`} className="text-ink-400 hover:text-ink-700 transition-colors"><Pencil size={14} /></button>
+                      <button onClick={() => toggle(d)} aria-label={`${d.is_active ? 'Deactivate' : 'Activate'} discount ${d.name}`} className="text-ink-400 hover:text-ink-700 transition-colors">
                         {d.is_active ? <ToggleRight size={18} style={{ color: '#009688' }} /> : <ToggleLeft size={18} />}
                       </button>
-                      <button onClick={() => remove(d.id)} className="text-ink-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
+                      <button onClick={() => remove(d.id)} aria-label={`Delete discount ${d.name}`} className="text-ink-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreditSale } from '../../database/entities/credit-sale.entity';
@@ -53,11 +53,14 @@ export class CreditService {
     const credit = await this.creditRepo.findOne({ where: { id: creditId, tenant_id: tenantId } });
     if (!credit) throw new NotFoundException('Credit sale not found');
 
+    const balance = Number(credit.amount_due) - Number(credit.amount_paid);
+    if (dto.amount > balance) throw new BadRequestException(`Payment amount exceeds outstanding balance of ${balance}`);
+    if (credit.status === 'paid') throw new BadRequestException('This credit sale is already fully paid');
+
     await this.paymentRepo.save(this.paymentRepo.create({ credit_sale_id: creditId, ...dto }));
 
     credit.amount_paid = Number(credit.amount_paid) + dto.amount;
-    if (credit.amount_paid >= credit.amount_due) credit.status = 'paid';
-    else credit.status = 'partial';
+    credit.status = credit.amount_paid >= credit.amount_due ? 'paid' : 'partial';
 
     return this.creditRepo.save(credit);
   }

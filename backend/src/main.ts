@@ -10,11 +10,10 @@ import { ensurePublicBucket } from './common/cloudinary';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.setGlobalPrefix('api');
-  const allowedOrigins = (process.env.FRONTEND_URL || '').split(',').map(s => s.trim()).filter(Boolean);
+  const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',').map(s => s.trim()).filter(Boolean);
   app.enableCors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      if (!allowedOrigins.length) return callback(new Error('CORS: FRONTEND_URL not configured'));
       const allowed = allowedOrigins.some(pattern => {
         if (pattern.startsWith('*.')) {
           const base = pattern.slice(2);

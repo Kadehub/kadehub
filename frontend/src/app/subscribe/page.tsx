@@ -1,269 +1,205 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../hooks/useAuth';
 import api from '../../lib/api';
+import { LKR } from '../../lib/format';
+import { Check, ArrowLeft, Loader2, Star } from 'lucide-react';
 
-const PLANS = [
-  {
-    id: 1,
-    name: 'Starter',
-    price: { mo: 2999, yr: 2499 },
-    features: ['3 employees', 'POS system', 'Inventory management', 'Basic reports', 'Email support'],
-    popular: false,
-  },
-  {
-    id: 2,
-    name: 'Pro',
-    price: { mo: 4999, yr: 4149 },
-    features: ['10 employees', 'POS system', 'Inventory management', 'Customer CRM & Loyalty', 'Supplier management', 'Expense tracking', 'Priority support'],
-    popular: true,
-  },
-  {
-    id: 3,
-    name: 'Enterprise',
-    price: { mo: 9999, yr: 8299 },
-    features: ['Unlimited employees', 'All Pro features', 'Analytics dashboard', 'Staff & shifts', 'Credit & debt tracking', 'Discount & promotions', 'Batch & expiry tracking', 'Dedicated support'],
-    popular: false,
-  },
-];
+const fmt = (n: number, currency: string) =>
+  currency === 'USD'
+    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
+    : LKR(n);
 
-const BANK_DETAILS = [
-  { label: 'Bank', value: 'Commercial Bank of Ceylon' },
-  { label: 'Account Name', value: 'KadeHub (Pvt) Ltd' },
-  { label: 'Account Number', value: '8001234567' },
-  { label: 'Branch', value: 'Colombo 03' },
-];
-
-type Plan = typeof PLANS[0];
-
-function BankTransferModal({ plan, yearly, onClose, onSuccess }: {
-  plan: Plan; yearly: boolean; onClose: () => void; onSuccess: () => void;
-}) {
-  const [form, setForm] = useState({ depositor_name: '', slip_reference: '', notes: '' });
+export default function SubscribePage() {
+  const { logout } = useAuthStore();
+  const [packages, setPackages] = useState<any[]>([]);
+  const [currency, setCurrency] = useState('LKR');
+  const [registrationFee, setRegistrationFee] = useState(25000);
+  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
+  const [selectedPkg, setSelectedPkg] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm(f => ({ ...f, [k]: e.target.value }));
 
-  const amount = yearly ? plan.price.yr : plan.price.mo;
+  useEffect(() => {
+    api.get('/billing/packages').then(r => {
+      const d = r.data;
+      setPackages(Array.isArray(d) ? d : (d.packages ?? []));
+      if (d.currency) setCurrency(d.currency);
+      if (d.registrationFee != null) setRegistrationFee(d.registrationFee);
+    }).catch(() => {});
+  }, []);
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '11px 14px', borderRadius: 10,
-    border: '1.5px solid #e5e7eb', fontSize: 14, fontFamily: 'Poppins,sans-serif',
-    fontWeight: 500, color: '#0f172a', outline: 'none', background: '#fff',
-  };
+  const price = selectedPkg
+    ? billing === 'yearly' ? selectedPkg.price_yearly : selectedPkg.price_monthly
+    : 0;
+  const total = price + registrationFee;
 
-  async function submit(e: React.FormEvent) {
+  async function pay(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true); setError('');
     try {
-      await api.post('/billing/subscribe/bank-transfer', {
-        package_id: plan.id,
-        billing_cycle: yearly ? 'yearly' : 'monthly',
-        depositor_name: form.depositor_name,
-        slip_reference: form.slip_reference,
-        notes: form.notes,
+      const res = await api.post('/billing/onepay/initiate', {
+        package_id: selectedPkg.id,
+        billing_cycle: billing,
+        registration_fee: registrationFee,
       });
-      onSuccess();
+      window.location.href = res.data.payment_url;
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Something went wrong. Please try again.');
-    } finally {
+      const msg = err?.response?.data?.message;
+      setError(Array.isArray(msg) ? msg[0] : msg || 'Payment initiation failed. Please try again.');
       setLoading(false);
     }
   }
 
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-      onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 80px rgba(0,0,0,0.25)', fontFamily: 'Poppins,sans-serif' }}>
-
-        {/* Header */}
-        <div style={{ background: 'linear-gradient(135deg,#0d6e5a,#14a085)', padding: '24px 28px', borderRadius: '20px 20px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Subscribing to</div>
-            <div style={{ color: '#fff', fontSize: 20, fontWeight: 800 }}>{plan.name} Plan</div>
-            <div style={{ color: '#f5a623', fontSize: 22, fontWeight: 800, marginTop: 4 }}>
-              LKR {amount.toLocaleString()}<span style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>/mo · {yearly ? 'Yearly' : 'Monthly'}</span>
-            </div>
-          </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-        </div>
-
-        <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-          {/* Bank details */}
-          <div style={{ background: '#f0faf7', border: '1px solid #a7f3d0', borderRadius: 12, padding: '16px 20px' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#0d6e5a', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Bank Transfer Details</div>
-            {BANK_DETAILS.map(d => (
-              <div key={d.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #d1fae5' }}>
-                <span style={{ fontSize: 13, color: '#6b7280', fontWeight: 500 }}>{d.label}</span>
-                <span style={{ fontSize: 14, color: '#0f172a', fontWeight: 700 }}>{d.value}</span>
-              </div>
-            ))}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 }}>
-              <span style={{ fontSize: 13, color: '#6b7280', fontWeight: 500 }}>Amount</span>
-              <span style={{ fontSize: 15, color: '#0d6e5a', fontWeight: 800 }}>LKR {amount.toLocaleString()}</span>
-            </div>
-          </div>
-
-          <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 400, margin: 0, lineHeight: 1.6 }}>
-            Transfer the exact amount to the account above, then fill in your details below. Your subscription will be activated immediately.
-          </p>
-
-          {/* Form */}
-          <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Depositor Name *</label>
-              <input required value={form.depositor_name} onChange={set('depositor_name')} placeholder="Name on the bank slip"
-                style={inputStyle} onFocus={e => e.target.style.borderColor = '#0d6e5a'} onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Slip / Reference Number *</label>
-              <input required value={form.slip_reference} onChange={set('slip_reference')} placeholder="e.g. TXN123456789"
-                style={inputStyle} onFocus={e => e.target.style.borderColor = '#0d6e5a'} onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Notes <span style={{ color: '#9ca3af', fontWeight: 400 }}>(optional)</span></label>
-              <textarea value={form.notes} onChange={set('notes')} rows={2} placeholder="Any additional info..."
-                style={{ ...inputStyle, resize: 'vertical' }} onFocus={e => e.target.style.borderColor = '#0d6e5a'} onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
-            </div>
-            {error && <p style={{ color: '#dc2626', fontSize: 13, margin: 0, fontFamily: 'Poppins,sans-serif' }}>{error}</p>}
-            <button type="submit" disabled={loading} style={{
-              padding: '14px 0', borderRadius: 12, border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
-              background: 'linear-gradient(135deg,#0d6e5a,#14a085)', color: '#fff',
-              fontWeight: 700, fontSize: 15, fontFamily: 'Poppins,sans-serif',
-              boxShadow: '0 4px 16px rgba(13,110,90,0.3)', opacity: loading ? 0.7 : 1, transition: 'all 0.2s',
-            }}>
-              {loading ? 'Activating…' : 'Confirm & Activate Subscription'}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SuccessScreen() {
-  return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0a4f40,#0d6e5a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Poppins,sans-serif', padding: 24 }}>
-      <div style={{ background: '#fff', borderRadius: 24, padding: '56px 48px', textAlign: 'center', maxWidth: 440, boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}>
-        <div style={{ fontSize: 64, marginBottom: 16 }}>🎉</div>
-        <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0d6e5a', marginBottom: 8 }}>Subscription Activated!</h2>
-        <p style={{ color: '#6b7280', fontSize: 15, fontWeight: 400, lineHeight: 1.65, marginBottom: 32 }}>
-          Your subscription is now active. Welcome to KadeHub — let's get back to running your shop.
-        </p>
-        <a href="/pos" style={{ display: 'inline-block', padding: '14px 36px', borderRadius: 12, background: 'linear-gradient(135deg,#0d6e5a,#14a085)', color: '#fff', fontWeight: 700, fontSize: 15, textDecoration: 'none', boxShadow: '0 4px 16px rgba(13,110,90,0.3)' }}>
-          Go to POS →
-        </a>
-      </div>
-    </div>
-  );
-}
-
-export default function SubscribePage() {
-  const [yearly, setYearly] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const [success, setSuccess] = useState(false);
-  const logout = useAuthStore(s => s.logout);
-
-  if (success) return <SuccessScreen />;
-
-  return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0a4f40 0%,#0d6e5a 50%,#0f8a6e 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 24px', fontFamily: 'Poppins,sans-serif', position: 'relative' }}>
-
-      <button onClick={() => { logout(); window.location.href = '/login'; }} style={{ position: 'absolute', top: 24, right: 24, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'Poppins,sans-serif' }}>
+  // ── Package selection ──
+  if (!selectedPkg) return (
+    <div className="min-h-screen flex flex-col items-center py-12 px-4" style={{ background: 'linear-gradient(135deg,#0a4f40,#0d6e5a)' }}>
+      <button onClick={() => { logout(); window.location.href = '/login'; }}
+        className="self-end mr-4 mb-6 text-sm font-semibold text-white/70 hover:text-white">
         Sign Out
       </button>
 
-      <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#0d6e5a', fontWeight: 800, fontSize: 20 }}>K</span>
-          </div>
-          <span style={{ color: '#fff', fontWeight: 800, fontSize: 22, letterSpacing: '-0.03em' }}>KadeHub</span>
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 text-sm font-bold"
+          style={{ background: 'rgba(245,166,35,0.2)', color: '#f5a623', border: '1px solid rgba(245,166,35,0.4)' }}>
+          ⏰ Your 14-day free trial has ended
         </div>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(245,166,35,0.2)', border: '1px solid rgba(245,166,35,0.4)', borderRadius: 100, padding: '8px 20px', marginBottom: 20 }}>
-          <span style={{ fontSize: 16 }}>⏰</span>
-          <span style={{ color: '#f5a623', fontWeight: 700, fontSize: 14 }}>Your 14-day free trial has ended</span>
+        <h1 className="text-3xl font-extrabold text-white mb-2">Choose a Plan to Continue</h1>
+        <p className="text-white/70 text-sm">Registration fee included in your first payment · Renews without it.</p>
+
+        <div className="flex items-center justify-center gap-3 mt-5">
+          <span className="text-sm font-semibold" style={{ color: billing === 'monthly' ? '#fff' : 'rgba(255,255,255,0.5)' }}>Monthly</span>
+          <button onClick={() => setBilling(b => b === 'monthly' ? 'yearly' : 'monthly')}
+            className="w-12 h-6 rounded-full relative transition-colors"
+            style={{ background: billing === 'yearly' ? '#f5a623' : 'rgba(255,255,255,0.25)' }}>
+            <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
+              style={{ left: billing === 'yearly' ? '26px' : '2px' }} />
+          </button>
+          <span className="text-sm font-semibold" style={{ color: billing === 'yearly' ? '#fff' : 'rgba(255,255,255,0.5)' }}>Yearly</span>
+          {billing === 'yearly' && <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#f5a623', color: '#0a2e25' }}>Save 17%</span>}
         </div>
-        <h1 style={{ color: '#fff', fontSize: 'clamp(1.8rem,4vw,2.8rem)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 12, lineHeight: 1.15 }}>Choose a Plan to Continue</h1>
-        <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 16, fontWeight: 400, maxWidth: 480, margin: '0 auto' }}>
-          Pay via bank transfer and activate instantly. Your data is safe and waiting.
-        </p>
       </div>
 
-      {/* Toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 36 }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: !yearly ? '#fff' : 'rgba(255,255,255,0.5)' }}>Monthly</span>
-        <button onClick={() => setYearly(y => !y)} style={{ width: 52, height: 28, borderRadius: 100, border: 'none', cursor: 'pointer', background: yearly ? '#f5a623' : 'rgba(255,255,255,0.25)', position: 'relative', transition: 'background 0.25s' }}>
-          <span style={{ position: 'absolute', top: 3, left: yearly ? 26 : 3, width: 22, height: 22, borderRadius: '50%', background: '#fff', transition: 'left 0.25s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
-        </button>
-        <span style={{ fontSize: 14, fontWeight: 600, color: yearly ? '#fff' : 'rgba(255,255,255,0.5)' }}>Yearly</span>
-        {yearly && <span style={{ background: '#f5a623', color: '#0a2e25', fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 100 }}>Save 17%</span>}
-      </div>
-
-      {/* Plans */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 20, width: '100%', maxWidth: 960, marginBottom: 40 }}>
-        {PLANS.map(plan => (
-          <div key={plan.name} style={{
-            background: plan.popular ? '#fff' : 'rgba(255,255,255,0.1)',
-            backdropFilter: plan.popular ? 'none' : 'blur(8px)',
-            border: plan.popular ? '2px solid #f5a623' : '1px solid rgba(255,255,255,0.2)',
-            borderRadius: 20, padding: '28px 24px', position: 'relative',
-            transform: plan.popular ? 'scale(1.04)' : 'none',
-            boxShadow: plan.popular ? '0 12px 48px rgba(0,0,0,0.2)' : 'none',
-          }}>
-            {plan.popular && (
-              <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', background: '#f5a623', color: '#0a2e25', fontSize: 12, fontWeight: 700, padding: '4px 16px', borderRadius: 100, whiteSpace: 'nowrap' }}>Most Popular</div>
-            )}
-            <div style={{ fontSize: 17, fontWeight: 700, color: plan.popular ? '#0f172a' : '#fff', marginBottom: 8 }}>{plan.name}</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
-              <span style={{ fontSize: 12, color: plan.popular ? '#6b7280' : 'rgba(255,255,255,0.6)' }}>LKR</span>
-              <span style={{ fontSize: 34, fontWeight: 800, color: plan.popular ? '#0d6e5a' : '#fff', lineHeight: 1 }}>
-                {(yearly ? plan.price.yr : plan.price.mo).toLocaleString()}
-              </span>
-              <span style={{ fontSize: 13, color: plan.popular ? '#9ca3af' : 'rgba(255,255,255,0.5)' }}>/mo</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full max-w-5xl mb-8">
+        {packages.map(pkg => {
+          const pkgPrice = billing === 'yearly' ? pkg.price_yearly : pkg.price_monthly;
+          return (
+            <div key={pkg.id} className="bg-white rounded-2xl p-6 flex flex-col relative"
+              style={{ border: pkg.is_popular ? '2px solid #f5a623' : undefined, transform: pkg.is_popular ? 'scale(1.03)' : undefined }}>
+              {pkg.is_popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1"
+                  style={{ background: '#f5a623', color: '#0a2e25' }}>
+                  <Star size={11} fill="#0a2e25" /> Most Popular
+                </div>
+              )}
+              <h3 className="font-bold text-ink-900 text-lg mb-1">{pkg.name}</h3>
+              <p className="text-xs text-ink-400 mb-3">{pkg.description}</p>
+              <div className="mb-3">
+                <span className="text-3xl font-extrabold" style={{ color: '#00A884' }}>{fmt(pkgPrice, currency)}</span>
+                <span className="text-ink-400 text-sm ml-1">/{billing === 'yearly' ? 'yr' : 'mo'}</span>
+              </div>
+              {/* First payment breakdown */}
+              <div className="rounded-xl p-3 mb-4 text-xs space-y-1" style={{ background: '#FEF9C3' }}>
+                <div className="flex justify-between text-ink-600">
+                  <span>Subscription</span><span>{fmt(pkgPrice, currency)}</span>
+                </div>
+                <div className="flex justify-between text-ink-600">
+                  <span>Reg. fee <span className="line-through opacity-50">{fmt(registrationFee * 2, currency)}</span></span>
+                  <span style={{ color: '#00A884' }}>{fmt(registrationFee, currency)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-ink-800 border-t border-yellow-200 pt-1">
+                  <span>First payment</span><span>{fmt(pkgPrice + registrationFee, currency)}</span>
+                </div>
+              </div>
+              <div className="flex-1 space-y-1.5 mb-5">
+                {pkg.modules?.slice(0, 6).map((m: any, i: number) => (
+                  <div key={i} className="flex items-center gap-2 text-xs text-ink-600">
+                    <Check size={12} style={{ color: '#00A884' }} />
+                    <span className="capitalize">{m.module_name}</span>
+                  </div>
+                ))}
+                {pkg.modules?.length > 6 && <p className="text-xs text-ink-400">+{pkg.modules.length - 6} more</p>}
+              </div>
+              <button onClick={() => setSelectedPkg(pkg)}
+                className="w-full py-2.5 rounded-xl text-sm font-bold transition-all"
+                style={{ background: pkg.is_popular ? '#00A884' : 'white', color: pkg.is_popular ? 'white' : '#00A884', border: '2px solid #00A884' }}>
+                Select {pkg.name}
+              </button>
             </div>
-            {yearly && <div style={{ fontSize: 11, color: plan.popular ? '#6b7280' : 'rgba(255,255,255,0.55)', marginBottom: 4 }}>Billed annually</div>}
-            <div style={{ height: 1, background: plan.popular ? '#e5e7eb' : 'rgba(255,255,255,0.15)', margin: '16px 0' }} />
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
-              {plan.features.map(f => (
-                <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: plan.popular ? '#374151' : 'rgba(255,255,255,0.85)', fontWeight: 500 }}>
-                  <span style={{ width: 16, height: 16, borderRadius: '50%', background: plan.popular ? '#e6f4f1' : 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="9" height="9" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke={plan.popular ? '#0d6e5a' : '#fff'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  </span>
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <button onClick={() => setSelectedPlan(plan)} style={{
-              width: '100%', padding: '12px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
-              fontWeight: 700, fontSize: 14, fontFamily: 'Poppins,sans-serif', transition: 'all 0.2s',
-              background: plan.popular ? 'linear-gradient(135deg,#0d6e5a,#14a085)' : 'rgba(255,255,255,0.15)',
-              color: '#fff',
-              boxShadow: plan.popular ? '0 4px 16px rgba(13,110,90,0.4)' : 'none',
-            }}>
-              Subscribe via Bank Transfer
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 400, textAlign: 'center' }}>
+      <p className="text-white/50 text-xs">
         Need help?{' '}
-        <a href="https://wa.me/94702470064" target="_blank" rel="noreferrer" style={{ color: '#25d366', fontWeight: 600, textDecoration: 'none' }}>
-          Chat on WhatsApp +94 70 247 0064
-        </a>
+        <a href="https://wa.me/94702470064" target="_blank" rel="noreferrer" className="font-semibold" style={{ color: '#25d366' }}>Chat on WhatsApp</a>
       </p>
+    </div>
+  );
 
-      {selectedPlan && (
-        <BankTransferModal
-          plan={selectedPlan}
-          yearly={yearly}
-          onClose={() => setSelectedPlan(null)}
-          onSuccess={() => { setSelectedPlan(null); setSuccess(true); }}
-        />
-      )}
+  // ── Payment screen ──
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#F1F5F9' }}>
+      <div className="w-full max-w-2xl">
+        <button onClick={() => setSelectedPkg(null)} className="flex items-center gap-1 text-sm text-ink-500 hover:text-ink-800 mb-4">
+          <ArrowLeft size={14} /> Back to plans
+        </button>
+
+        <div className="flex flex-col md:grid md:grid-cols-5 gap-4">
+          {/* OnePay form */}
+          <div className="md:col-span-3 bg-white rounded-2xl p-6 shadow-sm">
+            <h2 className="font-bold text-ink-900 text-lg mb-4">Payment</h2>
+            <div className="rounded-xl p-5 mb-5 text-center space-y-3" style={{ background: '#E0F2F1', border: '1.5px solid #B2DFDB' }}>
+              <p className="font-bold text-ink-800">Pay securely with OnePay</p>
+              <p className="text-xs text-ink-500">Supports Visa, Mastercard, LANKAQR &amp; internet banking.</p>
+              <div className="flex justify-center gap-2">
+                {['VISA', 'MC', 'QR', 'Bank'].map(m => (
+                  <span key={m} className="px-2 py-0.5 rounded text-xs font-bold bg-white border border-ink-200 text-ink-600">{m}</span>
+                ))}
+              </div>
+            </div>
+            <form onSubmit={pay}>
+              {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
+              <button type="submit" disabled={loading}
+                className="kh-btn-primary w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                {loading ? <Loader2 size={16} className="animate-spin" /> : `Proceed to OnePay →`}
+              </button>
+              <p className="text-xs text-center text-ink-400 mt-2">🔒 Secured via OnePay</p>
+            </form>
+          </div>
+
+          {/* Order summary */}
+          <div className="md:col-span-2 bg-white rounded-2xl p-5 shadow-sm h-fit">
+            <h3 className="font-semibold text-ink-800 mb-4">Order Summary</h3>
+            <div className="space-y-2 text-sm mb-3">
+              <div className="flex justify-between">
+                <span className="text-ink-600">{selectedPkg.name} Plan</span>
+                <span className="font-bold">{fmt(price, currency)}</span>
+              </div>
+              <div className="flex justify-between text-xs text-ink-400">
+                <span>Billing</span><span className="capitalize">{billing}</span>
+              </div>
+            </div>
+            <div className="border-t border-ink-100 pt-3 mb-3 space-y-2">
+              <div className="flex justify-between text-xs">
+                <div>
+                  <p className="text-ink-500">Registration fee (one-time)</p>
+                  <span className="px-1.5 py-0.5 rounded text-xs font-bold text-white" style={{ background: '#DC2626' }}>50% OFF</span>
+                </div>
+                <div className="text-right">
+                  <p className="line-through text-ink-300 text-xs">{fmt(registrationFee * 2, currency)}</p>
+                  <p className="font-semibold" style={{ color: '#00A884' }}>{fmt(registrationFee, currency)}</p>
+                </div>
+              </div>
+              <div className="flex justify-between font-bold text-sm border-t border-ink-100 pt-2">
+                <span>Total</span>
+                <span style={{ color: '#00A884' }}>{fmt(total, currency)}</span>
+              </div>
+              <p className="text-xs text-ink-400">Subsequent: {fmt(price, currency)}/{billing === 'yearly' ? 'yr' : 'mo'}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

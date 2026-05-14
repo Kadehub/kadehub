@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Sale } from '../../database/entities/sale.entity';
 import { SaleItem } from '../../database/entities/sale-item.entity';
 import { CreditSale } from '../../database/entities/credit-sale.entity';
+import { Inventory } from '../../database/entities/inventory.entity';
 import { AppEventEmitter, SALE_COMPLETED } from '../../common/events/app-event-emitter';
 import { CreateSaleDto } from './pos.dto';
 
@@ -13,6 +14,7 @@ export class PosService {
     @InjectRepository(Sale) private saleRepo: Repository<Sale>,
     @InjectRepository(SaleItem) private saleItemRepo: Repository<SaleItem>,
     @InjectRepository(CreditSale) private creditRepo: Repository<CreditSale>,
+    @InjectRepository(Inventory) private inventoryRepo: Repository<Inventory>,
     private events: AppEventEmitter,
   ) {}
 
@@ -20,6 +22,12 @@ export class PosService {
     if (dto.payment_method === 'CREDIT' && !dto.customer_id)
       throw new BadRequestException('A customer must be selected for credit sales');
 
+    // Validate stock availability before processing
+    for (const item of dto.items) {
+      const inv = await this.inventoryRepo.findOne({ where: { product_id: item.product_id } });
+      if (!inv || inv.quantity < item.quantity)
+        throw new BadRequestException(`Insufficient stock for product ID ${item.product_id}`);
+    }
     const subtotal = dto.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
     const discount = dto.discount || 0;
     if (discount > subtotal) throw new BadRequestException('Discount cannot exceed subtotal');

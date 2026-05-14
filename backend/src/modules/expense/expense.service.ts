@@ -13,7 +13,15 @@ export class ExpenseService {
       .leftJoin('e.user', 'u')
       .where('e.tenant_id = :tenantId', { tenantId })
       .andWhere('e.expense_date BETWEEN :from AND :to', { from, to })
-      .select(['e.id', 'e.category', 'e.description', 'e.amount', 'e.expense_date', 'e.created_at', 'u.name'])
+      .select([
+        'e.id AS id',
+        'e.category AS category',
+        'e.description AS description',
+        'e.amount AS amount',
+        'e.expense_date AS expense_date',
+        'e.created_at AS created_at',
+        'u.name AS user_name',
+      ])
       .orderBy('e.expense_date', 'DESC')
       .getRawMany();
   }

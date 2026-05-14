@@ -144,6 +144,7 @@ export default function Cart({ onSaleComplete }: Props) {
                     {item.product.name}
                   </p>
                   <button onClick={() => removeItem(item.product.id)}
+                    aria-label={`Remove ${item.product.name} from cart`}
                     className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded hover:bg-red-100 text-ink-300 hover:text-red-500 transition-colors mt-0.5">
                     <Trash2 size={11} />
                   </button>

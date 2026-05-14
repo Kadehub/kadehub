@@ -32,7 +32,11 @@ export default function SuppliersPage() {
       setSuppliers(Array.isArray(s.data) ? s.data : []);
       setOrders(Array.isArray(o.data) ? o.data : []);
       setProducts(Array.isArray(p.data) ? p.data : []);
-    } catch (err: any) { toast.error('Failed to load data'); }
+    } catch (err: any) {
+      const msg = err.response?.data?.message;
+      toast.error(Array.isArray(msg) ? msg[0] : msg || 'Failed to load data');
+      setSuppliers([]); setOrders([]); setProducts([]);
+    }
     finally { setLoading(false); }
   };
 
@@ -145,8 +149,8 @@ export default function SuppliersPage() {
                       <td className="px-5 py-3.5">
                         {o.status === 'pending' && (
                           <div className="flex gap-1">
-                            <button onClick={() => receiveOrder(o.id)} className="text-green-500 hover:text-green-700"><CheckCircle size={16} /></button>
-                            <button onClick={() => cancelOrder(o.id)} className="text-red-400 hover:text-red-600"><XCircle size={16} /></button>
+                            <button onClick={() => receiveOrder(o.id)} aria-label="Mark order as received" className="text-green-500 hover:text-green-700"><CheckCircle size={16} /></button>
+                            <button onClick={() => cancelOrder(o.id)} aria-label="Cancel order" className="text-red-400 hover:text-red-600"><XCircle size={16} /></button>
                           </div>
                         )}
                       </td>

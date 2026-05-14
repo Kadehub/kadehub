@@ -14,7 +14,7 @@ const formatPrice = (amount: number, currency: string) =>
     : LKR(amount);
 import {
   Check, ChevronRight, ShoppingCart, Boxes, Users, BarChart2,
-  Tag, Receipt, Truck, CreditCard, FlaskConical, UserCog, Star,
+  Tag, Receipt, Truck, FlaskConical, UserCog, Star, CreditCard,
   Building2, ArrowLeft, Loader2,
 } from 'lucide-react';
 
@@ -48,8 +48,6 @@ export default function RegisterPage() {
   const [company, setCompany] = useState({ address: '', city: '', phone: '', email: '', website: '', tax_number: '' });
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
-  const [gateway, setGateway] = useState<'paypal' | 'card'>('card');
-  const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '' });
   const [authData, setAuthData] = useState<any>(null); // after register
 
   useEffect(() => {
@@ -85,37 +83,36 @@ export default function RegisterPage() {
     try {
       await api.patch('/billing/profile', { ...company, email: company.email || account.email });
       setStep('package');
-    } catch { toast.error('Failed to save company details'); }
+    } catch (err: any) {
+      const msg = err.response?.data?.message;
+      toast.error(Array.isArray(msg) ? msg[0] : msg || 'Failed to save company details');
+    }
     finally { setLoading(false); }
   };
 
-  // ── Step 3: Select package → go to payment ──
+  // ── Step 3a: Free trial — skip payment ──
+  const startTrial = () => { setSelectedPkg(null); setStep('done'); };
+
+  // ── Step 3b: Select package → go to payment ──
   const selectPackage = (pkg: any) => { setSelectedPkg(pkg); setStep('payment'); };
 
-  // ── Step 4: Process payment ──
+  // ── Step 4: Process payment via OnePay ──
   const submitPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPkg) return;
     setLoading(true);
     try {
-      // Simulate payment gateway — in production integrate real PayPal/Stripe SDK
-      const gatewayRef = gateway === 'paypal'
-        ? `PAYPAL-${Date.now()}`
-        : `CARD-${card.number.slice(-4)}-${Date.now()}`;
-
-      await api.post('/billing/subscribe', {
+      const res = await api.post('/billing/onepay/initiate', {
         package_id: selectedPkg.id,
         billing_cycle: billing,
-        gateway,
-        gateway_ref: gatewayRef,
-        currency,
         registration_fee: registrationFee,
       });
-      setStep('done');
+      window.location.href = res.data.payment_url;
     } catch (err: any) {
       const msg = err.response?.data?.message;
       toast.error(Array.isArray(msg) ? msg[0] : msg || 'Payment failed');
-    } finally { setLoading(false); }
+      setLoading(false);
+    }
   };
 
   const price = selectedPkg
@@ -309,9 +306,16 @@ export default function RegisterPage() {
                 );
               })}
             </div>
-            <div className="text-center mt-6">
-              <button onClick={() => setStep('company')} className="text-sm text-ink-400 hover:text-ink-700 flex items-center gap-1 mx-auto">
-                <ArrowLeft size={14} /> Back to company details
+            {/* Free trial CTA */}
+            <div className="text-center mt-6 space-y-2">
+              <button onClick={startTrial}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-dashed text-sm font-semibold transition-all hover:bg-white"
+                style={{ borderColor: '#00A884', color: '#00A884' }}>
+                Start 14-day Free Trial — no credit card needed
+              </button>
+              <p className="text-xs text-ink-400">All modules included. Upgrade to a paid plan anytime.</p>
+              <button onClick={() => setStep('company')} className="text-xs text-ink-400 hover:text-ink-700 flex items-center gap-1 mx-auto pt-1">
+                <ArrowLeft size={12} /> Back to company details
               </button>
             </div>
           </div>
@@ -319,58 +323,29 @@ export default function RegisterPage() {
 
         {/* ── STEP 4: Payment ── */}
         {step === 'payment' && selectedPkg && (
-          <div className="w-full max-w-2xl px-0 sm:px-0">
+          <div className="w-full max-w-2xl">
             <div className="flex flex-col md:grid md:grid-cols-5 gap-4 sm:gap-5">
               {/* Payment form */}
               <div className="md:col-span-3 kh-card p-4 sm:p-6">
-                <h2 className="text-base sm:text-lg font-bold text-ink-900 mb-4 sm:mb-5">Payment Details</h2>
-
-                {/* Gateway selector */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-5">
-                  {(['card', 'paypal'] as const).map(g => (
-                    <button key={g} onClick={() => setGateway(g)}
-                      className="flex items-center justify-center gap-2 py-2.5 sm:py-3 rounded-xl border-2 text-xs sm:text-sm font-semibold transition-all"
-                      style={{
-                        borderColor: gateway === g ? '#00A884' : '#E2E8F0',
-                        background: gateway === g ? '#E0F2F1' : 'white',
-                        color: gateway === g ? '#00A884' : '#64748B',
-                      }}>
-                      {g === 'card' ? <CreditCard size={15} /> : <span className="font-extrabold text-blue-600">Pay</span>}
-                      {g === 'card' ? 'Credit / Debit' : 'PayPal'}
-                    </button>
-                  ))}
+                <h2 className="text-base sm:text-lg font-bold text-ink-900 mb-4">Payment</h2>
+                <div className="rounded-xl p-4 mb-4 text-center space-y-2" style={{ background: '#E0F2F1', border: '1.5px solid #B2DFDB' }}>
+                  <p className="font-bold text-ink-800">Pay securely with OnePay</p>
+                  <p className="text-xs text-ink-500">Supports Visa, Mastercard, LANKAQR &amp; internet banking.</p>
+                  <div className="flex justify-center gap-2">
+                    {['VISA', 'MC', 'QR', 'Bank'].map(m => (
+                      <span key={m} className="px-2 py-0.5 rounded text-xs font-bold bg-white border border-ink-200 text-ink-600">{m}</span>
+                    ))}
+                  </div>
                 </div>
-
-                <form onSubmit={submitPayment} className="space-y-3 sm:space-y-4">
-                  {gateway === 'card' && (
-                    <>
-                      <Input label="Card Number" placeholder="1234 5678 9012 3456" required
-                        value={card.number} onChange={e => setCard(c => ({ ...c, number: e.target.value }))}
-                        maxLength={19} />
-                      <Input label="Cardholder Name" placeholder="NIMAL PERERA" required
-                        value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value }))} />
-                      <div className="grid grid-cols-2 gap-3">
-                        <Input label="Expiry (MM/YY)" placeholder="04/28" required
-                          value={card.expiry} onChange={e => setCard(c => ({ ...c, expiry: e.target.value }))} />
-                        <Input label="CVV" placeholder="123" required type="password" maxLength={4}
-                          value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value }))} />
-                      </div>
-                    </>
-                  )}
-                  {gateway === 'paypal' && (
-                    <div className="p-4 rounded-xl text-center" style={{ background: '#EFF6FF' }}>
-                      <p className="text-sm text-blue-700 font-medium">You will be redirected to PayPal to complete payment.</p>
-                      <p className="text-xs text-blue-500 mt-1">Secure payment powered by PayPal</p>
-                    </div>
-                  )}
+                <form onSubmit={submitPayment}>
                   <button type="submit" disabled={loading}
                     className="kh-btn-primary w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm sm:text-base font-bold">
                     {loading
                       ? <Loader2 size={18} className="animate-spin" />
-                      : <>Pay {fmt(price)} <ChevronRight size={16} /></>
+                      : <>Proceed to OnePay <ChevronRight size={16} /></>
                     }
                   </button>
-                  <p className="text-xs text-center text-ink-400">🔒 Secured with 256-bit SSL encryption</p>
+                  <p className="text-xs text-center text-ink-400 mt-2">🔒 Secured via OnePay</p>
                 </form>
               </div>
 
@@ -447,7 +422,7 @@ export default function RegisterPage() {
             </div>
             <h2 className="text-2xl font-bold text-ink-900 mb-2">You're all set! 🎉</h2>
             <p className="text-ink-400 mb-2">
-              <strong>{selectedPkg?.name}</strong> plan activated successfully.
+              {selectedPkg ? <><strong>{selectedPkg.name}</strong> plan activated successfully.</> : <>Your 14-day free trial is active.</>}
             </p>
             <p className="text-sm text-ink-400 mb-8">
               Your shop is ready. Start managing sales, inventory and customers right away.

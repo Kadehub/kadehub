@@ -1,8 +1,8 @@
 import * as Minio from 'minio';
 import * as path from 'path';
 
-const ENDPOINT = 'mo-db.zenova.services';
-const BUCKET = 'kadehub';
+const ENDPOINT = process.env.MINIO_ENDPOINT ?? 'mo-db.zenova.services';
+const BUCKET = process.env.MINIO_BUCKET ?? 'kadehub';
 const ALLOWED_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg']);
 
 const MIME: Record<string, string> = {
@@ -15,8 +15,8 @@ const minioClient = new Minio.Client({
   endPoint: ENDPOINT,
   port: 443,
   useSSL: true,
-  accessKey: 'yaodVODDkdfXWxvoCE99',
-  secretKey: 'GLAn4TM2MQogyckvW7ZeLEfG0vIaTVE2xo4TwEso',
+  accessKey: process.env.MINIO_ACCESS_KEY!,
+  secretKey: process.env.MINIO_SECRET_KEY!,
 });
 
 // Ensure bucket exists and is publicly readable — called once on app start

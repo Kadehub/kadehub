@@ -34,7 +34,7 @@ export default function ExpensesPage() {
       ]);
       setExpenses(Array.isArray(e.data) ? e.data : []);
       setSummary(Array.isArray(s.data) ? s.data : []);
-    } catch { setExpenses([]); }
+    } catch { setExpenses([]); setSummary([]); }
     finally { setLoading(false); }
   };
 
@@ -126,7 +126,7 @@ export default function ExpensesPage() {
                   <td data-label={t('expenses.description')} className="px-5 py-3.5 text-ink-700">{e.description}</td>
                   <td data-label={t('expenses.amount')} className="px-5 py-3.5 text-right font-bold" style={{ color: '#FF6B6B' }}>{LKR(e.amount)}</td>
                   <td className="px-5 py-3.5 text-right">
-                    <button onClick={() => remove(e.id)} className="text-ink-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
+                    <button onClick={() => remove(e.id)} aria-label="Delete expense" className="text-ink-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
                   </td>
                 </tr>
               ))}

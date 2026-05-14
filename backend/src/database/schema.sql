@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS `subscription` (
   `billing_cycle`  ENUM('monthly','yearly'),
   `started_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `expires_at`     DATETIME,
-  `payment_status` ENUM('pending','paid','failed') NOT NULL DEFAULT 'pending',
+  `payment_status` ENUM('pending','paid','failed','trial') NOT NULL DEFAULT 'pending',
   `payment_ref`    VARCHAR(255),
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_sub_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenant` (`id`) ON DELETE CASCADE

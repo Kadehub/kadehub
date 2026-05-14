@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from '../../database/entities/product.entity';
@@ -63,7 +63,11 @@ export class InventoryService implements OnModuleInit {
   async adjustStock(productId: number, tenantId: number, dto: AdjustStockDto) {
     const product = await this.productRepo.findOne({ where: { id: productId, tenant_id: tenantId } });
     if (!product) throw new NotFoundException('Product not found');
-    await this.inventoryRepo.increment({ product_id: productId }, 'quantity', dto.quantity);
+    const inv = await this.inventoryRepo.findOne({ where: { product_id: productId } });
+    if (!inv) throw new NotFoundException('Inventory record not found');
+    const newQty = (inv.quantity ?? 0) + dto.quantity;
+    if (newQty < 0) throw new BadRequestException('Stock cannot go below zero');
+    await this.inventoryRepo.update({ product_id: productId }, { quantity: newQty });
     return this.inventoryRepo.findOne({ where: { product_id: productId } });
   }
 

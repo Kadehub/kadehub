@@ -340,6 +340,7 @@ export const translations = {
     'staff.photoHint': 'JPG, PNG · උපරිම 2MB',
     'staff.changePhoto': 'ඡායාරූපය වෙනස් කරන්න',
     'staff.uploadPhoto': 'ඡායාරූපය උඩුගත කරන්න',
+    // amazonq-ignore-next-line
     'staff.password': 'මුරපදය',
     'staff.newPassword': 'නව මුරපදය (නොවෙනස් නම් හිස් කරන්න)',
     'staff.cashier': 'අයකැමි',

@@ -77,7 +77,7 @@ export default function StaffPage() {
   };
 
   const openEditModal = (emp: any) => {
-    setEmpForm({ name: emp.name, email: emp.email, password: '', role: emp.role, phone: emp.phone || '', emp_no: emp.emp_no || '' });
+    setEmpForm({ name: emp.name, email: emp.email, password: '', role: emp.role, phone: emp.phone || '', emp_no: emp.emp_no || '', pin: emp.pin || '' });
     setEmpPhoto(null);
     setEmpPhotoPreview(resolvePhoto(emp.photo_url));
     setEditEmployee(emp);

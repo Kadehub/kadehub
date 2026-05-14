@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, Query, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param, Query, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { PosService } from './pos.service';
 import { CreateSaleDto } from './pos.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';

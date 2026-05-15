@@ -88,7 +88,6 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/register', account);
-      setAuthData(data);
       setAuth(data.user, data.access_token);
       setStep('company');
     } catch (err: any) {

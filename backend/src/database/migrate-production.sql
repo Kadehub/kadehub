@@ -58,3 +58,11 @@ CREATE TABLE IF NOT EXISTS `expense_category` (
   PRIMARY KEY (`id`),
   CONSTRAINT `fk_expc_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenant` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ------------------------------------------------------------
+-- [2025-07-30] Custom subdomain per tenant
+-- ------------------------------------------------------------
+
+ALTER TABLE `tenant`
+  ADD COLUMN IF NOT EXISTS `subdomain` VARCHAR(63) NULL DEFAULT NULL AFTER `slug`,
+  ADD UNIQUE INDEX IF NOT EXISTS `uq_tenant_subdomain` (`subdomain`);

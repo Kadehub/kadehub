@@ -25,6 +25,12 @@ export class RegisterDto {
   @MinLength(8)
   @Matches(/^(?=.*[A-Z])(?=.*\d)/, { message: 'Password must contain at least one uppercase letter and one number' })
   password: string;
+
+  @IsString()
+  @MinLength(3)
+  @MaxLength(30)
+  @Matches(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/, { message: 'Subdomain must be lowercase letters, numbers, or hyphens, and cannot start or end with a hyphen' })
+  subdomain: string;
 }
 
 export class PinLoginDto {

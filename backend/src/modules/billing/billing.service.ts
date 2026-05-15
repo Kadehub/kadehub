@@ -288,6 +288,130 @@ export class BillingService {
 
   // ── OnePay Integration ──────────────────────────────────────────────────────
 
+  async initiateRegistrationFee(tenantId: number) {
+    const appId    = process.env.ONEPAY_APP_ID;
+    const appToken = process.env.ONEPAY_APP_TOKEN;
+    const hashSalt = process.env.ONEPAY_HASH_SALT;
+    if (!appId || !appToken || !hashSalt) {
+      throw new BadRequestException('OnePay credentials not configured.');
+    }
+
+    const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
+    if (!tenant) throw new NotFoundException('Tenant not found');
+
+    // Idempotency: if already paid, just activate trial and return
+    const alreadyPaid = await this.txRepo.findOne({
+      where: { tenant_id: tenantId, status: 'completed', metadata: { type: 'registration_fee' } as any },
+    });
+    if (alreadyPaid) {
+      await this.activateTrialAfterRegistrationFee(tenantId);
+      return { already_paid: true };
+    }
+
+    const ref = `REG-${tenantId}-${Date.now()}`;
+    const tx = this.txRepo.create({
+      tenant_id: tenantId,
+      package_id: 1, // placeholder — registration fee is not tied to a package
+      amount: REGISTRATION_FEE_LKR,
+      currency: 'LKR',
+      billing_cycle: 'monthly',
+      gateway: 'onepay',
+      gateway_ref: ref,
+      status: 'pending',
+      metadata: { type: 'registration_fee' },
+    });
+    await this.txRepo.save(tx);
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const payload = {
+      amount: REGISTRATION_FEE_LKR,
+      app_id: appId,
+      reference: ref,
+      customer_first_name: tenant.name,
+      customer_last_name: 'KadeHub',
+      customer_phone_number: '0000000000',
+      customer_email: 'billing@kadehub.lk',
+      transaction_redirect_url: `${appUrl}/register/pay?status=success&ref=${ref}`,
+      currency: 'LKR',
+    };
+
+    const hashStr = `${appId}${REGISTRATION_FEE_LKR}${ref}${hashSalt}`;
+    const hash = crypto.createHash('sha256').update(hashStr).digest('hex');
+
+    const onepayRes = await this.callOnepayApi(
+      `https://merchant-api-live-v2.onepay.lk/api/ipg/gateway/request-transaction/?hash=${hash}`,
+      appToken,
+      payload,
+    );
+
+    if (!onepayRes?.data?.gateway?.redirect_url) {
+      tx.status = 'failed';
+      await this.txRepo.save(tx);
+      throw new BadRequestException(onepayRes?.message || 'OnePay transaction creation failed');
+    }
+
+    tx.metadata = { ...tx.metadata, onepay_token: onepayRes.data.ipg_transaction_id };
+    await this.txRepo.save(tx);
+
+    return { payment_url: onepayRes.data.gateway.redirect_url, reference: ref, amount: REGISTRATION_FEE_LKR };
+  }
+
+  async verifyRegistrationFeeReturn(ref: string, tenantId: number) {
+    const tx = await this.txRepo.findOne({ where: { gateway_ref: ref, tenant_id: tenantId } });
+    if (!tx) throw new NotFoundException('Transaction not found');
+
+    if (tx.status === 'completed') {
+      await this.activateTrialAfterRegistrationFee(tenantId);
+      return { status: 'completed' };
+    }
+
+    // Poll OnePay
+    const appToken = process.env.ONEPAY_APP_TOKEN;
+    const appId    = process.env.ONEPAY_APP_ID;
+    const hashSalt = process.env.ONEPAY_HASH_SALT;
+    if (appToken && appId && hashSalt && tx.metadata?.onepay_token) {
+      try {
+        const hash = crypto.createHash('sha256')
+          .update(`${appId}${tx.metadata.onepay_token}${hashSalt}`).digest('hex');
+        const res = await this.callOnepayApi(
+          `https://merchant-api-live-v2.onepay.lk/api/ipg/gateway/query-transaction/?hash=${hash}`,
+          appToken,
+          { app_id: appId, ipg_transaction_id: tx.metadata.onepay_token },
+        );
+        if (res?.data?.payment_status === 'CAPTURED' || res?.data?.status_code === '2') {
+          tx.status = 'completed';
+          await this.txRepo.save(tx);
+          await this.activateTrialAfterRegistrationFee(tenantId);
+          return { status: 'completed' };
+        }
+      } catch { /* ignore */ }
+    }
+
+    return { status: tx.status };
+  }
+
+  private async activateTrialAfterRegistrationFee(tenantId: number) {
+    // Activate tenant
+    await this.tenantRepo.update(tenantId, { status: 'active' });
+
+    // Only create trial subs if none exist yet
+    const existing = await this.subRepo.findOne({ where: { tenant_id: tenantId } });
+    if (existing) return;
+
+    const modules = ['pos', 'inventory', 'customer', 'analytics', 'expense', 'credit', 'discount', 'supplier', 'batch', 'staff'];
+    const trialExpires = new Date();
+    trialExpires.setDate(trialExpires.getDate() + 14);
+    await this.subRepo.save(
+      modules.map(m => this.subRepo.create({
+        tenant_id: tenantId,
+        module_name: m,
+        status: 'active',
+        payment_status: 'trial',
+        expires_at: trialExpires,
+      }))
+    );
+  }
+
   async initiateOnepay(tenantId: number, dto: InitiateOnepayDto) {
     const pkg = await this.packageRepo.findOne({
       where: { id: dto.package_id },
@@ -398,7 +522,11 @@ export class BillingService {
     await this.txRepo.save(tx);
 
     if (isSuccess) {
-      await this.activateSubscription(tx);
+      if (tx.metadata?.type === 'registration_fee') {
+        await this.activateTrialAfterRegistrationFee(tx.tenant_id);
+      } else {
+        await this.activateSubscription(tx);
+      }
     }
 
     return { received: true };

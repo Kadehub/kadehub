@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS `tenant` (
   `id`         INT          NOT NULL AUTO_INCREMENT,
   `name`       VARCHAR(255) NOT NULL,
   `slug`       VARCHAR(255) NOT NULL UNIQUE,
+  `subdomain`  VARCHAR(63)  NULL UNIQUE,
   `status`     ENUM('active', 'blocked', 'suspended') NOT NULL DEFAULT 'active',
   `plan_note`  TEXT,
   `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,

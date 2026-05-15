@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto, PinLoginDto } from './auth.dto';
 
@@ -20,5 +20,10 @@ export class AuthController {
   @Post('pin-login')
   pinLogin(@Body() dto: PinLoginDto) {
     return this.authService.pinLogin(dto);
+  }
+
+  @Get('check-subdomain/:subdomain')
+  checkSubdomain(@Param('subdomain') subdomain: string) {
+    return this.authService.checkSubdomain(subdomain.toLowerCase());
   }
 }

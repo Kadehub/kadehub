@@ -85,6 +85,20 @@ export class BillingController {
 
   // ── OnePay endpoints ──
 
+  /** Registration fee: mandatory LKR 25,000 one-time payment on first registration */
+  @Post('onepay/registration-fee')
+  @UseGuards(JwtAuthGuard)
+  initiateRegistrationFee(@CurrentUser() user: any) {
+    return this.billingService.initiateRegistrationFee(user.tenant_id);
+  }
+
+  /** Verify registration fee payment after returning from OnePay */
+  @Get('onepay/registration-fee/verify/:ref')
+  @UseGuards(JwtAuthGuard)
+  verifyRegistrationFee(@CurrentUser() user: any, @Param('ref') ref: string) {
+    return this.billingService.verifyRegistrationFeeReturn(ref, user.tenant_id);
+  }
+
   /** Step 1: Create OnePay transaction, get redirect URL */
   @Post('onepay/initiate')
   @UseGuards(JwtAuthGuard)

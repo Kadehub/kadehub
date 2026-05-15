@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KadeHub — Product Brochure</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Inter, system-ui, Arial, sans-serif;
+      font-size: 10.5pt;
+      color: #1a1a2e;
+      background: #fff;
+      line-height: 1.55;
+    }
+
+    /* ── Print setup ── */
+    @page { size: A4; margin: 14mm 16mm; }
+    @media print {
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always; }
+      body { font-size: 9.5pt; }
+    }
+
+    /* ── Layout ── */
+    .page { max-width: 780px; margin: 0 auto; padding: 24px 28px 32px; }
+
+    /* ── Colours ── */
+    :root {
+      --brand: #2563eb;
+      --brand-dark: #1e40af;
+      --accent: #0ea5e9;
+      --light: #eff6ff;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --green: #16a34a;
+      --orange: #ea580c;
+    }
+
+    /* ── Cover / Hero ── */
+    .cover {
+      background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 55%, var(--accent) 100%);
+      color: #fff;
+      border-radius: 12px;
+      padding: 40px 44px 36px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::after {
+      content: '';
+      position: absolute;
+      right: -60px; top: -60px;
+      width: 260px; height: 260px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+    }
+    .cover-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 20px;
+      padding: 3px 14px;
+      font-size: 8.5pt;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .cover h1 { font-size: 30pt; font-weight: 800; letter-spacing: -.5px; line-height: 1.1; }
+    .cover h1 span { color: #bfdbfe; }
+    .cover .tagline { font-size: 12pt; margin-top: 10px; opacity: .88; max-width: 520px; }
+    .cover-meta {
+      display: flex; gap: 28px; margin-top: 28px; flex-wrap: wrap;
+    }
+    .cover-meta-item { font-size: 9pt; opacity: .8; }
+    .cover-meta-item strong { display: block; font-size: 11pt; opacity: 1; }
+
+    /* ── Section headings ── */
+    h2 {
+      font-size: 14pt; font-weight: 700; color: var(--brand-dark);
+      border-left: 4px solid var(--brand);
+      padding-left: 10px;
+      margin: 28px 0 12px;
+    }
+    h3 { font-size: 10.5pt; font-weight: 700; color: #1e293b; margin: 14px 0 6px; }
+
+    /* ── Two-column grid ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--light);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+    }
+    .card-icon { font-size: 20px; margin-bottom: 6px; }
+    .card h3 { margin-top: 0; color: var(--brand-dark); }
+    .card ul { padding-left: 16px; }
+    .card ul li { margin-bottom: 3px; font-size: 9.5pt; }
+
+    /* ── Feature table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+    th {
+      background: var(--brand);
+      color: #fff;
+      text-align: left;
+      padding: 7px 10px;
+      font-weight: 600;
+    }
+    td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #f8fafc; }
+
+    /* ── Pricing ── */
+    .pricing-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 12px; }
+    .plan {
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 16px;
+      text-align: center;
+    }
+    .plan.featured {
+      border-color: var(--brand);
+      background: var(--light);
+    }
+    .plan-name { font-size: 12pt; font-weight: 700; color: var(--brand-dark); }
+    .plan-price { font-size: 18pt; font-weight: 800; color: var(--brand); margin: 6px 0 2px; }
+    .plan-price span { font-size: 9pt; font-weight: 400; color: var(--muted); }
+    .plan-desc { font-size: 8.5pt; color: var(--muted); margin-bottom: 10px; }
+    .plan ul { text-align: left; padding-left: 16px; font-size: 8.5pt; }
+    .plan ul li { margin-bottom: 4px; }
+    .badge-featured {
+      display: inline-block;
+      background: var(--brand);
+      color: #fff;
+      font-size: 7.5pt;
+      border-radius: 10px;
+      padding: 2px 10px;
+      margin-bottom: 6px;
+    }
+
+    /* ── Problem / Solution ── */
+    .ps-row { display: flex; gap: 0; margin-bottom: 8px; align-items: flex-start; }
+    .ps-problem {
+      flex: 1; background: #fff1f2; border-left: 3px solid #f43f5e;
+      padding: 8px 12px; border-radius: 6px 0 0 6px; font-size: 9pt;
+    }
+    .ps-arrow {
+      background: #f1f5f9; padding: 8px 10px; font-size: 12pt; color: var(--brand);
+      display: flex; align-items: center;
+    }
+    .ps-solution {
+      flex: 1; background: #f0fdf4; border-left: 3px solid var(--green);
+      padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 9pt;
+    }
+
+    /* ── Tech stack pills ── */
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .pill {
+      background: var(--light);
+      border: 1px solid #bfdbfe;
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 8.5pt;
+      color: var(--brand-dark);
+      font-weight: 500;
+    }
+
+    /* ── Timeline / roadmap ── */
+    .timeline { border-left: 3px solid var(--brand); padding-left: 18px; margin-top: 10px; }
+    .tl-item { position: relative; margin-bottom: 12px; }
+    .tl-item::before {
+      content: '';
+      position: absolute;
+      left: -23px; top: 4px;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--brand);
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px var(--brand);
+    }
+    .tl-item strong { color: var(--brand-dark); }
+
+    /* ── CTA footer ── */
+    .cta {
+      background: linear-gradient(135deg, var(--brand-dark), var(--brand));
+      color: #fff;
+      border-radius: 10px;
+      padding: 28px 36px;
+      margin-top: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .cta h2 { color: #fff; border-color: rgba(255,255,255,.5); margin: 0 0 6px; }
+    .cta p { opacity: .88; font-size: 9.5pt; }
+    .cta-contact { text-align: right; }
+    .cta-contact p { font-size: 9pt; opacity: .8; }
+    .cta-contact strong { font-size: 11pt; display: block; }
+
+    /* ── Print hint ── */
+    .print-hint {
+      text-align: center;
+      padding: 10px;
+      background: #fefce8;
+      border: 1px solid #fde68a;
+      border-radius: 6px;
+      font-size: 9pt;
+      color: #92400e;
+      margin-bottom: 24px;
+    }
+
+    /* ── Divider ── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+    p { margin-bottom: 8px; }
+    ul { padding-left: 18px; }
+    li { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Print hint (hidden when printing) -->
+  <div class="print-hint no-print">
+    💡 To save as PDF: press <strong>Ctrl+P</strong> (or Cmd+P on Mac) → choose <strong>"Save as PDF"</strong> → set margins to <strong>None</strong> or <strong>Minimum</strong>.
+  </div>
+
+  <!-- ── COVER ── -->
+  <div class="cover">
+    <div class="cover-badge">Product Overview · 2025</div>
+    <h1>Kade<span>Hub</span></h1>
+    <p class="tagline">Smart Point-of-Sale &amp; Shop Management Platform for Sri Lankan Retailers</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item"><strong>Multi-Tenant</strong>One platform, many shops</div>
+      <div class="cover-meta-item"><strong>Offline-First</strong>Works without internet</div>
+      <div class="cover-meta-item"><strong>Cloud-Ready</strong>Deploy anywhere</div>
+      <div class="cover-meta-item"><strong>LKR Native</strong>Built for Sri Lanka</div>
+    </div>
+  </div>
+
+  <!-- ── EXECUTIVE SUMMARY ── -->
+  <h2>Executive Summary</h2>
+  <p>
+    KadeHub is an affordable, all-in-one POS and shop management platform purpose-built for Sri Lankan grocery stores, pharmacies, and retail outlets. It unifies sales, inventory, supplier ordering, customer loyalty, expense tracking, and analytics into a single web application — accessible from any device, with or without an internet connection.
+  </p>
+  <p>
+    Built on a modern, scalable architecture (NestJS + Next.js), KadeHub runs on a dedicated OVH server with MinIO secure file storage. Every shop gets its own custom subdomain (e.g. <em>yourshop.kadehub.com</em>) and a 14-day free trial before any payment is required.
+  </p>
+
+  <!-- ── PROBLEMS & SOLUTIONS ── -->
+  <h2>Problems We Solve</h2>
+
+  <div class="ps-row">
+    <div class="ps-problem">❌ Manual cash reconciliation and missing shift reports</div>
+    <div class="ps-arrow">→</div>
+    <div class="ps-solution">✅ Shift-based cash open/close with automatic reconciliation reports</div>
+  </div>
+  <div class="ps-row">
+    <div class="ps-problem">❌ Stockouts and overstock from poor reorder visibility</div>
+    <div class="ps-arrow">→</div>
+    <div class="ps-solution">✅ Real-time low-stock alerts and configurable reorder levels</div>
+  </div>
+  <div class="ps-row">
+    <div class="ps-problem">❌ Lost sales when internet goes down</div>
+    <div class="ps-arrow">→</div>
+    <div class="ps-solution">✅ Offline-first POS queue — syncs automatically when back online</div>
+  </div>
+  <div class="ps-row">
+    <div class="ps-problem">❌ Expired stock causing waste and compliance risk</div>
+    <div class="ps-arrow">→</div>
+    <div class="ps-solution">✅ Batch &amp; expiry tracking with configurable expiring-soon alerts</div>
+  </div>
+  <div class="ps-row">
+    <div class="ps-problem">❌ No visibility into customer debt or credit sales</div>
+    <div class="ps-arrow">→</div>
+    <div class="ps-solution">✅ Credit sales module with outstanding balance tracking and payment recording</div>
+  </div>
+  <div class="ps-row">
+    <div class="ps-problem">❌ Time wasted on manual supplier orders and follow-ups</div>
+    <div class="ps-arrow">→</div>
+    <div class="ps-solution">✅ Digital purchase orders with one-click stock receiving</div>
+  </div>
+
+  <!-- ── KEY FEATURES ── -->
+  <h2>Key Features</h2>
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-icon">🛒</div>
+      <h3>Point of Sale (POS)</h3>
+      <ul>
+        <li>Fast cart with product search</li>
+        <li>CASH, CARD, LANKAQR, CREDIT payments</li>
+        <li>Printable receipts</li>
+        <li>Discount application at checkout</li>
+        <li>Offline queue with auto-sync</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">📦</div>
+      <h3>Inventory Management</h3>
+      <ul>
+        <li>Product catalogue with images</li>
+        <li>Real-time stock tracking</li>
+        <li>Low-stock &amp; reorder alerts</li>
+        <li>Batch &amp; expiry date tracking</li>
+        <li>Manual stock adjustments</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">🤝</div>
+      <h3>Supplier &amp; Purchasing</h3>
+      <ul>
+        <li>Supplier directory</li>
+        <li>Digital purchase orders</li>
+        <li>One-click stock receiving</li>
+        <li>Order status tracking (pending → received)</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">👥</div>
+      <h3>Customer CRM</h3>
+      <ul>
+        <li>Customer profiles with contact info</li>
+        <li>Loyalty points (1 pt per LKR 100)</li>
+        <li>Credit/debt tracking per customer</li>
+        <li>Payment recording against credit</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">🏷️</div>
+      <h3>Discounts &amp; Promotions</h3>
+      <ul>
+        <li>Percentage or fixed-amount discounts</li>
+        <li>Minimum purchase thresholds</li>
+        <li>Date-bounded validity periods</li>
+        <li>Auto-apply at POS checkout</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">📊</div>
+      <h3>Analytics &amp; Reports</h3>
+      <ul>
+        <li>Daily / weekly / monthly revenue</li>
+        <li>Top-selling products</li>
+        <li>Stock report across all products</li>
+        <li>Customer purchase summary</li>
+        <li>Expense &amp; P&amp;L support</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">👔</div>
+      <h3>Staff &amp; Shift Management</h3>
+      <ul>
+        <li>Cashier shift open/close</li>
+        <li>Per-shift sales reports</li>
+        <li>Cashier performance tracking</li>
+        <li>Immutable audit logs (ADMIN)</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">💰</div>
+      <h3>Expense Tracking</h3>
+      <ul>
+        <li>Categorised business expenses</li>
+        <li>Date-range filtering</li>
+        <li>Category summary for P&amp;L</li>
+        <li>Rent, utilities, salaries &amp; more</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ── MODULE TABLE ── -->
+  <h2>Module Overview</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Module</th>
+        <th>What it does</th>
+        <th>Who benefits</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Auth &amp; Multi-Tenancy</strong></td><td>JWT login, shop registration, role-based access (ADMIN / CASHIER)</td><td>All shops</td></tr>
+      <tr><td><strong>POS</strong></td><td>Cart, sales, receipts, multiple payment methods, offline sync</td><td>Cashiers, owners</td></tr>
+      <tr><td><strong>Inventory</strong></td><td>Product catalogue, stock tracking, reorder alerts, image uploads</td><td>Owners, managers</td></tr>
+      <tr><td><strong>Batch &amp; Expiry</strong></td><td>Lot tracking, expiry alerts, expired stock reports</td><td>Pharmacies, grocery</td></tr>
+      <tr><td><strong>Supplier</strong></td><td>Supplier directory, purchase orders, automatic stock receiving</td><td>Owners, managers</td></tr>
+      <tr><td><strong>Customer CRM</strong></td><td>Customer profiles, loyalty points, purchase history</td><td>All retail shops</td></tr>
+      <tr><td><strong>Credit</strong></td><td>Credit sales, outstanding debt tracking, payment recording</td><td>Shops with regulars</td></tr>
+      <tr><td><strong>Discount</strong></td><td>Promotions, percentage/fixed discounts, date-bounded validity</td><td>All shops</td></tr>
+      <tr><td><strong>Expense</strong></td><td>Business expense tracking by category, P&amp;L support</td><td>Owners, accountants</td></tr>
+      <tr><td><strong>Analytics</strong></td><td>Revenue charts, top products, stock &amp; customer reports</td><td>Owners, managers</td></tr>
+      <tr><td><strong>Staff</strong></td><td>Shift management, cash reconciliation, audit logs</td><td>Multi-staff shops</td></tr>
+      <tr><td><strong>Billing</strong></td><td>Subscription packages, module-level feature control</td><td>Platform admin</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── IDEAL CUSTOMERS ── -->
+  <h2>Ideal Customers</h2>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-icon">🛍️</div>
+      <h3>Grocery &amp; Convenience</h3>
+      <p style="font-size:9pt">Fast POS, stock alerts, and loyalty programs to keep customers coming back.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">💊</div>
+      <h3>Pharmacies</h3>
+      <p style="font-size:9pt">Batch &amp; expiry tracking ensures compliance and eliminates expired stock losses.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🏪</div>
+      <h3>Growing Retailers</h3>
+      <p style="font-size:9pt">Multi-tenant architecture supports expansion to multiple outlets from one platform.</p>
+    </div>
+  </div>
+
+  <!-- PAGE BREAK for print -->
+  <div class="page-break"></div>
+
+  <!-- ── PRICING ── -->
+  <h2>Pricing Packages</h2>
+  <div class="pricing-grid">
+
+    <div class="plan">
+      <div class="plan-name">Starter</div>
+      <div class="plan-price">LKR 2,999 <span>/ month</span></div>
+      <div class="plan-desc">LKR 29,990 / year &nbsp;·&nbsp; Up to 3 staff</div>
+      <ul>
+        <li>POS &amp; Sales</li>
+        <li>Inventory Management</li>
+        <li>Basic Reports</li>
+        <li>1 Admin + 2 Cashiers</li>
+        <li>Email support</li>
+      </ul>
+    </div>
+
+    <div class="plan featured">
+      <div class="badge-featured">Most Popular</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">LKR 4,999 <span>/ month</span></div>
+      <div class="plan-desc">LKR 49,990 / year &nbsp;·&nbsp; Up to 10 staff</div>
+      <ul>
+        <li>Everything in Starter</li>
+        <li>Customer CRM &amp; Loyalty</li>
+        <li>Supplier &amp; Purchase Orders</li>
+        <li>Expense Tracking</li>
+        <li>Priority support</li>
+      </ul>
+    </div>
+
+    <div class="plan">
+      <div class="plan-name">Enterprise</div>
+      <div class="plan-price">LKR 9,999 <span>/ month</span></div>
+      <div class="plan-desc">LKR 99,990 / year &nbsp;·&nbsp; Unlimited staff</div>
+      <ul>
+        <li>Everything in Pro</li>
+        <li>Advanced Analytics</li>
+        <li>Staff &amp; Shift Management</li>
+        <li>Credit Sales Tracking</li>
+        <li>Discounts &amp; Promotions</li>
+        <li>Batch &amp; Expiry Tracking</li>
+        <li>Dedicated onboarding &amp; training</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <hr>
+
+  <!-- ── TECHNOLOGY ── -->
+  <h2>Technology &amp; Security</h2>
+  <div class="grid-2">
+    <div>
+      <h3>Built on Modern, Proven Tech</h3>
+      <div class="pills">
+        <span class="pill">NestJS (TypeScript)</span>
+        <span class="pill">Next.js 14</span>
+        <span class="pill">MySQL 8</span>
+        <span class="pill">TypeORM</span>
+        <span class="pill">JWT Auth</span>
+        <span class="pill">Tailwind CSS</span>
+        <span class="pill">Recharts</span>
+        <span class="pill">Zustand</span>
+      </div>
+    </div>
+    <div>
+      <h3>Security &amp; Compliance</h3>
+      <ul style="font-size:9.5pt">
+        <li>Passwords hashed with bcrypt</li>
+        <li>JWT tokens with configurable expiry</li>
+        <li>Role-based access control (ADMIN / CASHIER)</li>
+        <li>All data scoped per tenant — zero cross-tenant leakage</li>
+        <li>Immutable audit logs for every significant action</li>
+        <li>CORS restricted to configured frontend origin</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── HOW IT WORKS ── -->
+  <h2>How It Works — Getting Started</h2>
+  <div class="timeline">
+    <div class="tl-item"><strong>1. Register:</strong> Enter your shop name and choose your custom subdomain (e.g. <em>yourshop.kadehub.com</em>). The subdomain can be fully customised during registration to match your brand.</div>
+    <div class="tl-item"><strong>2. Free Trial:</strong> All modules are unlocked for a <strong>14-day free trial</strong> — no payment required to get started and explore every feature.</div>
+    <div class="tl-item"><strong>3. Choose a Plan:</strong> Select Starter, Pro, or Enterprise. Pricing is shown in LKR or USD automatically based on your location.</div>
+    <div class="tl-item"><strong>4. Pay Securely:</strong> Pay via <strong>OnePay</strong> (online card / LANKAQR) or bank transfer. A one-time registration fee of <strong>LKR 25,000</strong> applies on first subscription.</div>
+    <div class="tl-item"><strong>5. Go Live:</strong> Subscription activates instantly. Your shop is live at your custom subdomain and ready to use.</div>
+  </div>
+
+  <!-- ── INFRASTRUCTURE ── -->
+  <h2>Infrastructure &amp; Hosting</h2>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-icon">🖥️</div>
+      <h3>OVH Dedicated Server</h3>
+      <p style="font-size:9pt">Hosted on a high-availability <strong>OVH dedicated server</strong> — guaranteed resources, no shared neighbours, and full control over the environment for maximum reliability.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🗄️</div>
+      <h3>MinIO Secure File Storage</h3>
+      <p style="font-size:9pt">Product images and shop logos are stored in a private <strong>MinIO object storage</strong> bucket — secure, scalable, and isolated per tenant with no publicly guessable URLs.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🌐</div>
+      <h3>Custom Subdomain per Shop</h3>
+      <p style="font-size:9pt">Every registered shop gets its own subdomain on <strong>kadehub.com</strong> (e.g. <em>yourshop.kadehub.com</em>), chosen and customised during the registration process.</p>
+    </div>
+  </div>
+
+  <!-- ── SCALING ROADMAP ── -->
+  <h2>Scaling Roadmap</h2>
+  <div class="timeline">
+    <div class="tl-item"><strong>Phase 1 — Now:</strong> Modular monolith on shared hosting or cloud. Fast to deploy, easy to maintain.</div>
+    <div class="tl-item"><strong>Phase 2 — Growth:</strong> Extract high-traffic modules (POS, Inventory) into standalone microservices.</div>
+    <div class="tl-item"><strong>Phase 3 — Scale:</strong> Replace internal event emitter with Kafka. Add Redis caching and rate limiting.</div>
+    <div class="tl-item"><strong>Phase 4 — Enterprise:</strong> CDN for product images (CloudFront), PostgreSQL migration, multi-region support.</div>
+  </div>
+
+  <!-- ── WHY KADEHUB ── -->
+  <h2>Why KadeHub?</h2>
+  <div class="grid-2">
+    <div>
+      <ul>
+        <li><strong>Built for Sri Lanka</strong> — LKR currency, LANKAQR payments, local retail workflows</li>
+        <li><strong>Offline-first</strong> — POS works without internet; syncs when reconnected</li>
+        <li><strong>All-in-one</strong> — No need for separate POS, inventory, and accounting tools</li>
+        <li><strong>Affordable</strong> — Modular pricing; pay only for what you use</li>
+      </ul>
+    </div>
+    <div>
+      <ul>
+        <li><strong>Fast onboarding</strong> — Up and running in hours, not weeks</li>
+        <li><strong>Secure &amp; auditable</strong> — Role-based access and full audit trail</li>
+        <li><strong>Scalable</strong> — Grows from a single shop to a multi-store chain</li>
+        <li><strong>Modern UI</strong> — Clean, responsive interface for any device</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── CTA ── -->
+  <div class="cta">
+    <div>
+      <h2>Ready to modernise your shop?</h2>
+      <p>Schedule a live demo, request a free trial, or get a custom quote today.</p>
+    </div>
+    <div class="cta-contact">
+      <strong>Contact Us</strong>
+      <p>📧 official.kadehub@gmail.com</p>
+      <p>🌐 www.kadehub.lk</p>
+      <p style="margin-top:6px;font-size:8pt;opacity:.7">© 2025 KadeHub. All rights reserved.</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

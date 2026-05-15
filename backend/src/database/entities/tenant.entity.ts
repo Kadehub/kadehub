@@ -11,6 +11,9 @@ export class Tenant {
   @Column({ unique: true })
   slug: string;
 
+  @Column({ unique: true, nullable: true })
+  subdomain: string;
+
   @Column({ type: 'enum', enum: ['active', 'blocked', 'suspended'], default: 'active' })
   status: string;
 

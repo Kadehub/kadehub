@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '../../../lib/api';
 import { useAuthStore } from '../../../hooks/useAuth';
@@ -14,7 +14,7 @@ const formatPrice = (amount: number, currency: string) =>
     : LKR(amount);
 import {
   Check, ChevronRight, ShoppingCart, Boxes, Users, BarChart2,
-  Tag, Receipt, Truck, FlaskConical, UserCog, Star, CreditCard,
+  Tag, Receipt, Truck, FlaskConical, UserCog, CreditCard,
   Building2, ArrowLeft, Loader2,
 } from 'lucide-react';
 
@@ -32,7 +32,7 @@ const MODULE_META: Record<string, { label: string; icon: any; desc: string }> = 
   staff:     { label: 'Staff',      icon: UserCog,      desc: 'Shifts & audit' },
 };
 
-type Step = 'account' | 'company' | 'package' | 'payment' | 'done';
+type Step = 'account' | 'company' | 'payment' | 'done';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -40,15 +40,14 @@ export default function RegisterPage() {
   const [step, setStep] = useState<Step>('account');
   const [packages, setPackages] = useState<any[]>([]);
   const [currency, setCurrency] = useState<string>('LKR');
-  const [registrationFee, setRegistrationFee] = useState<number>(25000);
+  const [registrationFee] = useState<number>(25000);
   const [loading, setLoading] = useState(false);
 
   // Form state
-  const [account, setAccount] = useState({ shopName: '', name: '', email: '', password: '' });
+  const [account, setAccount] = useState({ shopName: '', name: '', email: '', password: '', subdomain: '' });
+  const [subdomainStatus, setSubdomainStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   const [company, setCompany] = useState({ address: '', city: '', phone: '', email: '', website: '', tax_number: '' });
-  const [selectedPkg, setSelectedPkg] = useState<any>(null);
-  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
-  const [authData, setAuthData] = useState<any>(null); // after register
+  const [billing] = useState<'monthly'>('monthly');
 
   useEffect(() => {
     api.get('/billing/packages')
@@ -56,14 +55,36 @@ export default function RegisterPage() {
         const data = r.data;
         setPackages(Array.isArray(data) ? data : (data.packages ?? []));
         if (data.currency) setCurrency(data.currency);
-        if (data.registrationFee != null) setRegistrationFee(data.registrationFee);
       })
       .catch(() => setPackages([]));
   }, []);
 
+  // ── Subdomain availability check (debounced) ──
+  const checkSubdomain = useCallback((value: string) => {
+    if (!value) return setSubdomainStatus('idle');
+    if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(value) || value.length < 3) return setSubdomainStatus('invalid');
+    setSubdomainStatus('checking');
+    api.get(`/auth/check-subdomain/${value}`)
+      .then(r => setSubdomainStatus(r.data.available ? 'available' : 'taken'))
+      .catch(() => setSubdomainStatus('idle'));
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => checkSubdomain(account.subdomain), 500);
+    return () => clearTimeout(t);
+  }, [account.subdomain, checkSubdomain]);
+
+  // Auto-suggest subdomain from shop name
+  const handleShopNameChange = (value: string) => {
+    const suggested = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
+    setAccount(a => ({ ...a, shopName: value, subdomain: suggested }));
+  };
+
   // ── Step 1: Create account ──
   const submitAccount = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (subdomainStatus === 'taken') return toast.error('Subdomain is already taken');
+    if (subdomainStatus === 'invalid' || !account.subdomain) return toast.error('Enter a valid subdomain');
     setLoading(true);
     try {
       const { data } = await api.post('/auth/register', account);
@@ -82,7 +103,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await api.patch('/billing/profile', { ...company, email: company.email || account.email });
-      setStep('package');
+      setStep('payment');
     } catch (err: any) {
       const msg = err.response?.data?.message;
       toast.error(Array.isArray(msg) ? msg[0] : msg || 'Failed to save company details');
@@ -90,38 +111,24 @@ export default function RegisterPage() {
     finally { setLoading(false); }
   };
 
-  // ── Step 3a: Free trial — skip payment ──
-  const startTrial = () => { setSelectedPkg(null); setStep('done'); };
-
-  // ── Step 3b: Select package → go to payment ──
-  const selectPackage = (pkg: any) => { setSelectedPkg(pkg); setStep('payment'); };
-
-  // ── Step 4: Process payment via OnePay ──
-  const submitPayment = async (e: React.FormEvent) => {
+  // ── Step 3: Pay registration fee via OnePay ──
+  const submitRegistrationFee = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPkg) return;
     setLoading(true);
     try {
-      const res = await api.post('/billing/onepay/initiate', {
-        package_id: selectedPkg.id,
-        billing_cycle: billing,
-        registration_fee: registrationFee,
-      });
+      const res = await api.post('/billing/onepay/registration-fee');
+      if (res.data.already_paid) { setStep('done'); return; }
       window.location.href = res.data.payment_url;
     } catch (err: any) {
       const msg = err.response?.data?.message;
-      toast.error(Array.isArray(msg) ? msg[0] : msg || 'Payment failed');
+      toast.error(Array.isArray(msg) ? msg[0] : msg || 'Payment initiation failed');
       setLoading(false);
     }
   };
 
-  const price = selectedPkg
-    ? billing === 'yearly' ? selectedPkg.price_yearly : selectedPkg.price_monthly
-    : 0;
-
   const fmt = (n: number) => formatPrice(n, currency);
 
-  const STEPS: Step[] = ['account', 'company', 'package', 'payment'];
+  const STEPS: Step[] = ['account', 'company', 'payment'];
   const stepIdx = STEPS.indexOf(step);
 
   return (
@@ -139,7 +146,7 @@ export default function RegisterPage() {
         {step !== 'done' && (
           <div className="w-full max-w-2xl mb-8">
             <div className="flex items-center gap-2">
-              {['Account', 'Company', 'Package', 'Payment'].map((label, i) => (
+              {['Account', 'Company', 'Payment'].map((label, i) => (
                 <div key={label} className="flex items-center gap-2 flex-1">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
@@ -152,7 +159,7 @@ export default function RegisterPage() {
                     <span className="text-xs font-semibold hidden sm:block"
                       style={{ color: i <= stepIdx ? '#00A884' : '#94A3B8' }}>{label}</span>
                   </div>
-                  {i < 3 && <div className="flex-1 h-0.5 rounded-full" style={{ background: i < stepIdx ? '#00A884' : '#E2E8F0' }} />}
+                  {i < 2 && <div className="flex-1 h-0.5 rounded-full" style={{ background: i < stepIdx ? '#00A884' : '#E2E8F0' }} />}
                 </div>
               ))}
             </div>
@@ -166,9 +173,33 @@ export default function RegisterPage() {
             <p className="text-sm text-ink-400 mb-5">Start your KadeHub journey</p>
             <form onSubmit={submitAccount} className="space-y-3 sm:space-y-4">
               <Input label="Shop / Business Name" placeholder="e.g. Perera Grocery" required
-                value={account.shopName} onChange={e => setAccount(a => ({ ...a, shopName: e.target.value }))} />
+                value={account.shopName} onChange={e => handleShopNameChange(e.target.value)} />
               <Input label="Your Full Name" placeholder="e.g. Nimal Perera" required
                 value={account.name} onChange={e => setAccount(a => ({ ...a, name: e.target.value }))} />
+
+              {/* Subdomain field */}
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-ink-700">Your Shop Subdomain</label>
+                <div className="flex items-center border rounded-lg overflow-hidden bg-white"
+                  style={{ borderColor: subdomainStatus === 'available' ? '#00A884' : subdomainStatus === 'taken' || subdomainStatus === 'invalid' ? '#ef4444' : '#e2e8f0' }}>
+                  <input
+                    className="flex-1 px-3 py-2.5 text-sm text-ink-800 outline-none bg-transparent"
+                    placeholder="yourshop"
+                    required
+                    minLength={3}
+                    maxLength={30}
+                    value={account.subdomain}
+                    onChange={e => setAccount(a => ({ ...a, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))}
+                  />
+                  <span className="px-3 py-2.5 text-xs font-semibold text-ink-400 bg-ink-50 border-l border-ink-200 whitespace-nowrap">.kadehub.com</span>
+                </div>
+                <div className="flex items-center gap-1.5 min-h-[18px]">
+                  {subdomainStatus === 'checking' && <span className="text-xs text-ink-400">⏳ Checking availability...</span>}
+                  {subdomainStatus === 'available' && <span className="text-xs font-medium" style={{ color: '#00A884' }}>✓ <strong>{account.subdomain}.kadehub.com</strong> is available!</span>}
+                  {subdomainStatus === 'taken' && <span className="text-xs text-red-500">✗ Already taken — try another</span>}
+                  {subdomainStatus === 'invalid' && <span className="text-xs text-red-500">✗ Use lowercase letters, numbers, hyphens only (min 3 chars)</span>}
+                </div>
+              </div>
               <Input label="Email Address" type="email" placeholder="you@example.com" required
                 value={account.email} onChange={e => setAccount(a => ({ ...a, email: e.target.value }))} />
               <Input label="Password" type="password" placeholder="Min 6 characters" required
@@ -224,191 +255,62 @@ export default function RegisterPage() {
           </div>
         )}
 
-        {/* ── STEP 3: Package Selection ── */}
-        {step === 'package' && (
-          <div className="w-full max-w-5xl">
-            <div className="text-center mb-6 sm:mb-8 px-2">
-              <h2 className="text-xl sm:text-2xl font-bold text-ink-900">Choose your plan</h2>
-              <p className="text-sm text-ink-400 mt-2">Select the modules your shop needs. Upgrade anytime.</p>
-              {/* Registration fee notice */}
-              <div className="inline-flex flex-wrap items-center justify-center gap-2 mt-3 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium" style={{ background: '#FEF9C3', color: '#92400E' }}>
-                One-time registration fee:
-                <span className="line-through opacity-60">{fmt(registrationFee * 2)}</span>
-                <strong>{fmt(registrationFee)}</strong>
-                <span className="px-1.5 py-0.5 rounded-md text-xs font-bold text-white" style={{ background: '#DC2626' }}>50% OFF</span>
+        {/* ── STEP 3: Registration Fee Payment ── */}
+        {step === 'payment' && (
+          <div className="w-full max-w-md">
+            <div className="kh-card p-6 sm:p-8">
+              <h2 className="text-lg sm:text-xl font-bold text-ink-900 mb-1">Registration Fee</h2>
+              <p className="text-sm text-ink-400 mb-6">A one-time registration fee is required to activate your shop.</p>
+
+              {/* Fee breakdown */}
+              <div className="rounded-xl p-4 mb-5" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-ink-600">One-time registration fee</span>
+                  <span className="font-bold text-ink-900">{fmt(registrationFee)}</span>
+                </div>
+                <div className="flex justify-between text-xs text-ink-400 mb-3">
+                  <span>Includes 14-day free trial of all modules</span>
+                </div>
+                <div className="border-t border-ink-100 pt-3 flex justify-between font-bold">
+                  <span>Total due today</span>
+                  <span style={{ color: '#00A884' }}>{fmt(registrationFee)}</span>
+                </div>
               </div>
-              {/* Billing toggle */}
-              <div className="flex items-center justify-center mt-4">
-                <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-white border border-ink-200">
-                  {(['monthly', 'yearly'] as const).map(b => (
-                    <button key={b} onClick={() => setBilling(b)}
-                      className="px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold capitalize transition-all"
-                      style={{ background: billing === b ? '#00A884' : 'transparent', color: billing === b ? 'white' : '#64748B' }}>
-                      {b === 'yearly' ? 'Yearly — Save 17%' : 'Monthly'}
-                    </button>
+
+              {/* What you get */}
+              <div className="rounded-xl p-4 mb-5" style={{ background: '#E0F2F1', border: '1px solid #B2DFDB' }}>
+                <p className="text-xs font-semibold mb-2" style={{ color: '#00A884' }}>What you get after payment:</p>
+                <ul className="space-y-1.5">
+                  {['14-day free trial — all modules unlocked', 'Your custom subdomain: ' + account.subdomain + '.kadehub.com', 'Full POS, Inventory, Analytics & more', 'Choose a paid plan anytime from settings'].map(item => (
+                    <li key={item} className="flex items-center gap-2 text-xs text-ink-700">
+                      <Check size={12} style={{ color: '#00A884' }} /> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Payment */}
+              <div className="rounded-xl p-4 mb-4 text-center space-y-1" style={{ background: '#F1F5F9' }}>
+                <p className="text-xs font-semibold text-ink-600">Secured via OnePay</p>
+                <div className="flex justify-center gap-2 mt-1">
+                  {['VISA', 'MC', 'QR', 'Bank'].map(m => (
+                    <span key={m} className="px-2 py-0.5 rounded text-xs font-bold bg-white border border-ink-200 text-ink-600">{m}</span>
                   ))}
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {packages.map(pkg => {
-                const pkgPrice = billing === 'yearly' ? pkg.price_yearly : pkg.price_monthly;
-                return (
-                  <div key={pkg.id}
-                    className="kh-card p-5 sm:p-6 flex flex-col relative transition-all hover:shadow-lg"
-                    style={{ border: pkg.is_popular ? '2px solid #00A884' : undefined }}>
-                    {pkg.is_popular && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1"
-                        style={{ background: '#00A884' }}>
-                        <Star size={11} fill="white" /> Most Popular
-                      </div>
-                    )}
-                    <div className="mb-4">
-                      <h3 className="text-base sm:text-lg font-bold text-ink-900">{pkg.name}</h3>
-                      <p className="text-xs text-ink-400 mt-1">{pkg.description}</p>
-                    </div>
-                    <div className="mb-4 sm:mb-5">
-                      <span className="text-2xl sm:text-3xl font-extrabold" style={{ color: '#00A884' }}>{fmt(pkgPrice)}</span>
-                      <span className="text-ink-400 text-sm ml-1">/{billing === 'yearly' ? 'year' : 'month'}</span>
-                      {billing === 'yearly' && (
-                        <p className="text-xs text-ink-400 mt-0.5">{fmt(pkg.price_monthly)}/mo billed annually</p>
-                      )}
-                    </div>
-                    {/* Modules */}
-                    <div className="flex-1 space-y-2 mb-5 sm:mb-6">
-                      {pkg.modules?.map((m: any, idx: number) => {
-                        const meta = MODULE_META[m.module_name];
-                        if (!meta) return null;
-                        const Icon = meta.icon;
-                        return (
-                          <div key={`${pkg.id}-${m.module_name}-${idx}`} className="flex items-center gap-2.5 text-sm">
-                            <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                              style={{ background: '#E0F2F1' }}>
-                              <Icon size={13} style={{ color: '#00A884' }} />
-                            </div>
-                            <span className="text-ink-700 font-medium text-xs sm:text-sm">{meta.label}</span>
-                            <span className="text-ink-400 text-xs ml-auto hidden sm:block">{meta.desc}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <button onClick={() => selectPackage(pkg)}
-                      className="w-full py-2.5 rounded-xl text-sm font-bold transition-all"
-                      style={{
-                        background: pkg.is_popular ? '#00A884' : 'white',
-                        color: pkg.is_popular ? 'white' : '#00A884',
-                        border: `2px solid #00A884`,
-                      }}>
-                      Select {pkg.name}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-            {/* Free trial CTA */}
-            <div className="text-center mt-6 space-y-2">
-              <button onClick={startTrial}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-dashed text-sm font-semibold transition-all hover:bg-white"
-                style={{ borderColor: '#00A884', color: '#00A884' }}>
-                Start 14-day Free Trial — no credit card needed
-              </button>
-              <p className="text-xs text-ink-400">All modules included. Upgrade to a paid plan anytime.</p>
-              <button onClick={() => setStep('company')} className="text-xs text-ink-400 hover:text-ink-700 flex items-center gap-1 mx-auto pt-1">
-                <ArrowLeft size={12} /> Back to company details
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 4: Payment ── */}
-        {step === 'payment' && selectedPkg && (
-          <div className="w-full max-w-2xl">
-            <div className="flex flex-col md:grid md:grid-cols-5 gap-4 sm:gap-5">
-              {/* Payment form */}
-              <div className="md:col-span-3 kh-card p-4 sm:p-6">
-                <h2 className="text-base sm:text-lg font-bold text-ink-900 mb-4">Payment</h2>
-                <div className="rounded-xl p-4 mb-4 text-center space-y-2" style={{ background: '#E0F2F1', border: '1.5px solid #B2DFDB' }}>
-                  <p className="font-bold text-ink-800">Pay securely with OnePay</p>
-                  <p className="text-xs text-ink-500">Supports Visa, Mastercard, LANKAQR &amp; internet banking.</p>
-                  <div className="flex justify-center gap-2">
-                    {['VISA', 'MC', 'QR', 'Bank'].map(m => (
-                      <span key={m} className="px-2 py-0.5 rounded text-xs font-bold bg-white border border-ink-200 text-ink-600">{m}</span>
-                    ))}
-                  </div>
-                </div>
-                <form onSubmit={submitPayment}>
-                  <button type="submit" disabled={loading}
-                    className="kh-btn-primary w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm sm:text-base font-bold">
-                    {loading
-                      ? <Loader2 size={18} className="animate-spin" />
-                      : <>Proceed to OnePay <ChevronRight size={16} /></>
-                    }
-                  </button>
-                  <p className="text-xs text-center text-ink-400 mt-2">🔒 Secured via OnePay</p>
-                </form>
-              </div>
-
-              {/* Order summary */}
-              <div className="md:col-span-2 kh-card p-4 sm:p-5 h-fit">
-                <h3 className="font-semibold text-ink-800 mb-3 sm:mb-4">Order Summary</h3>
-                <div className="space-y-2 mb-3 sm:mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-ink-600">{selectedPkg.name} Plan</span>
-                    <span className="font-bold text-ink-800">{fmt(price)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-ink-400">
-                    <span>Billing</span>
-                    <span className="capitalize">{billing}</span>
-                  </div>
-                  {billing === 'yearly' && (
-                    <div className="flex justify-between text-xs" style={{ color: '#00A884' }}>
-                      <span>Annual discount</span>
-                      <span>-{fmt(selectedPkg.price_monthly * 12 - selectedPkg.price_yearly)}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="border-t border-ink-100 pt-3 mb-3 sm:mb-4">
-                  <div className="flex justify-between text-xs text-ink-500 mb-1">
-                    <div className="flex flex-col gap-0.5">
-                      <span>Registration fee (one-time)</span>
-                      <span className="px-1.5 py-0.5 rounded text-xs font-bold text-white w-fit" style={{ background: '#DC2626' }}>50% OFF</span>
-                    </div>
-                    <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
-                      <span className="line-through opacity-50">{fmt(registrationFee * 2)}</span>
-                      <span className="font-semibold" style={{ color: '#00A884' }}>{fmt(registrationFee)}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between font-bold">
-                    <span>Total</span>
-                    <div className="flex flex-col items-end gap-0.5">
-                      <span className="text-xs font-medium line-through opacity-50">{fmt(price + registrationFee * 2)}</span>
-                      <span style={{ color: '#00A884' }}>{fmt(price + registrationFee)}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <p className="text-xs font-semibold text-ink-500 mb-2">Included modules:</p>
-                  <div className="grid grid-cols-2 md:grid-cols-1 gap-1">
-                    {selectedPkg.modules?.map((m: any, idx: number) => {
-                      const meta = MODULE_META[m.module_name];
-                      if (!meta) return null;
-                      const Icon = meta.icon;
-                      return (
-                        <div key={`summary-${m.module_name}-${idx}`} className="flex items-center gap-2 text-xs text-ink-600">
-                          <Check size={12} style={{ color: '#00A884' }} />
-                          <Icon size={12} />
-                          {meta.label}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                <button onClick={() => setStep('package')}
-                  className="mt-4 text-xs text-ink-400 hover:text-ink-700 flex items-center gap-1">
-                  <ArrowLeft size={12} /> Change plan
+              <form onSubmit={submitRegistrationFee}>
+                <button type="submit" disabled={loading}
+                  className="kh-btn-primary w-full py-3 rounded-xl flex items-center justify-center gap-2 font-bold">
+                  {loading
+                    ? <Loader2 size={18} className="animate-spin" />
+                    : <>Pay {fmt(registrationFee)} &amp; Activate Trial <ChevronRight size={16} /></>}
                 </button>
-              </div>
+              </form>
+              <button onClick={() => setStep('company')}
+                className="mt-3 text-xs text-ink-400 hover:text-ink-700 flex items-center gap-1 mx-auto">
+                <ArrowLeft size={12} /> Back
+              </button>
             </div>
           </div>
         )}
@@ -421,12 +323,11 @@ export default function RegisterPage() {
               <Check size={32} style={{ color: '#00A884' }} />
             </div>
             <h2 className="text-2xl font-bold text-ink-900 mb-2">You're all set! 🎉</h2>
-            <p className="text-ink-400 mb-2">
-              {selectedPkg ? <><strong>{selectedPkg.name}</strong> plan activated successfully.</> : <>Your 14-day free trial is active.</>}
+            <p className="text-ink-400 mb-2">Registration fee paid. Your 14-day free trial is now active.</p>
+            <p className="text-sm text-ink-400 mb-2">
+              Your shop is live at: <strong style={{ color: '#00A884' }}>{account.subdomain}.kadehub.com</strong>
             </p>
-            <p className="text-sm text-ink-400 mb-8">
-              Your shop is ready. Start managing sales, inventory and customers right away.
-            </p>
+            <p className="text-xs text-ink-400 mb-8">Choose a paid plan anytime from Settings → Billing.</p>
             <button onClick={() => router.push('/pos')}
               className="kh-btn-primary w-full py-3 rounded-xl text-base font-bold flex items-center justify-center gap-2">
               Go to Dashboard <ChevronRight size={16} />

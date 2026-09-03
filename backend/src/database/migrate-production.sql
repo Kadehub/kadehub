@@ -66,3 +66,11 @@ CREATE TABLE IF NOT EXISTS `expense_category` (
 ALTER TABLE `tenant`
   ADD COLUMN IF NOT EXISTS `subdomain` VARCHAR(63) NULL DEFAULT NULL AFTER `slug`,
   ADD UNIQUE INDEX IF NOT EXISTS `uq_tenant_subdomain` (`subdomain`);
+
+-- ------------------------------------------------------------
+-- [2026-09-03] Auto-run on deploy
+-- Schema changes below are also applied by the API on startup
+-- (backend/src/database/migrations.ts). This log stays the MySQL delta.
+-- ------------------------------------------------------------
+-- Super Admin role, tenant status/subdomain, billing enums, support tables
+-- are created by runPendingMigrations() when the backend container starts.

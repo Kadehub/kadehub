@@ -69,7 +69,11 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.userRepo.findOne({ where: { email: dto.email } });
+    const email = dto.email.trim().toLowerCase();
+    const user = await this.userRepo
+      .createQueryBuilder('u')
+      .where('LOWER(u.email) = :email', { email })
+      .getOne();
     if (!user || !(await bcrypt.compare(dto.password, user.password_hash))) {
       throw new UnauthorizedException('Invalid credentials');
     }

@@ -1,13 +1,23 @@
 import 'reflect-metadata';
+import * as dotenv from 'dotenv';
+dotenv.config();
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as path from 'path';
 import { ensurePublicBucket } from './common/cloudinary';
+import { databaseConfig } from './config/database.config';
+import { runPendingMigrations } from './database/run-migrations';
 
 async function bootstrap() {
+  const migrateDs = new DataSource(databaseConfig() as any);
+  await migrateDs.initialize();
+  await runPendingMigrations(migrateDs);
+  await migrateDs.destroy();
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.setGlobalPrefix('api');
   const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',').map(s => s.trim()).filter(Boolean);

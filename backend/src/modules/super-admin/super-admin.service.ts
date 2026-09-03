@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import * as bcrypt from 'bcryptjs';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { User } from '../../database/entities/user.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
@@ -55,8 +56,12 @@ export class UpdateAnnouncementDto {
 
 // ── Service ───────────────────────────────────────────────────────────────────
 
+const DEFAULT_SUPER_ADMIN_EMAIL = 'superadmin@kadehub.com';
+const DEFAULT_SUPER_ADMIN_PASSWORD = 'SuperAdmin@123';
+const LEGACY_DUMMY_HASH = '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
+
 @Injectable()
-export class SuperAdminService {
+export class SuperAdminService implements OnModuleInit {
   private readonly logger = new Logger(SuperAdminService.name);
 
   constructor(
@@ -71,6 +76,77 @@ export class SuperAdminService {
     private emailService: EmailService,
     private cloudflare: CloudflareService,
   ) {}
+
+  async onModuleInit() {
+    await this.ensureSuperAdmin();
+  }
+
+  private async ensureSuperAdmin() {
+    try {
+      await this.ensureSuperAdminRole();
+
+      const email = (process.env.SUPER_ADMIN_EMAIL || DEFAULT_SUPER_ADMIN_EMAIL).trim().toLowerCase();
+      const password = process.env.SUPER_ADMIN_PASSWORD || DEFAULT_SUPER_ADMIN_PASSWORD;
+      const forceReset = process.env.SUPER_ADMIN_RESET_PASSWORD === 'true';
+
+      let tenant = await this.tenantRepo.findOne({ where: { slug: 'kadehub-platform' } });
+      if (!tenant) {
+        tenant = await this.tenantRepo.save(this.tenantRepo.create({
+          name: 'KadeHub Platform',
+          slug: 'kadehub-platform',
+          subdomain: 'admin',
+          status: 'active',
+        }));
+      }
+
+      let user = await this.userRepo
+        .createQueryBuilder('u')
+        .where('LOWER(u.email) = :email', { email })
+        .getOne();
+      if (!user) {
+        user = await this.userRepo.findOne({ where: { role: 'SUPER_ADMIN' } });
+      }
+
+      const hash = await bcrypt.hash(password, 10);
+      const brokenSeed = user?.password_hash === LEGACY_DUMMY_HASH;
+      const mustWrite = !user || forceReset || brokenSeed || user.role !== 'SUPER_ADMIN'
+        || !(await bcrypt.compare(password, user.password_hash));
+
+      if (!mustWrite) return;
+
+      if (!user) {
+        await this.userRepo.save(this.userRepo.create({
+          tenant_id: tenant.id,
+          name: 'Super Admin',
+          email,
+          password_hash: hash,
+          role: 'SUPER_ADMIN',
+        }));
+        this.logger.log(`Created Super Admin ${email}`);
+        return;
+      }
+
+      user.email = email;
+      user.role = 'SUPER_ADMIN';
+      if (!user.tenant_id) user.tenant_id = tenant.id;
+      user.password_hash = hash;
+      await this.userRepo.save(user);
+      this.logger.log(`Reset Super Admin login for ${email}`);
+    } catch (err) {
+      this.logger.warn(`Could not ensure Super Admin: ${err.message}`);
+    }
+  }
+
+  private async ensureSuperAdminRole() {
+    const type = this.userRepo.manager.connection.options.type;
+    if (type === 'postgres') {
+      await this.userRepo.query(`ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'SUPER_ADMIN'`).catch(() => {});
+    } else {
+      await this.userRepo.query(
+        `ALTER TABLE \`user\` MODIFY COLUMN \`role\` ENUM('SUPER_ADMIN','ADMIN','CASHIER') NOT NULL DEFAULT 'CASHIER'`,
+      ).catch(() => {});
+    }
+  }
 
   // ── Dashboard stats ────────────────────────────────────────────────────────
 

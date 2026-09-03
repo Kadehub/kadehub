@@ -15,4 +15,4 @@ INSERT IGNORE INTO `tenant` (`id`, `name`, `slug`, `status`) VALUES (0, 'KadeHub
 -- Insert super admin user (change email/password as needed)
 -- Password below is bcrypt hash of: SuperAdmin@123
 INSERT IGNORE INTO `user` (`tenant_id`, `name`, `email`, `password_hash`, `role`)
-VALUES (0, 'Super Admin', 'superadmin@kadehub.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'SUPER_ADMIN');
+VALUES (0, 'Super Admin', 'superadmin@kadehub.com', '$2a$10$/yAWpqaOAJoHWn81f34vdOgK8/wzoH/zvclQohccuVYO2O8UhhTwy', 'SUPER_ADMIN');

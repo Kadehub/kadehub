@@ -28,11 +28,17 @@ export const useAuthStore = create<AuthStore>()(
 );
 
 export function useAuthHydrated() {
-  const [hydrated, setHydrated] = useState(useAuthStore.persist.hasHydrated());
+  const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
-    const unsub = useAuthStore.persist.onFinishHydration(() => setHydrated(true));
-    setHydrated(useAuthStore.persist.hasHydrated());
-    return unsub;
+    const persistApi = useAuthStore.persist;
+    if (typeof persistApi?.hasHydrated === 'function' && persistApi.hasHydrated()) {
+      setHydrated(true);
+      return;
+    }
+    if (typeof persistApi?.onFinishHydration === 'function') {
+      return persistApi.onFinishHydration(() => setHydrated(true));
+    }
+    setHydrated(true);
   }, []);
   return hydrated;
 }

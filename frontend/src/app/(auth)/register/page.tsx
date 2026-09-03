@@ -7,6 +7,7 @@ import KadeHubLogo from '../../../components/ui/KadeHubLogo';
 import { Input } from '../../../components/ui/Input';
 import { LKR } from '../../../lib/format';
 import toast from 'react-hot-toast';
+import BankTransferForm from '../../../components/billing/BankTransferForm';
 
 const formatPrice = (amount: number, currency: string) =>
   currency === 'USD'
@@ -48,6 +49,7 @@ export default function RegisterPage() {
   const [subdomainStatus, setSubdomainStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   const [company, setCompany] = useState({ address: '', city: '', phone: '', email: '', website: '', tax_number: '' });
   const [billing] = useState<'monthly'>('monthly');
+  const [pendingReview, setPendingReview] = useState(false);
 
   useEffect(() => {
     api.get('/billing/packages')
@@ -108,21 +110,6 @@ export default function RegisterPage() {
       toast.error(Array.isArray(msg) ? msg[0] : msg || 'Failed to save company details');
     }
     finally { setLoading(false); }
-  };
-
-  // ── Step 3: Pay registration fee via OnePay ──
-  const submitRegistrationFee = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await api.post('/billing/onepay/registration-fee');
-      if (res.data.already_paid) { setStep('done'); return; }
-      window.location.href = res.data.payment_url;
-    } catch (err: any) {
-      const msg = err.response?.data?.message;
-      toast.error(Array.isArray(msg) ? msg[0] : msg || 'Payment initiation failed');
-      setLoading(false);
-    }
   };
 
   const fmt = (n: number) => formatPrice(n, currency);
@@ -288,24 +275,13 @@ export default function RegisterPage() {
                 </ul>
               </div>
 
-              {/* Payment */}
-              <div className="rounded-xl p-4 mb-4 text-center space-y-1" style={{ background: '#F1F5F9' }}>
-                <p className="text-xs font-semibold text-ink-600">Secured via OnePay</p>
-                <div className="flex justify-center gap-2 mt-1">
-                  {['VISA', 'MC', 'QR', 'Bank'].map(m => (
-                    <span key={m} className="px-2 py-0.5 rounded text-xs font-bold bg-white border border-ink-200 text-ink-600">{m}</span>
-                  ))}
-                </div>
-              </div>
-
-              <form onSubmit={submitRegistrationFee}>
-                <button type="submit" disabled={loading}
-                  className="kh-btn-primary w-full py-3 rounded-xl flex items-center justify-center gap-2 font-bold">
-                  {loading
-                    ? <Loader2 size={18} className="animate-spin" />
-                    : <>Pay {fmt(registrationFee)} &amp; Activate Trial <ChevronRight size={16} /></>}
-                </button>
-              </form>
+              <BankTransferForm
+                type="registration_fee"
+                amount={registrationFee}
+                currency={currency}
+                depositorDefault={account.name}
+                onSuccess={() => { setPendingReview(true); setStep('done'); toast.success('Slip submitted for review'); }}
+              />
               <button onClick={() => setStep('company')}
                 className="mt-3 text-xs text-ink-400 hover:text-ink-700 flex items-center gap-1 mx-auto">
                 <ArrowLeft size={12} /> Back
@@ -321,16 +297,34 @@ export default function RegisterPage() {
               style={{ background: '#E0F2F1' }}>
               <Check size={32} style={{ color: '#00A884' }} />
             </div>
-            <h2 className="text-2xl font-bold text-ink-900 mb-2">You're all set! 🎉</h2>
-            <p className="text-ink-400 mb-2">Registration fee paid. Your 14-day free trial is now active.</p>
-            <p className="text-sm text-ink-400 mb-2">
-              Your shop is live at: <strong style={{ color: '#00A884' }}>{account.subdomain}.kadehub.com</strong>
-            </p>
-            <p className="text-xs text-ink-400 mb-8">Choose a paid plan anytime from Settings → Billing.</p>
-            <button onClick={() => router.push('/pos')}
-              className="kh-btn-primary w-full py-3 rounded-xl text-base font-bold flex items-center justify-center gap-2">
-              Go to Dashboard <ChevronRight size={16} />
-            </button>
+            <h2 className="text-2xl font-bold text-ink-900 mb-2">
+              {pendingReview ? 'Slip received' : "You're all set! 🎉"}
+            </h2>
+            {pendingReview ? (
+              <>
+                <p className="text-ink-400 mb-2">We will activate your 14-day trial after verifying the bank transfer.</p>
+                <p className="text-sm text-ink-400 mb-2">
+                  Your shop will go live at: <strong style={{ color: '#00A884' }}>{account.subdomain}.kadehub.com</strong>
+                </p>
+                <p className="text-xs text-ink-400 mb-8">You can sign in anytime — access unlocks once the slip is approved.</p>
+                <button onClick={() => router.push('/login')}
+                  className="kh-btn-primary w-full py-3 rounded-xl text-base font-bold flex items-center justify-center gap-2">
+                  Back to sign in <ChevronRight size={16} />
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-ink-400 mb-2">Registration fee paid. Your 14-day free trial is now active.</p>
+                <p className="text-sm text-ink-400 mb-2">
+                  Your shop is live at: <strong style={{ color: '#00A884' }}>{account.subdomain}.kadehub.com</strong>
+                </p>
+                <p className="text-xs text-ink-400 mb-8">Choose a paid plan anytime from Settings → Billing.</p>
+                <button onClick={() => router.push('/pos')}
+                  className="kh-btn-primary w-full py-3 rounded-xl text-base font-bold flex items-center justify-center gap-2">
+                  Go to Dashboard <ChevronRight size={16} />
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

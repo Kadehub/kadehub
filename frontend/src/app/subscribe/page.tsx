@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../hooks/useAuth';
 import api from '../../lib/api';
 import { LKR } from '../../lib/format';
-import { Check, ArrowLeft, Loader2, Star } from 'lucide-react';
+import BankTransferForm from '../../components/billing/BankTransferForm';
+import { Check, ArrowLeft, Star, Clock } from 'lucide-react';
 
 const fmt = (n: number, currency: string) =>
   currency === 'USD'
@@ -17,8 +18,8 @@ export default function SubscribePage() {
   const [registrationFee, setRegistrationFee] = useState(25000);
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [pendingSlip, setPendingSlip] = useState<any>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     api.get('/billing/packages').then(r => {
@@ -27,6 +28,10 @@ export default function SubscribePage() {
       if (d.currency) setCurrency(d.currency);
       if (d.registrationFee != null) setRegistrationFee(d.registrationFee);
     }).catch(() => {});
+    api.get('/billing/bank-transfer/mine').then(r => {
+      const pending = (Array.isArray(r.data) ? r.data : []).find((t: any) => t.status === 'pending');
+      if (pending) setPendingSlip(pending);
+    }).catch(() => {});
   }, []);
 
   const price = selectedPkg
@@ -34,21 +39,29 @@ export default function SubscribePage() {
     : 0;
   const total = price + registrationFee;
 
-  async function pay(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true); setError('');
-    try {
-      const res = await api.post('/billing/onepay/initiate', {
-        package_id: selectedPkg.id,
-        billing_cycle: billing,
-        registration_fee: registrationFee,
-      });
-      window.location.href = res.data.payment_url;
-    } catch (err: any) {
-      const msg = err?.response?.data?.message;
-      setError(Array.isArray(msg) ? msg[0] : msg || 'Payment initiation failed. Please try again.');
-      setLoading(false);
-    }
+  if (pendingSlip || submitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#F1F5F9' }}>
+        <div className="w-full max-w-md bg-white rounded-2xl p-8 text-center shadow-sm">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#FFF8E1' }}>
+            <Clock size={26} style={{ color: '#F59E0B' }} />
+          </div>
+          <h2 className="text-xl font-bold text-ink-900 mb-2">Payment under review</h2>
+          <p className="text-sm text-ink-500 mb-4">
+            Your bank slip has been submitted. We will activate your shop as soon as the transfer is verified.
+          </p>
+          {pendingSlip && (
+            <p className="text-xs text-ink-400 mb-6">
+              Ref {pendingSlip.gateway_ref} · {fmt(pendingSlip.amount, currency)}
+            </p>
+          )}
+          <button onClick={() => { logout(); window.location.href = '/login'; }}
+            className="text-sm font-semibold" style={{ color: '#00A884' }}>
+            Sign out
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // ── Package selection ──
@@ -146,26 +159,17 @@ export default function SubscribePage() {
         </button>
 
         <div className="flex flex-col md:grid md:grid-cols-5 gap-4">
-          {/* OnePay form */}
           <div className="md:col-span-3 bg-white rounded-2xl p-6 shadow-sm">
             <h2 className="font-bold text-ink-900 text-lg mb-4">Payment</h2>
-            <div className="rounded-xl p-5 mb-5 text-center space-y-3" style={{ background: '#E0F2F1', border: '1.5px solid #B2DFDB' }}>
-              <p className="font-bold text-ink-800">Pay securely with OnePay</p>
-              <p className="text-xs text-ink-500">Supports Visa, Mastercard, LANKAQR &amp; internet banking.</p>
-              <div className="flex justify-center gap-2">
-                {['VISA', 'MC', 'QR', 'Bank'].map(m => (
-                  <span key={m} className="px-2 py-0.5 rounded text-xs font-bold bg-white border border-ink-200 text-ink-600">{m}</span>
-                ))}
-              </div>
-            </div>
-            <form onSubmit={pay}>
-              {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
-              <button type="submit" disabled={loading}
-                className="kh-btn-primary w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2">
-                {loading ? <Loader2 size={16} className="animate-spin" /> : `Proceed to OnePay →`}
-              </button>
-              <p className="text-xs text-center text-ink-400 mt-2">🔒 Secured via OnePay</p>
-            </form>
+            <BankTransferForm
+              type="subscription"
+              amount={total}
+              currency={currency}
+              packageId={selectedPkg.id}
+              billingCycle={billing}
+              registrationFee={registrationFee}
+              onSuccess={() => { setSubmitted(true); setPendingSlip({ gateway_ref: 'pending', amount: total }); }}
+            />
           </div>
 
           {/* Order summary */}

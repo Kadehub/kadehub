@@ -3,12 +3,13 @@ import * as path from 'path';
 
 const ENDPOINT = process.env.MINIO_ENDPOINT ?? 'mo-db.zenova.services';
 const BUCKET = process.env.MINIO_BUCKET ?? 'kadehub';
-const ALLOWED_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg']);
+const ALLOWED_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.pdf']);
 
 const MIME: Record<string, string> = {
   '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
   '.png': 'image/png',  '.webp': 'image/webp',
   '.gif': 'image/gif',  '.svg': 'image/svg+xml',
+  '.pdf': 'application/pdf',
 };
 
 const minioClient = new Minio.Client({

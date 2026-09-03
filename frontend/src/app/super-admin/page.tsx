@@ -10,6 +10,7 @@ interface Stats {
   blockedShops: number;
   totalRevenue: number;
   recentTransactions: any[];
+  pendingSlips?: number;
 }
 
 export default function SuperAdminDashboard() {
@@ -56,9 +57,9 @@ export default function SuperAdminDashboard() {
       {/* Quick links */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
+          { href: '/super-admin/payments',      label: 'Payment Slips',      desc: stats?.pendingSlips ? `${stats.pendingSlips} awaiting approval` : 'Review bank transfer slips', color: '#00796B', bg: '#E0F2F1' },
           { href: '/super-admin/shops',        label: 'Manage Shops',       desc: 'View, block or change plans',    color: '#00796B', bg: '#E0F2F1' },
           { href: '/super-admin/transactions',  label: 'All Transactions',   desc: 'Platform payment history',       color: '#2563EB', bg: '#EFF6FF' },
-          { href: '/super-admin/packages',      label: 'Manage Packages',    desc: 'View subscription packages',     color: '#F59E0B', bg: '#FFF8E1' },
         ].map(({ href, label, desc, color, bg }) => (
           <Link key={href} href={href}
             className="kh-card p-5 flex items-center justify-between hover:shadow-md transition-shadow group">

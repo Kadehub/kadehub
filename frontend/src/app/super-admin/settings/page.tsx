@@ -1,9 +1,31 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../../hooks/useAuth';
-import { ShieldCheck, Mail, Key } from 'lucide-react';
+import api from '../../../lib/api';
+import toast from 'react-hot-toast';
+import { ShieldCheck, Mail, Key, Landmark } from 'lucide-react';
 
 export default function SuperAdminSettingsPage() {
   const { user } = useAuthStore();
+  const [bank, setBank] = useState({ bank_name: '', account_name: '', account_number: '', branch: '', instructions: '' });
+  const [savingBank, setSavingBank] = useState(false);
+
+  useEffect(() => {
+    api.get('/super-admin/bank-details').then(r => {
+      if (r.data?.bank) setBank(b => ({ ...b, ...r.data.bank }));
+    }).catch(() => {});
+  }, []);
+
+  async function saveBank(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingBank(true);
+    try {
+      const { data } = await api.patch('/super-admin/bank-details', bank);
+      setBank({ ...bank, ...data });
+      toast.success('Bank details saved');
+    } catch { toast.error('Could not save bank details'); }
+    finally { setSavingBank(false); }
+  }
 
   return (
     <div className="space-y-5 max-w-2xl">
@@ -46,6 +68,51 @@ export default function SuperAdminSettingsPage() {
             To change the super admin password, update the <code className="bg-ink-100 px-1.5 py-0.5 rounded text-ink-600">password_hash</code> directly in the database using a bcrypt hash.
           </p>
         </div>
+      </div>
+
+      <div className="kh-card p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#E0F2F1' }}>
+            <Landmark size={18} style={{ color: '#00796B' }} />
+          </div>
+          <div>
+            <h3 className="font-semibold text-ink-800">Bank details for transfers</h3>
+            <p className="text-xs text-ink-400">Shown to shops when they pay by bank slip</p>
+          </div>
+        </div>
+        <form onSubmit={saveBank} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className="text-sm space-y-1">
+            <span className="text-ink-600">Bank name</span>
+            <input value={bank.bank_name} onChange={e => setBank(b => ({ ...b, bank_name: e.target.value }))}
+              className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm" />
+          </label>
+          <label className="text-sm space-y-1">
+            <span className="text-ink-600">Account name</span>
+            <input value={bank.account_name} onChange={e => setBank(b => ({ ...b, account_name: e.target.value }))}
+              className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm" />
+          </label>
+          <label className="text-sm space-y-1">
+            <span className="text-ink-600">Account number</span>
+            <input value={bank.account_number} onChange={e => setBank(b => ({ ...b, account_number: e.target.value }))}
+              className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm" />
+          </label>
+          <label className="text-sm space-y-1">
+            <span className="text-ink-600">Branch</span>
+            <input value={bank.branch} onChange={e => setBank(b => ({ ...b, branch: e.target.value }))}
+              className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm" />
+          </label>
+          <label className="text-sm space-y-1 sm:col-span-2">
+            <span className="text-ink-600">Instructions</span>
+            <textarea value={bank.instructions} onChange={e => setBank(b => ({ ...b, instructions: e.target.value }))}
+              className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm min-h-[72px]" />
+          </label>
+          <div className="sm:col-span-2 flex justify-end">
+            <button type="submit" disabled={savingBank}
+              className="kh-btn-primary px-4 py-2.5 rounded-xl text-sm font-bold disabled:opacity-50">
+              {savingBank ? 'Saving…' : 'Save bank details'}
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* Suggested features notice */}

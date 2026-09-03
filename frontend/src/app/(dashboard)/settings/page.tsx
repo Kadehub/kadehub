@@ -7,7 +7,8 @@ import { LKR } from '../../../lib/format';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../../hooks/useAuth';
-import { Building2, Camera, CreditCard, Package, Check, Star, ArrowLeft, Loader2 } from 'lucide-react';
+import BankTransferForm from '../../../components/billing/BankTransferForm';
+import { Building2, Camera, CreditCard, Package, Check, Star, ArrowLeft, Clock } from 'lucide-react';
 
 export default function SettingsPage() {
   const { setLogoUrl } = useAuthStore();
@@ -28,7 +29,7 @@ export default function SettingsPage() {
   const [billingLoaded, setBillingLoaded] = useState(false);
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
-  const [paying, setPaying] = useState(false);
+  const [slipSubmitted, setSlipSubmitted] = useState(false);
 
   useEffect(() => {
     api.get('/billing/profile').then(r => {
@@ -77,23 +78,7 @@ export default function SettingsPage() {
     } catch { toast.error('Failed to upload logo'); }
   };
 
-  const submitPayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedPkg) return;
-    setPaying(true);
-    try {
-      const res = await api.post('/billing/onepay/initiate', {
-        package_id: selectedPkg.id,
-        billing_cycle: billing,
-        ...(!activeSub && { registration_fee: regFee }),
-      });
-      window.location.href = res.data.payment_url;
-    } catch (err: any) {
-      const msg = err.response?.data?.message;
-      toast.error(Array.isArray(msg) ? msg[0] : msg || 'Payment failed');
-      setPaying(false);
-    }
-  };
+  const pendingTx = transactions.find(t => t.status === 'pending' && t.gateway === 'bank_transfer');
 
   const activeSub = subscriptions[0];
   const currentPkg = packages.find(p => p.id === activeSub?.package_id) ?? null;
@@ -216,23 +201,27 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
                 {/* Payment form */}
                 <div className="md:col-span-3 space-y-4">
-                  <div className="rounded-xl p-5 text-center space-y-3" style={{ background: '#E0F2F1', border: '1.5px solid #B2DFDB' }}>
-                    <p className="font-bold text-ink-800">Pay securely with OnePay</p>
-                    <p className="text-xs text-ink-500">Supports Visa, Mastercard, LANKAQR &amp; internet banking.</p>
-                    <div className="flex justify-center gap-2">
-                      {['VISA', 'MC', 'QR', 'Bank'].map(m => (
-                        <span key={m} className="px-2 py-0.5 rounded text-xs font-bold bg-white border border-ink-200 text-ink-600">{m}</span>
-                      ))}
+                  {pendingTx || slipSubmitted ? (
+                    <div className="rounded-xl p-5 text-center" style={{ background: '#FFF8E1', border: '1px solid #FDE68A' }}>
+                      <Clock size={22} className="mx-auto mb-2" style={{ color: '#F59E0B' }} />
+                      <p className="font-bold text-ink-800">Slip submitted — awaiting approval</p>
+                      <p className="text-xs text-ink-500 mt-1">Admin will verify the transfer and activate your plan.</p>
                     </div>
-                  </div>
-                  <form onSubmit={submitPayment} className="space-y-3">
-                    <button type="submit" disabled={paying}
-                      className="w-full py-3 rounded-xl text-base font-bold flex items-center justify-center gap-2 text-white transition-all"
-                      style={{ background: '#00A884' }}>
-                      {paying ? <Loader2 size={18} className="animate-spin" /> : <>Proceed to OnePay &rarr;</>}
-                    </button>
-                    <p className="text-xs text-center text-ink-400">🔒 Secured via OnePay</p>
-                  </form>
+                  ) : (
+                    <BankTransferForm
+                      type="subscription"
+                      amount={!activeSub ? price + regFee : price}
+                      currency={currency}
+                      packageId={selectedPkg.id}
+                      billingCycle={billing}
+                      registrationFee={!activeSub ? regFee : undefined}
+                      onSuccess={() => {
+                        setSlipSubmitted(true);
+                        toast.success('Slip submitted for review');
+                        api.get('/billing/transactions').then(r => setTransactions(Array.isArray(r.data) ? r.data : []));
+                      }}
+                    />
+                  )}
                 </div>
                 {/* Order summary */}
                 <div className="md:col-span-2 rounded-xl p-4 h-fit" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>
@@ -274,6 +263,15 @@ export default function SettingsPage() {
             </Card>
           ) : (
             <>
+              {(pendingTx || slipSubmitted) && (
+                <div className="flex items-start gap-3 p-4 rounded-xl border" style={{ background: '#FFF8E1', borderColor: '#FDE68A' }}>
+                  <Clock size={16} style={{ color: '#F59E0B' }} className="mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-ink-800">Bank slip pending review</p>
+                    <p className="text-xs text-ink-500 mt-0.5">Your plan will activate after an admin verifies the transfer.</p>
+                  </div>
+                </div>
+              )}
               {/* Current plan */}
               {activeSub && (
                 <Card>
@@ -438,8 +436,11 @@ export default function SettingsPage() {
                           <td data-label="Amount" className="px-5 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(tx.amount)}</td>
                           <td data-label="Status" className="px-5 py-3">
                             <span className="px-2 py-0.5 rounded-full text-xs font-semibold"
-                              style={{ background: tx.status === 'completed' ? '#E0F2F1' : '#FFF0F0', color: tx.status === 'completed' ? '#00796B' : '#E53E3E' }}>
-                              {tx.status}
+                              style={{
+                                background: tx.status === 'completed' ? '#E0F2F1' : tx.status === 'pending' ? '#FFF8E1' : '#FFF0F0',
+                                color: tx.status === 'completed' ? '#00796B' : tx.status === 'pending' ? '#B45309' : '#E53E3E',
+                              }}>
+                              {tx.status === 'pending' ? 'pending review' : tx.status}
                             </span>
                           </td>
                         </tr>

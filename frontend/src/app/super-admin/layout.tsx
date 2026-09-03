@@ -2,12 +2,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '../../hooks/useAuth';
+import api from '../../lib/api';
 import Link from 'next/link';
 import KadeHubLogo from '../../components/ui/KadeHubLogo';
 import {
   LayoutDashboard, Store, CreditCard, Package,
   LogOut, ChevronRight, ShieldCheck, BarChart2, Settings,
-  Tag, Megaphone, Activity,
+  Tag, Megaphone, Activity, Banknote,
 } from 'lucide-react';
 
 const NAV = [
@@ -22,6 +23,7 @@ const NAV = [
     group: 'Management',
     items: [
       { href: '/super-admin/shops', label: 'All Shops', icon: Store },
+      { href: '/super-admin/payments', label: 'Payment Slips', icon: Banknote },
       { href: '/super-admin/transactions', label: 'Transactions', icon: CreditCard },
       { href: '/super-admin/packages', label: 'Packages', icon: Package },
       { href: '/super-admin/coupons', label: 'Coupons', icon: Tag },
@@ -47,8 +49,15 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   const router = useRouter();
   const pathname = usePathname();
   const [hydrated, setHydrated] = useState(false);
+  const [pendingSlips, setPendingSlips] = useState(0);
 
   useEffect(() => setHydrated(true), []);
+  useEffect(() => {
+    if (!hydrated || user?.role !== 'SUPER_ADMIN') return;
+    api.get('/super-admin/bank-transfers/pending-count')
+      .then(r => setPendingSlips(r.data?.count || 0))
+      .catch(() => {});
+  }, [hydrated, user, pathname]);
   useEffect(() => {
     if (hydrated && (!token || user?.role !== 'SUPER_ADMIN')) router.push('/login');
   }, [hydrated, token, user]);
@@ -97,6 +106,12 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                       style={active ? { background: 'linear-gradient(135deg,#00796B,#00A884)' } : {}}>
                       <Icon size={17} style={active ? { color: 'white' } : {}} className={active ? '' : 'text-ink-400 group-hover:text-ink-600'} />
                       <span className="flex-1">{label}</span>
+                      {href === '/super-admin/payments' && pendingSlips > 0 && (
+                        <span className="min-w-[18px] h-[18px] px-1 rounded-full text-2xs font-bold flex items-center justify-center"
+                          style={{ background: active ? 'rgba(255,255,255,0.25)' : '#F59E0B', color: active ? 'white' : '#0a2e25' }}>
+                          {pendingSlips}
+                        </span>
+                      )}
                       {active && <ChevronRight size={14} className="opacity-60" />}
                     </Link>
                   );

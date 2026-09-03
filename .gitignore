@@ -3,6 +3,7 @@ dist/
 .env
 .env.local
 uploads/
+backend/data/platform-bank.json
 *.log
 .next/
 tsconfig.tsbuildinfo

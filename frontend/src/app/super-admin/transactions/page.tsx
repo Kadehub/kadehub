@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import api from '../../../lib/api';
-import { CreditCard, Download, FileText } from 'lucide-react';
+import { CreditCard, Download, FileText, Eye } from 'lucide-react';
+import Modal from '../../../components/ui/Modal';
 
 export default function TransactionsPage() {
   const [data, setData] = useState<any[]>([]);
@@ -9,6 +10,7 @@ export default function TransactionsPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [slip, setSlip] = useState<any>(null);
 
   useEffect(() => { load(1); }, []);
 
@@ -82,14 +84,14 @@ export default function TransactionsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-ink-100">
-                {['#', 'Shop', 'Package', 'Amount', 'Cycle', 'Gateway', 'Reference', 'Status', 'Date', 'Invoice'].map(h => (
+                {['#', 'Shop', 'Package', 'Amount', 'Cycle', 'Gateway', 'Reference', 'Status', 'Date', 'Slip', 'Invoice'].map(h => (
                   <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-ink-400 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-50">
               {loading ? (
-                [...Array(8)].map((_, i) => <tr key={i}><td colSpan={10} className="px-5 py-3"><div className="h-6 bg-ink-100 rounded-lg animate-pulse" /></td></tr>)
+                [...Array(8)].map((_, i) => <tr key={i}><td colSpan={11} className="px-5 py-3"><div className="h-6 bg-ink-100 rounded-lg animate-pulse" /></td></tr>)
               ) : data.map((tx: any) => (
                 <tr key={tx.id} className="hover:bg-ink-50 transition-colors">
                   <td className="px-5 py-3.5 text-ink-400 text-xs">#{tx.id}</td>
@@ -102,10 +104,18 @@ export default function TransactionsPage() {
                   <td className="px-5 py-3.5">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
                       tx.status === 'completed' ? 'kh-badge-teal' :
-                      tx.status === 'refunded' ? 'kh-badge-amber' : 'kh-badge-coral'
-                    }`}>{tx.status}</span>
+                      tx.status === 'pending' || tx.status === 'refunded' ? 'kh-badge-amber' : 'kh-badge-coral'
+                    }`}>{tx.status === 'pending' ? 'pending review' : tx.status}</span>
                   </td>
                   <td className="px-5 py-3.5 text-ink-400 text-xs">{new Date(tx.created_at).toLocaleDateString()}</td>
+                  <td className="px-5 py-3.5">
+                    {tx.metadata?.slip_url ? (
+                      <button onClick={() => setSlip(tx)}
+                        className="p-2 rounded-lg text-ink-400 hover:bg-teal-50 hover:text-teal-700 transition-colors" title="View slip">
+                        <Eye size={15} />
+                      </button>
+                    ) : <span className="text-ink-300 text-xs">—</span>}
+                  </td>
                   <td className="px-5 py-3.5">
                     <button onClick={() => downloadInvoice(tx)}
                       className="p-2 rounded-lg text-ink-400 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Print Invoice">
@@ -129,6 +139,14 @@ export default function TransactionsPage() {
           </div>
         )}
       </div>
+
+      <Modal open={!!slip} onClose={() => setSlip(null)} title="Payment slip" width="max-w-3xl">
+        {slip?.metadata?.slip_url && (
+          String(slip.metadata.slip_url).toLowerCase().endsWith('.pdf')
+            ? <iframe src={slip.metadata.slip_url} className="w-full h-[70vh] rounded-lg border border-ink-100" />
+            : <img src={slip.metadata.slip_url} alt="Slip" className="w-full max-h-[70vh] object-contain rounded-lg" />
+        )}
+      </Modal>
     </div>
   );
 }

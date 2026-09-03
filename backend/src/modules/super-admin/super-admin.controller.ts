@@ -7,6 +7,8 @@ import {
   SuperAdminService, BlockTenantDto, ChangePlanDto,
   CreateCouponDto, CreateAnnouncementDto, UpdateAnnouncementDto,
 } from './super-admin.service';
+import { BillingService } from '../billing/billing.service';
+import { UpdateBankDetailsDto, RejectBankTransferDto } from '../billing/billing.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -14,7 +16,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 @UseGuards(JwtAuthGuard)
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class SuperAdminController {
-  constructor(private service: SuperAdminService) {}
+  constructor(private service: SuperAdminService, private billing: BillingService) {}
 
   private guard(user: any) {
     if (user.role !== 'SUPER_ADMIN') throw new ForbiddenException('Super admin only');
@@ -68,6 +70,37 @@ export class SuperAdminController {
   @Get('transactions/:id/invoice')
   getInvoice(@CurrentUser() u: any, @Param('id') id: string) {
     this.guard(u); return this.service.getInvoiceData(+id);
+  }
+
+  // ── Bank transfer slips ────────────────────────────────────────────────────
+  @Get('bank-transfers')
+  bankTransfers(@CurrentUser() u: any, @Query('status') status?: string) {
+    this.guard(u); return this.billing.listBankTransfers(status);
+  }
+
+  @Get('bank-transfers/pending-count')
+  pendingSlipCount(@CurrentUser() u: any) {
+    this.guard(u); return this.billing.countPendingBankTransfers().then(count => ({ count }));
+  }
+
+  @Patch('bank-transfers/:id/approve')
+  approveSlip(@CurrentUser() u: any, @Param('id') id: string) {
+    this.guard(u); return this.billing.approveBankTransfer(+id);
+  }
+
+  @Patch('bank-transfers/:id/reject')
+  rejectSlip(@CurrentUser() u: any, @Param('id') id: string, @Body() dto: RejectBankTransferDto) {
+    this.guard(u); return this.billing.rejectBankTransfer(+id, dto.reason);
+  }
+
+  @Get('bank-details')
+  getBankDetails(@CurrentUser() u: any) {
+    this.guard(u); return this.billing.getPaymentOptions();
+  }
+
+  @Patch('bank-details')
+  updateBankDetails(@CurrentUser() u: any, @Body() dto: UpdateBankDetailsDto) {
+    this.guard(u); return this.billing.updateBankDetails(dto);
   }
 
   // ── Packages ───────────────────────────────────────────────────────────────

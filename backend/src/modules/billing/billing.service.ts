@@ -7,9 +7,12 @@ import { CompanyProfile } from '../../database/entities/company-profile.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
 import { PaymentTransaction } from '../../database/entities/payment-transaction.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
-import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto, BankTransferDto } from './billing.dto';
+import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto, BankTransferDto, UpdateBankDetailsDto } from './billing.dto';
+import { getBankDetails, saveBankDetails, isOnepayConfigured } from '../../common/bank-details';
 import * as https from 'https';
 import * as crypto from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const REGISTRATION_FEE_LKR = 25000;
 const LKR_TO_USD = 0.0033;
@@ -212,78 +215,186 @@ export class BillingService {
     }
   }
 
-  // ── Bank Transfer Self-Service ─────────────────────────────────────────────
+  getPaymentOptions() {
+    return {
+      bank: getBankDetails(),
+      onepay_enabled: isOnepayConfigured(),
+    };
+  }
 
-  async bankTransferSubscribe(tenantId: number, dto: BankTransferDto) {
-    const pkg = await this.packageRepo.findOne({ where: { id: dto.package_id }, relations: ['modules'] });
-    if (!pkg) throw new NotFoundException('Package not found');
+  updateBankDetails(dto: UpdateBankDetailsDto) {
+    return saveBankDetails(dto);
+  }
 
-    const amount = dto.billing_cycle === 'yearly' ? Number(pkg.price_yearly) : Number(pkg.price_monthly);
+  async listBankTransfers(status?: string) {
+    const where: any = { gateway: 'bank_transfer' };
+    if (status && ['pending', 'completed', 'failed', 'refunded'].includes(status)) {
+      where.status = status;
+    }
+    return this.txRepo.find({
+      where,
+      relations: ['tenant', 'package'],
+      order: { created_at: 'DESC' },
+    });
+  }
+
+  async getMyBankTransfers(tenantId: number) {
+    return this.txRepo.find({
+      where: { tenant_id: tenantId, gateway: 'bank_transfer' },
+      relations: ['package'],
+      order: { created_at: 'DESC' },
+    });
+  }
+
+  async countPendingBankTransfers() {
+    return this.txRepo.count({ where: { gateway: 'bank_transfer', status: 'pending' } });
+  }
+
+  // ── Bank Transfer (pending until admin approves) ───────────────────────────
+
+  async submitBankTransfer(tenantId: number, dto: BankTransferDto, slipUrl: string) {
+    const pending = await this.txRepo.findOne({
+      where: { tenant_id: tenantId, gateway: 'bank_transfer', status: 'pending' },
+    });
+    if (pending) {
+      throw new BadRequestException('You already have a bank slip pending review. Please wait for admin approval.');
+    }
+
+    let pkg: Package | null = null;
+    let amount = REGISTRATION_FEE_LKR;
+    let billingCycle: 'monthly' | 'yearly' = dto.billing_cycle || 'monthly';
+    let packageId = 1;
+
+    if (dto.type === 'subscription') {
+      if (!dto.package_id) throw new BadRequestException('package_id is required for subscription payments.');
+      pkg = await this.packageRepo.findOne({ where: { id: dto.package_id }, relations: ['modules'] });
+      if (!pkg) throw new NotFoundException('Package not found');
+      packageId = pkg.id;
+      amount = billingCycle === 'yearly' ? Number(pkg.price_yearly) : Number(pkg.price_monthly);
+      if (dto.registration_fee && dto.registration_fee > 0) amount += Number(dto.registration_fee);
+    }
+
     const ref = `BT-${tenantId}-${Date.now()}`;
-
     const tx = this.txRepo.create({
       tenant_id: tenantId,
-      package_id: pkg.id,
+      package_id: packageId,
       amount,
       currency: 'LKR',
-      billing_cycle: dto.billing_cycle,
+      billing_cycle: billingCycle,
       gateway: 'bank_transfer' as any,
       gateway_ref: ref,
-      status: 'completed',
-      metadata: { depositor_name: dto.depositor_name, slip_reference: dto.slip_reference, notes: dto.notes || '' },
+      status: 'pending',
+      metadata: {
+        type: dto.type,
+        depositor_name: dto.depositor_name,
+        slip_reference: dto.slip_reference || ref,
+        notes: dto.notes || '',
+        slip_url: slipUrl,
+        registration_fee: dto.registration_fee ?? 0,
+      },
     });
     await this.txRepo.save(tx);
 
-    // Activate subscription immediately
-    const expiresAt = new Date();
-    if (dto.billing_cycle === 'yearly') expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-    else expiresAt.setMonth(expiresAt.getMonth() + 1);
+    this.sendBankTransferNotification(tenantId, pkg?.name || 'Registration fee', amount, dto, slipUrl).catch(() => {});
 
-    await this.subRepo.delete({ tenant_id: tenantId });
-    const subs = pkg.modules.map(m => this.subRepo.create({
-      tenant_id: tenantId,
-      module_name: m.module_name,
-      status: 'active',
-      package_id: pkg.id,
-      billing_cycle: dto.billing_cycle,
-      started_at: new Date(),
-      expires_at: expiresAt,
-      payment_status: 'paid',
-      payment_ref: ref,
-    }));
-    await this.subRepo.save(subs);
-
-    // Notify admin by email (non-blocking)
-    this.sendBankTransferNotification(tenantId, pkg.name, amount, dto).catch(() => {});
-
-    return { ok: true, reference: ref, expires_at: expiresAt, package: pkg.name };
+    return {
+      ok: true,
+      status: 'pending',
+      reference: ref,
+      amount,
+      message: 'Slip submitted. Your account will be activated after admin verifies the payment.',
+    };
   }
 
-  private async sendBankTransferNotification(tenantId: number, pkgName: string, amount: number, dto: BankTransferDto) {
+  async approveBankTransfer(txId: number) {
+    const tx = await this.txRepo.findOne({ where: { id: txId, gateway: 'bank_transfer' } });
+    if (!tx) throw new NotFoundException('Bank transfer not found');
+    if (tx.status !== 'pending') throw new BadRequestException('This slip has already been processed.');
+
+    tx.status = 'completed';
+    tx.metadata = { ...tx.metadata, approved_at: new Date().toISOString() };
+    await this.txRepo.save(tx);
+
+    if (tx.metadata?.type === 'registration_fee') {
+      await this.activateTrialAfterRegistrationFee(tx.tenant_id);
+    } else {
+      await this.tenantRepo.update(tx.tenant_id, { status: 'active' });
+      await this.activateSubscription(tx);
+    }
+
+    return { ok: true, status: 'completed', transaction: tx };
+  }
+
+  async rejectBankTransfer(txId: number, reason?: string) {
+    const tx = await this.txRepo.findOne({ where: { id: txId, gateway: 'bank_transfer' } });
+    if (!tx) throw new NotFoundException('Bank transfer not found');
+    if (tx.status !== 'pending') throw new BadRequestException('This slip has already been processed.');
+
+    tx.status = 'failed';
+    tx.metadata = {
+      ...tx.metadata,
+      rejected_at: new Date().toISOString(),
+      reject_reason: reason || 'Payment could not be verified',
+    };
+    await this.txRepo.save(tx);
+
+    return { ok: true, status: 'failed', transaction: tx };
+  }
+
+  private async sendBankTransferNotification(
+    tenantId: number,
+    pkgName: string,
+    amount: number,
+    dto: BankTransferDto,
+    slipUrl: string,
+  ) {
     const nodemailer = await import('nodemailer');
+    const user = process.env.GMAIL_USER || process.env.SMTP_USER;
+    const pass = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS;
+    if (!user || !pass) return;
+
     const transporter = nodemailer.default.createTransport({
       service: 'gmail',
-      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+      auth: { user, pass },
     });
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     await transporter.sendMail({
-      from: `"KadeHub Billing" <${process.env.GMAIL_USER}>`,
-      to: 'official.kadehub@gmail.com',
-      subject: `New Bank Transfer — ${pkgName} (Tenant #${tenantId})`,
+      from: `"KadeHub Billing" <${user}>`,
+      to: process.env.SUPER_ADMIN_EMAIL || 'official.kadehub@gmail.com',
+      subject: `Bank slip pending — ${pkgName} (Tenant #${tenantId})`,
       html: `
         <div style="font-family:sans-serif;max-width:500px">
-          <h2 style="color:#0d6e5a">New Bank Transfer Subscription</h2>
+          <h2 style="color:#0d6e5a">New bank slip awaiting approval</h2>
           <table style="width:100%;border-collapse:collapse">
             <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Tenant ID</td><td style="font-weight:600">#${tenantId}</td></tr>
-            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Package</td><td style="font-weight:600">${pkgName} (${dto.billing_cycle})</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Type</td><td style="font-weight:600">${dto.type}</td></tr>
+            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Package</td><td style="font-weight:600">${pkgName}${dto.billing_cycle ? ` (${dto.billing_cycle})` : ''}</td></tr>
             <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Amount</td><td style="font-weight:600">LKR ${amount.toLocaleString()}</td></tr>
             <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Depositor</td><td style="font-weight:600">${dto.depositor_name}</td></tr>
-            <tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Slip Ref</td><td style="font-weight:600">${dto.slip_reference}</td></tr>
             ${dto.notes ? `<tr><td style="padding:8px 0;color:#6b7280;font-size:13px">Notes</td><td style="font-weight:600">${dto.notes}</td></tr>` : ''}
           </table>
-          <p style="color:#6b7280;font-size:12px;margin-top:16px">Subscription has been activated automatically. Verify the slip and revoke if fraudulent.</p>
+          <p style="margin-top:16px"><a href="${slipUrl}" style="color:#0d6e5a;font-weight:600">View slip</a></p>
+          <p style="color:#6b7280;font-size:12px;margin-top:12px">Review and approve in Super Admin → Payment Slips. ${appUrl}/super-admin/payments</p>
         </div>
       `,
     });
+  }
+
+  async uploadSlipFile(file: Express.Multer.File, req: any): Promise<string> {
+    if (!file?.buffer) throw new BadRequestException('Payment slip is required.');
+    try {
+      if (process.env.MINIO_ACCESS_KEY && process.env.MINIO_SECRET_KEY) {
+        const { uploadToCloudinary } = await import('../../common/cloudinary');
+        return await uploadToCloudinary(file.buffer, 'kadehub/slips', file.originalname);
+      }
+    } catch { /* fall back to local disk */ }
+
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    const ext = path.extname(file.originalname || '').toLowerCase() || '.jpg';
+    const filename = `slip-${Date.now()}${ext}`;
+    fs.writeFileSync(path.join(uploadsDir, filename), file.buffer);
+    return `${req.protocol}://${req.get('host')}/uploads/${filename}`;
   }
 
   // ── OnePay Integration ──────────────────────────────────────────────────────

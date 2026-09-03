@@ -11,6 +11,7 @@ import { Coupon } from '../../database/entities/coupon.entity';
 import { Announcement } from '../../database/entities/announcement.entity';
 import { ApiLog } from '../../database/entities/api-log.entity';
 import { EmailService } from '../../common/email.service';
+import { CloudflareService } from '../../common/cloudflare.service';
 import {
   IsString, IsOptional, IsEnum, IsNumber, IsBoolean,
   IsDateString, IsInt, Min, Max, MaxLength, Matches,
@@ -68,6 +69,7 @@ export class SuperAdminService {
     @InjectRepository(Announcement) private announcementRepo: Repository<Announcement>,
     @InjectRepository(ApiLog) private apiLogRepo: Repository<ApiLog>,
     private emailService: EmailService,
+    private cloudflare: CloudflareService,
   ) {}
 
   // ── Dashboard stats ────────────────────────────────────────────────────────
@@ -88,7 +90,8 @@ export class SuperAdminService {
       order: { created_at: 'DESC' },
       take: 10,
     });
-    return { totalShops, activeShops, blockedShops, totalRevenue: parseFloat(revenue?.total || '0'), recentTransactions: recentTx };
+    const pendingSlips = await this.txRepo.count({ where: { gateway: 'bank_transfer', status: 'pending' } });
+    return { totalShops, activeShops, blockedShops, totalRevenue: parseFloat(revenue?.total || '0'), recentTransactions: recentTx, pendingSlips };
   }
 
   // ── Shops ──────────────────────────────────────────────────────────────────
@@ -175,8 +178,25 @@ export class SuperAdminService {
   async deleteTenant(tenantId: number) {
     const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
     if (!tenant) throw new NotFoundException('Shop not found');
+
+    // Clean up Cloudflare DNS record if one was created during registration
+    try {
+      const planNote = this.parsePlanNote(tenant.plan_note);
+      if (planNote.cf_dns_record_id) {
+        await this.cloudflare.deleteSubdomain(planNote.cf_dns_record_id);
+        this.logger.log(`Deleted Cloudflare DNS record for tenant ${tenantId} (${tenant.subdomain})`);
+      }
+    } catch (err) {
+      // Log but don't block deletion — DNS cleanup failure shouldn't prevent tenant removal
+      this.logger.warn(`Failed to delete Cloudflare DNS record for tenant ${tenantId}: ${err.message}`);
+    }
+
     await this.tenantRepo.remove(tenant);
     return { message: 'Shop deleted' };
+  }
+
+  private parsePlanNote(note: string | null): Record<string, any> {
+    try { return note ? JSON.parse(note) : {}; } catch { return {}; }
   }
 
   // ── Transactions ───────────────────────────────────────────────────────────

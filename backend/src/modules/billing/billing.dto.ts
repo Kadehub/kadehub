@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsEmail, IsEnum, IsNumber, IsInt, Min } from 'class-validator';
+import { IsOptional, IsString, IsEmail, IsEnum, IsNumber, IsInt, Min, MinLength } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateCompanyDto {
@@ -43,18 +43,41 @@ export class InitiateOnepayDto {
 }
 
 export class BankTransferDto {
+  @IsEnum(['registration_fee', 'subscription'])
+  type: 'registration_fee' | 'subscription';
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt() @Min(1)
-  package_id: number;
+  package_id?: number;
 
+  @IsOptional()
   @IsEnum(['monthly', 'yearly'])
-  billing_cycle: 'monthly' | 'yearly';
+  billing_cycle?: 'monthly' | 'yearly';
 
   @IsString()
+  @MinLength(2)
   depositor_name: string;
 
-  @IsString()
-  slip_reference: string;
+  @IsOptional() @IsString()
+  slip_reference?: string;
 
   @IsOptional() @IsString() notes?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  registration_fee?: number;
+}
+
+export class UpdateBankDetailsDto {
+  @IsOptional() @IsString() bank_name?: string;
+  @IsOptional() @IsString() account_name?: string;
+  @IsOptional() @IsString() account_number?: string;
+  @IsOptional() @IsString() branch?: string;
+  @IsOptional() @IsString() instructions?: string;
+}
+
+export class RejectBankTransferDto {
+  @IsOptional() @IsString() reason?: string;
 }

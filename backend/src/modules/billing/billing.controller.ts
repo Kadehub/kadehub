@@ -1,9 +1,9 @@
 import {
-  Controller, Get, Post, Patch, Body, UseGuards,
+  Controller, Get, Post, Patch, Body, UseGuards, BadRequestException,
   UsePipes, ValidationPipe, UseInterceptors, UploadedFile, Req, Param, HttpCode,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { diskStorage, memoryStorage } from 'multer';
 import { extname, join } from 'path';
 import { BillingService } from './billing.service';
 import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto, BankTransferDto } from './billing.dto';
@@ -77,10 +77,61 @@ export class BillingController {
     return this.billingService.getTransactions(user.tenant_id);
   }
 
+  @Get('payment-options')
+  getPaymentOptions() {
+    return this.billingService.getPaymentOptions();
+  }
+
+  @Get('bank-transfer/mine')
+  @UseGuards(JwtAuthGuard)
+  myBankTransfers(@CurrentUser() user: any) {
+    return this.billingService.getMyBankTransfers(user.tenant_id);
+  }
+
+  @Post('bank-transfer')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('slip', {
+    storage: memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      if (!file.mimetype.match(/^(image\/(jpeg|png|webp)|application\/pdf)$/)) {
+        return cb(new BadRequestException('Upload a JPG, PNG, WEBP, or PDF slip'), false);
+      }
+      cb(null, true);
+    },
+  }))
+  async submitBankTransfer(
+    @CurrentUser() user: any,
+    @Body() dto: BankTransferDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ) {
+    if (!file) throw new BadRequestException('Payment slip is required.');
+    const slipUrl = await this.billingService.uploadSlipFile(file, req);
+    return this.billingService.submitBankTransfer(user.tenant_id, dto, slipUrl);
+  }
+
   @Post('subscribe/bank-transfer')
   @UseGuards(JwtAuthGuard)
-  bankTransfer(@CurrentUser() user: any, @Body() dto: BankTransferDto) {
-    return this.billingService.bankTransferSubscribe(user.tenant_id, dto);
+  @UseInterceptors(FileInterceptor('slip', {
+    storage: memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      if (!file.mimetype.match(/^(image\/(jpeg|png|webp)|application\/pdf)$/)) {
+        return cb(new BadRequestException('Upload a JPG, PNG, WEBP, or PDF slip'), false);
+      }
+      cb(null, true);
+    },
+  }))
+  async bankTransfer(
+    @CurrentUser() user: any,
+    @Body() dto: BankTransferDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ) {
+    if (!file) throw new BadRequestException('Payment slip is required.');
+    const slipUrl = await this.billingService.uploadSlipFile(file, req);
+    return this.billingService.submitBankTransfer(user.tenant_id, dto, slipUrl);
   }
 
   // ── OnePay endpoints ──

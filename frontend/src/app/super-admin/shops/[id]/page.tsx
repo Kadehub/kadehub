@@ -50,6 +50,7 @@ export default function ShopDetailPage() {
 
   const { tenant, users, subscriptions, transactions, currentPlan } = detail;
   const totalPaid = transactions.filter((t: any) => t.status === 'completed').reduce((s: number, t: any) => s + t.amount, 0);
+  const pendingSlips = transactions.filter((t: any) => t.gateway === 'bank_transfer' && t.status === 'pending');
 
   return (
     <div className="space-y-5">
@@ -68,6 +69,18 @@ export default function ShopDetailPage() {
           tenant.status === 'blocked' ? 'kh-badge-coral' : 'kh-badge-amber'
         }`}>{tenant.status}</span>
       </div>
+
+      {pendingSlips.length > 0 && (
+        <div className="flex items-center justify-between gap-3 p-4 rounded-xl border" style={{ background: '#FFF8E1', borderColor: '#FDE68A' }}>
+          <p className="text-sm text-ink-700">
+            <span className="font-semibold">{pendingSlips.length} bank slip{pendingSlips.length > 1 ? 's' : ''}</span> waiting for review
+          </p>
+          <button onClick={() => router.push('/super-admin/payments')}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ background: '#00A884', color: 'white' }}>
+            Review slips
+          </button>
+        </div>
+      )}
 
       {/* Admin note */}
       {tenant.plan_note && (
@@ -172,7 +185,13 @@ export default function ShopDetailPage() {
                   <td className="px-5 py-3 capitalize text-ink-500">{tx.gateway}</td>
                   <td className="px-5 py-3 font-mono text-xs text-ink-400">{tx.gateway_ref}</td>
                   <td className="px-5 py-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${tx.status === 'completed' ? 'kh-badge-teal' : 'kh-badge-coral'}`}>{tx.status}</span>
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      tx.status === 'completed' ? 'kh-badge-teal' :
+                      tx.status === 'pending' ? 'kh-badge-amber' : 'kh-badge-coral'
+                    }`}>{tx.status === 'pending' ? 'pending review' : tx.status}</span>
+                    {tx.metadata?.slip_url && (
+                      <a href={tx.metadata.slip_url} target="_blank" rel="noreferrer" className="ml-2 text-xs font-semibold" style={{ color: '#00A884' }}>Slip</a>
+                    )}
                   </td>
                   <td className="px-5 py-3 text-ink-400 text-xs">{new Date(tx.created_at).toLocaleDateString()}</td>
                 </tr>

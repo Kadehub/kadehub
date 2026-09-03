@@ -2,7 +2,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '../../../lib/api';
-import { Search, Eye, Lock, Unlock, Store } from 'lucide-react';
+import { Search, Eye, Lock, Unlock, Store, Trash2 } from 'lucide-react';
+import Modal from '../../../components/ui/Modal';
+import toast from 'react-hot-toast';
 
 interface Shop {
   id: number; name: string; slug: string; status: string;
@@ -17,6 +19,8 @@ export default function ShopsPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [removing, setRemoving] = useState<Shop | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => { load(1, ''); }, []);
 
@@ -36,6 +40,21 @@ export default function ShopsPage() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault(); setPage(1); load(1, search);
+  }
+
+  async function removeShop() {
+    if (!removing) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/super-admin/shops/${removing.id}`);
+      toast.success(`${removing.name} removed`);
+      setRemoving(null);
+      await load(page, search);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Could not remove shop');
+    } finally {
+      setDeleting(false);
+    }
   }
 
   const statusBadge = (s: string) => ({
@@ -113,6 +132,10 @@ export default function ShopsPage() {
                         }`} title={shop.status === 'active' ? 'Block' : 'Unblock'}>
                         {shop.status === 'active' ? <Lock size={15} /> : <Unlock size={15} />}
                       </button>
+                      <button onClick={() => setRemoving(shop)}
+                        className="p-2 rounded-lg text-ink-400 hover:bg-red-50 hover:text-red-600 transition-colors" title="Remove shop">
+                        <Trash2 size={15} />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -133,6 +156,20 @@ export default function ShopsPage() {
           </div>
         )}
       </div>
+
+      <Modal open={!!removing} onClose={() => !deleting && setRemoving(null)} title="Remove shop">
+        <p className="text-sm text-ink-600">
+          Permanently delete <span className="font-semibold text-ink-900">{removing?.name}</span>? This removes the shop, its users, and related data. This cannot be undone.
+        </p>
+        <div className="flex justify-end gap-2 mt-5">
+          <button type="button" disabled={deleting} onClick={() => setRemoving(null)}
+            className="px-4 py-2 text-sm font-semibold text-ink-500">Cancel</button>
+          <button type="button" disabled={deleting} onClick={removeShop}
+            className="px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50" style={{ background: '#E53E3E' }}>
+            {deleting ? 'Removing…' : 'Remove shop'}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

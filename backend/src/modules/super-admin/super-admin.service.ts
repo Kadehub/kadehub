@@ -254,6 +254,9 @@ export class SuperAdminService implements OnModuleInit {
   async deleteTenant(tenantId: number) {
     const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
     if (!tenant) throw new NotFoundException('Shop not found');
+    if (tenant.slug === 'kadehub-platform') {
+      throw new BadRequestException('The platform tenant cannot be deleted.');
+    }
 
     // Clean up Cloudflare DNS record if one was created during registration
     try {

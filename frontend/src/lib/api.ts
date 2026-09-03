@@ -22,7 +22,10 @@ api.interceptors.response.use(
     const isAnnouncements = url.includes('/announcements');
     if (err.response?.status === 401 && !isAuthRoute && !isBillingProfile && !isAnnouncements && typeof window !== 'undefined') {
       localStorage.removeItem('auth-store');
-      window.location.href = '/login';
+      const dest = window.location.pathname.startsWith('/super-admin')
+        ? '/super-admin/login'
+        : '/login';
+      window.location.href = dest;
     }
     return Promise.reject(err);
   },

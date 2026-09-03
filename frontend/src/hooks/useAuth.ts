@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User } from '../types';
@@ -25,3 +26,13 @@ export const useAuthStore = create<AuthStore>()(
     { name: 'auth-store' },
   ),
 );
+
+export function useAuthHydrated() {
+  const [hydrated, setHydrated] = useState(useAuthStore.persist.hasHydrated());
+  useEffect(() => {
+    const unsub = useAuthStore.persist.onFinishHydration(() => setHydrated(true));
+    setHydrated(useAuthStore.persist.hasHydrated());
+    return unsub;
+  }, []);
+  return hydrated;
+}

@@ -51,17 +51,22 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   const [hydrated, setHydrated] = useState(false);
   const [pendingSlips, setPendingSlips] = useState(0);
 
+  const isLogin = pathname === '/super-admin/login';
+
   useEffect(() => setHydrated(true), []);
   useEffect(() => {
-    if (!hydrated || user?.role !== 'SUPER_ADMIN') return;
+    if (!hydrated || isLogin || user?.role !== 'SUPER_ADMIN') return;
     api.get('/super-admin/bank-transfers/pending-count')
       .then(r => setPendingSlips(r.data?.count || 0))
       .catch(() => {});
-  }, [hydrated, user, pathname]);
+  }, [hydrated, user, pathname, isLogin]);
   useEffect(() => {
-    if (hydrated && (!token || user?.role !== 'SUPER_ADMIN')) router.push('/login');
-  }, [hydrated, token, user]);
+    if (hydrated && !isLogin && (!token || user?.role !== 'SUPER_ADMIN')) {
+      router.replace('/super-admin/login');
+    }
+  }, [hydrated, token, user, isLogin, router]);
 
+  if (isLogin) return <>{children}</>;
   if (!hydrated || !token || user?.role !== 'SUPER_ADMIN') return null;
 
   return (
@@ -124,7 +129,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         {/* Logout */}
         <div className="flex-shrink-0 px-3 py-3 border-t border-ink-100">
           <button
-            onClick={() => { logout(); router.push('/login'); }}
+            onClick={() => { logout(); router.replace('/super-admin/login'); }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-ink-500 hover:bg-red-50 hover:text-red-600 transition-all group">
             <LogOut size={17} className="group-hover:text-red-500 transition-colors" />
             Sign Out

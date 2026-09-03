@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import KadeHubLogo from '../../../components/ui/KadeHubLogo';
 import { Input } from '../../../components/ui/Input';
 import { ShoppingCart, Boxes, Users, BarChart2, ArrowRight } from 'lucide-react';
-import { useAuthStore } from '../../../hooks/useAuth';
+import { useAuthHydrated, useAuthStore } from '../../../hooks/useAuth';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 
@@ -18,21 +18,29 @@ const features = [
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const { setAuth, token } = useAuthStore();
+  const { setAuth, token, user } = useAuthStore();
+  const hydrated = useAuthHydrated();
   const router = useRouter();
 
-  // Redirect if already logged in
+  // Shop login never sends Super Admin to POS
   useEffect(() => {
-    if (token) router.replace('/pos');
-  }, [token, router]);
+    if (!hydrated || !token || !user) return;
+    if (user.role === 'SUPER_ADMIN') router.replace('/super-admin');
+    else router.replace('/pos');
+  }, [hydrated, token, user, router]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       const { data } = await api.post('/auth/login', form);
+      if (data.user?.role === 'SUPER_ADMIN') {
+        setAuth(data.user, data.access_token);
+        router.replace('/super-admin');
+        return;
+      }
       setAuth(data.user, data.access_token);
-      router.push(data.user.role === 'SUPER_ADMIN' ? '/super-admin' : '/pos');
+      router.replace('/pos');
     } catch (err: any) {
       const msg = err.response?.data?.message;
       toast.error(Array.isArray(msg) ? msg[0] : msg || 'Invalid credentials');

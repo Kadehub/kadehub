@@ -35,6 +35,7 @@ const ANN_STYLES: Record<string, string> = {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
   const setLogoUrl = useAuthStore((s) => s.setLogoUrl);
   const pathname = usePathname();
   const { t } = useLang();
@@ -76,7 +77,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, []);
   useEffect(() => {
-    if (!token) return;
+    if (!token || !user) return;
+    if (user.role === 'SUPER_ADMIN') {
+      window.location.href = '/super-admin';
+      return;
+    }
     api.get('/billing/subscriptions').then(({ data }) => {
       const now = new Date();
       const hasPaid = data.some((s: any) => s.payment_status === 'paid');
@@ -85,7 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }).catch((err: any) => {
       if (err?.response?.status === 402) window.location.href = '/subscribe';
     });
-  }, [token]);
+  }, [token, user]);
 
   useEffect(() => {
     if (!token) return;

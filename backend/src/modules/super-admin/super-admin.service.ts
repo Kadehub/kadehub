@@ -270,7 +270,45 @@ export class SuperAdminService implements OnModuleInit {
       this.logger.warn(`Failed to delete Cloudflare DNS record for tenant ${tenantId}: ${err.message}`);
     }
 
-    await this.tenantRepo.remove(tenant);
+    const em = this.tenantRepo.manager;
+    const isPg = em.connection.options.type === 'postgres';
+    const p = isPg ? '$1' : '?';
+    const userTable = isPg ? '"user"' : '`user`';
+
+    await em.transaction(async (trx) => {
+      const run = async (sql: string) => {
+        try {
+          await trx.query(sql, [tenantId]);
+        } catch (err) {
+          if (/does not exist|doesn't exist|Unknown table|ER_NO_SUCH_TABLE/i.test(err.message)) return;
+          throw err;
+        }
+      };
+
+      await run(`DELETE FROM credit_payment WHERE credit_sale_id IN (SELECT id FROM credit_sale WHERE tenant_id = ${p})`);
+      await run(`DELETE FROM sale_item WHERE sale_id IN (SELECT id FROM sale WHERE tenant_id = ${p})`);
+      await run(`DELETE FROM purchase_order_item WHERE order_id IN (SELECT id FROM purchase_order WHERE tenant_id = ${p})`);
+      await run(`DELETE FROM inventory WHERE product_id IN (SELECT id FROM product WHERE tenant_id = ${p})`);
+      await run(`DELETE FROM credit_sale WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM sale WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM purchase_order WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM batch WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM product WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM expense WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM expense_category WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM discount WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM shift WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM audit_log WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM payment_transaction WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM subscription WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM company_profile WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM customer WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM supplier WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM api_log WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM ${userTable} WHERE tenant_id = ${p}`);
+      await run(`DELETE FROM tenant WHERE id = ${p}`);
+    });
+
     return { message: 'Shop deleted' };
   }
 

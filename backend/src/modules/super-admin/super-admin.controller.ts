@@ -8,6 +8,7 @@ import {
   CreateCouponDto, CreateAnnouncementDto, UpdateAnnouncementDto,
 } from './super-admin.service';
 import { BillingService } from '../billing/billing.service';
+import { InvoiceService } from '../billing/invoice.service';
 import { UpdateBankDetailsDto, RejectBankTransferDto } from '../billing/billing.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -16,7 +17,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 @UseGuards(JwtAuthGuard)
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class SuperAdminController {
-  constructor(private service: SuperAdminService, private billing: BillingService) {}
+  constructor(private service: SuperAdminService, private billing: BillingService, private invoices: InvoiceService) {}
 
   private guard(user: any) {
     if (user.role !== 'SUPER_ADMIN') throw new ForbiddenException('Super admin only');
@@ -68,8 +69,19 @@ export class SuperAdminController {
   }
 
   @Get('transactions/:id/invoice')
-  getInvoice(@CurrentUser() u: any, @Param('id') id: string) {
+  getTransactionInvoice(@CurrentUser() u: any, @Param('id') id: string) {
     this.guard(u); return this.service.getInvoiceData(+id);
+  }
+
+  // ── Invoices ───────────────────────────────────────────────────────────────
+  @Get('invoices')
+  listInvoices(@CurrentUser() u: any, @Query('page') page = '1', @Query('limit') limit = '20', @Query('status') status?: string) {
+    this.guard(u); return this.invoices.listAll(+page, +limit, status);
+  }
+
+  @Get('invoices/:id')
+  getInvoice(@CurrentUser() u: any, @Param('id') id: string) {
+    this.guard(u); return this.invoices.getPrintData(+id);
   }
 
   // ── Bank transfer slips ────────────────────────────────────────────────────

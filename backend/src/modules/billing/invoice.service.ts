@@ -1,0 +1,143 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Invoice } from '../../database/entities/invoice.entity';
+import { PaymentTransaction } from '../../database/entities/payment-transaction.entity';
+import { Tenant } from '../../database/entities/tenant.entity';
+import { CompanyProfile } from '../../database/entities/company-profile.entity';
+import { getBankDetails } from '../../common/bank-details';
+
+export const REGISTRATION_FEE_LKR = 25000;
+
+@Injectable()
+export class InvoiceService {
+  constructor(
+    @InjectRepository(Invoice) private invoiceRepo: Repository<Invoice>,
+    @InjectRepository(Tenant) private tenantRepo: Repository<Tenant>,
+    @InjectRepository(CompanyProfile) private profileRepo: Repository<CompanyProfile>,
+  ) {}
+
+  private async nextInvoiceNumber(): Promise<string> {
+    const year = new Date().getFullYear();
+    const prefix = `INV-${year}-`;
+    const latest = await this.invoiceRepo
+      .createQueryBuilder('i')
+      .where('i.invoice_number LIKE :prefix', { prefix: `${prefix}%` })
+      .orderBy('i.id', 'DESC')
+      .getOne();
+    const seq = latest ? parseInt(latest.invoice_number.split('-').pop() || '0', 10) + 1 : 1;
+    return `${prefix}${String(seq).padStart(6, '0')}`;
+  }
+
+  async createRegistrationInvoice(tenantId: number, billToName: string, billToEmail: string) {
+    const existing = await this.invoiceRepo.findOne({
+      where: { tenant_id: tenantId, type: 'registration_fee', status: 'pending' },
+    });
+    if (existing) return existing;
+
+    const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
+    const dueAt = new Date();
+    dueAt.setDate(dueAt.getDate() + 14);
+
+    const invoice = this.invoiceRepo.create({
+      invoice_number: await this.nextInvoiceNumber(),
+      tenant_id: tenantId,
+      type: 'registration_fee',
+      amount: REGISTRATION_FEE_LKR,
+      currency: 'LKR',
+      status: 'pending',
+      description: 'KadeHub Registration Fee — 14-day trial access',
+      bill_to_name: billToName,
+      bill_to_email: billToEmail,
+      issued_at: new Date(),
+      due_at: dueAt,
+      line_items: [{
+        description: 'Registration Fee (One-time)',
+        quantity: 1,
+        unit_price: REGISTRATION_FEE_LKR,
+        total: REGISTRATION_FEE_LKR,
+      }],
+      notes: `Shop: ${tenant?.name || ''}`,
+    });
+    return this.invoiceRepo.save(invoice);
+  }
+
+  async markPaidByTransaction(tx: PaymentTransaction) {
+    const type = tx.metadata?.type === 'registration_fee' ? 'registration_fee' : 'subscription';
+    let invoice = await this.invoiceRepo.findOne({
+      where: { tenant_id: tx.tenant_id, type, status: 'pending' },
+      order: { created_at: 'DESC' },
+    });
+
+    if (!invoice && type === 'subscription') {
+      invoice = await this.createSubscriptionInvoice(tx);
+    }
+
+    if (!invoice) return null;
+
+    invoice.status = 'paid';
+    invoice.payment_transaction_id = tx.id;
+    invoice.paid_at = new Date();
+    if (type === 'subscription' && tx.package_id) invoice.package_id = tx.package_id;
+    return this.invoiceRepo.save(invoice);
+  }
+
+  async createSubscriptionInvoice(tx: PaymentTransaction) {
+    const invoice = this.invoiceRepo.create({
+      invoice_number: await this.nextInvoiceNumber(),
+      tenant_id: tx.tenant_id,
+      payment_transaction_id: tx.id,
+      package_id: tx.package_id,
+      type: 'subscription',
+      amount: tx.amount,
+      currency: tx.currency || 'LKR',
+      status: tx.status === 'completed' ? 'paid' : 'pending',
+      description: `KadeHub Subscription — ${tx.billing_cycle}`,
+      issued_at: new Date(),
+      paid_at: tx.status === 'completed' ? new Date() : undefined,
+      line_items: [{
+        description: `Subscription (${tx.billing_cycle})`,
+        quantity: 1,
+        unit_price: tx.amount,
+        total: tx.amount,
+      }],
+    });
+    return this.invoiceRepo.save(invoice);
+  }
+
+  async getForTenant(tenantId: number) {
+    return this.invoiceRepo.find({
+      where: { tenant_id: tenantId },
+      relations: ['package', 'payment_transaction'],
+      order: { created_at: 'DESC' },
+    });
+  }
+
+  async listAll(page = 1, limit = 20, status?: string) {
+    const qb = this.invoiceRepo.createQueryBuilder('i')
+      .leftJoinAndSelect('i.tenant', 'tenant')
+      .leftJoinAndSelect('i.package', 'package')
+      .orderBy('i.created_at', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+    if (status) qb.andWhere('i.status = :status', { status });
+    const [data, total] = await qb.getManyAndCount();
+    return { data, total, page, limit };
+  }
+
+  async getById(id: number) {
+    const invoice = await this.invoiceRepo.findOne({
+      where: { id },
+      relations: ['tenant', 'package', 'payment_transaction'],
+    });
+    if (!invoice) throw new NotFoundException('Invoice not found');
+    return invoice;
+  }
+
+  async getPrintData(id: number) {
+    const invoice = await this.getById(id);
+    const profile = await this.profileRepo.findOne({ where: { tenant_id: invoice.tenant_id } });
+    const bank = getBankDetails();
+    return { invoice, tenant: invoice.tenant, profile, bank };
+  }
+}

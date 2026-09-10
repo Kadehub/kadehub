@@ -9,11 +9,13 @@ import { CloudflareService } from '../../common/cloudflare.service';
 import { User } from '../../database/entities/user.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
+import { BillingModule } from '../billing/billing.module';
 
 @Global()
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Tenant, Subscription]),
+    BillingModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard, RolesGuard, CloudflareService],

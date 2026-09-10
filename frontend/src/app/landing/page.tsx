@@ -498,7 +498,19 @@ function QuoteForm() {
               e.preventDefault();
               setLoading(true); setError('');
               try {
-                const res = await fetch('/api/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+                const res = await fetch(`${apiUrl}/quotations`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    contact_name: form.name,
+                    email: form.email,
+                    business_type: form.business,
+                    country: form.country,
+                    description: form.description,
+                    budget_range: form.budget,
+                  }),
+                });
                 if (!res.ok) throw new Error('Failed to send');
                 setSubmitted(true);
               } catch {

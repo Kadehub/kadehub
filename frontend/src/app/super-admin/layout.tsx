@@ -8,7 +8,7 @@ import KadeHubLogo from '../../components/ui/KadeHubLogo';
 import {
   LayoutDashboard, Store, CreditCard, Package,
   LogOut, ChevronRight, ShieldCheck, BarChart2, Settings,
-  Tag, Megaphone, Activity, Banknote,
+  Tag, Megaphone, Activity, Banknote, FileText, ClipboardList,
 } from 'lucide-react';
 
 const NAV = [
@@ -24,6 +24,8 @@ const NAV = [
     items: [
       { href: '/super-admin/shops', label: 'All Shops', icon: Store },
       { href: '/super-admin/payments', label: 'Payment Slips', icon: Banknote },
+      { href: '/super-admin/invoices', label: 'Invoices', icon: FileText },
+      { href: '/super-admin/quotations', label: 'Quotations', icon: ClipboardList },
       { href: '/super-admin/transactions', label: 'Transactions', icon: CreditCard },
       { href: '/super-admin/packages', label: 'Packages', icon: Package },
       { href: '/super-admin/coupons', label: 'Coupons', icon: Tag },
@@ -50,6 +52,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   const pathname = usePathname();
   const [hydrated, setHydrated] = useState(false);
   const [pendingSlips, setPendingSlips] = useState(0);
+  const [newQuotes, setNewQuotes] = useState(0);
 
   const isLogin = pathname === '/super-admin/login';
 
@@ -58,6 +61,9 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     if (!hydrated || isLogin || user?.role !== 'SUPER_ADMIN') return;
     api.get('/super-admin/bank-transfers/pending-count')
       .then(r => setPendingSlips(r.data?.count || 0))
+      .catch(() => {});
+    api.get('/super-admin/quotations/new-count')
+      .then(r => setNewQuotes(r.data?.count || 0))
       .catch(() => {});
   }, [hydrated, user, pathname, isLogin]);
   useEffect(() => {
@@ -115,6 +121,12 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                         <span className="min-w-[18px] h-[18px] px-1 rounded-full text-2xs font-bold flex items-center justify-center"
                           style={{ background: active ? 'rgba(255,255,255,0.25)' : '#F59E0B', color: active ? 'white' : '#0a2e25' }}>
                           {pendingSlips}
+                        </span>
+                      )}
+                      {href === '/super-admin/quotations' && newQuotes > 0 && (
+                        <span className="min-w-[18px] h-[18px] px-1 rounded-full text-2xs font-bold flex items-center justify-center"
+                          style={{ background: active ? 'rgba(255,255,255,0.25)' : '#F59E0B', color: active ? 'white' : '#0a2e25' }}>
+                          {newQuotes}
                         </span>
                       )}
                       {active && <ChevronRight size={14} className="opacity-60" />}

@@ -50,6 +50,7 @@ export default function RegisterPage() {
   const [company, setCompany] = useState({ address: '', city: '', phone: '', email: '', website: '', tax_number: '' });
   const [billing] = useState<'monthly'>('monthly');
   const [pendingReview, setPendingReview] = useState(false);
+  const [registrationInvoice, setRegistrationInvoice] = useState<any>(null);
 
   useEffect(() => {
     api.get('/billing/packages')
@@ -91,6 +92,7 @@ export default function RegisterPage() {
     try {
       const { data } = await api.post('/auth/register', account);
       setAuth(data.user, data.access_token);
+      if (data.invoice) setRegistrationInvoice(data.invoice);
       setStep('company');
     } catch (err: any) {
       const msg = err.response?.data?.message;
@@ -247,6 +249,18 @@ export default function RegisterPage() {
             <div className="kh-card p-6 sm:p-8">
               <h2 className="text-lg sm:text-xl font-bold text-ink-900 mb-1">Registration Fee</h2>
               <p className="text-sm text-ink-400 mb-6">A one-time registration fee is required to activate your shop.</p>
+
+              {registrationInvoice && (
+                <div className="rounded-xl p-3 mb-4 flex items-center justify-between" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+                  <div>
+                    <p className="text-xs font-semibold text-blue-800">Your Invoice</p>
+                    <p className="text-sm font-mono font-bold text-blue-900">{registrationInvoice.invoice_number}</p>
+                  </div>
+                  <span className="px-2 py-1 rounded-full text-xs font-semibold capitalize" style={{ background: '#FEF3C7', color: '#B45309' }}>
+                    {registrationInvoice.status}
+                  </span>
+                </div>
+              )}
 
               {/* Fee breakdown */}
               <div className="rounded-xl p-4 mb-5" style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}>

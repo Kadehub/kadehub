@@ -8,6 +8,7 @@ import { Subscription } from '../../database/entities/subscription.entity';
 import { PaymentTransaction } from '../../database/entities/payment-transaction.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto, BankTransferDto, UpdateBankDetailsDto } from './billing.dto';
+import { InvoiceService } from './invoice.service';
 import { getBankDetails, saveBankDetails, isOnepayConfigured } from '../../common/bank-details';
 import * as https from 'https';
 import * as crypto from 'crypto';
@@ -52,7 +53,14 @@ export class BillingService {
     @InjectRepository(Subscription) private subRepo: Repository<Subscription>,
     @InjectRepository(PaymentTransaction) private txRepo: Repository<PaymentTransaction>,
     @InjectRepository(Tenant) private tenantRepo: Repository<Tenant>,
+    private invoiceService: InvoiceService,
   ) {}
+
+  private async syncInvoice(tx: PaymentTransaction) {
+    if (tx.status === 'completed') {
+      await this.invoiceService.markPaidByTransaction(tx).catch(() => {});
+    }
+  }
 
   async getPackagesWithCurrency(ip: string) {
     try {
@@ -160,6 +168,7 @@ export class BillingService {
         metadata: { type: 'subscription' },
       });
       await this.txRepo.save(tx);
+      await this.syncInvoice(tx);
 
       // Record one-time registration fee if provided
       if (dto.registration_fee && dto.registration_fee > 0) {
@@ -175,6 +184,7 @@ export class BillingService {
           metadata: { type: 'registration_fee' },
         });
         await this.txRepo.save(regTx);
+        await this.syncInvoice(regTx);
       }
 
       const expiresAt = new Date();
@@ -314,6 +324,7 @@ export class BillingService {
     tx.status = 'completed';
     tx.metadata = { ...tx.metadata, approved_at: new Date().toISOString() };
     await this.txRepo.save(tx);
+    await this.syncInvoice(tx);
 
     if (tx.metadata?.type === 'registration_fee') {
       await this.activateTrialAfterRegistrationFee(tx.tenant_id);
@@ -492,6 +503,7 @@ export class BillingService {
         if (res?.data?.payment_status === 'CAPTURED' || res?.data?.status_code === '2') {
           tx.status = 'completed';
           await this.txRepo.save(tx);
+          await this.syncInvoice(tx);
           await this.activateTrialAfterRegistrationFee(tenantId);
           return { status: 'completed' };
         }
@@ -631,6 +643,7 @@ export class BillingService {
     tx.status = isSuccess ? 'completed' : 'failed';
     tx.metadata = { ...tx.metadata, webhook: body };
     await this.txRepo.save(tx);
+    if (isSuccess) await this.syncInvoice(tx);
 
     if (isSuccess) {
       if (tx.metadata?.type === 'registration_fee') {
@@ -675,6 +688,7 @@ export class BillingService {
         if (isSuccess && tx.status !== 'completed') {
           tx.status = 'completed';
           await this.txRepo.save(tx);
+          await this.syncInvoice(tx);
           await this.activateSubscription(tx);
         }
       } catch { /* ignore poll errors */ }

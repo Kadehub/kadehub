@@ -8,7 +8,8 @@ import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../../hooks/useAuth';
 import BankTransferForm from '../../../components/billing/BankTransferForm';
-import { Building2, Camera, CreditCard, Package, Check, Star, ArrowLeft, Clock } from 'lucide-react';
+import { Building2, Camera, CreditCard, Package, Check, Star, ArrowLeft, Clock, FileText } from 'lucide-react';
+import { printInvoice } from '../../../lib/invoice-print';
 
 export default function SettingsPage() {
   const { setLogoUrl } = useAuthStore();
@@ -23,6 +24,7 @@ export default function SettingsPage() {
   // Billing
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
   const [currency, setCurrency] = useState<string>('LKR');
   const [regFee, setRegFee] = useState<number>(50000);
@@ -46,10 +48,12 @@ export default function SettingsPage() {
     Promise.all([
       api.get('/billing/subscriptions'),
       api.get('/billing/transactions'),
+      api.get('/billing/invoices'),
       api.get('/billing/packages'),
-    ]).then(([subs, txs, pkgs]) => {
+    ]).then(([subs, txs, invs, pkgs]) => {
       setSubscriptions(Array.isArray(subs.data) ? subs.data : []);
       setTransactions(Array.isArray(txs.data) ? txs.data : []);
+      setInvoices(Array.isArray(invs.data) ? invs.data : []);
       // /billing/packages always returns { currency, registrationFee, packages: [...] }
       setPackages(pkgs.data?.packages ?? []);
       setCurrency(pkgs.data?.currency ?? 'LKR');
@@ -112,10 +116,12 @@ export default function SettingsPage() {
           Promise.all([
             api.get('/billing/subscriptions'),
             api.get('/billing/transactions'),
+            api.get('/billing/invoices'),
             api.get('/billing/packages'),
-          ]).then(([subs, txs, pkgs]) => {
+          ]).then(([subs, txs, invs, pkgs]) => {
             setSubscriptions(Array.isArray(subs.data) ? subs.data : []);
             setTransactions(Array.isArray(txs.data) ? txs.data : []);
+            setInvoices(Array.isArray(invs.data) ? invs.data : []);
             setPackages(pkgs.data?.packages ?? []);
             setCurrency(pkgs.data?.currency ?? 'LKR');
             setRegFee(pkgs.data?.registrationFee ?? 50000);
@@ -408,6 +414,53 @@ export default function SettingsPage() {
                   })}
                 </div>
               </div>
+
+              {/* Invoices */}
+              <Card padding={false}>
+                <div className="px-5 py-4 border-b border-ink-100">
+                  <h3 className="font-semibold text-ink-800">Invoices</h3>
+                </div>
+                {invoices.length === 0 ? (
+                  <p className="text-center text-ink-300 text-sm py-8">No invoices yet</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="mob-cards w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-ink-100">
+                          {['Invoice #', 'Description', 'Amount', 'Status', 'Due', ''].map(h => (
+                            <th key={h || 'action'} className="px-5 py-3 text-xs font-semibold text-ink-400 uppercase tracking-wide text-left">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {invoices.map(inv => (
+                          <tr key={inv.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
+                            <td data-label="Invoice #" className="px-5 py-3 font-mono text-xs font-semibold">{inv.invoice_number}</td>
+                            <td data-label="Description" className="px-5 py-3 text-ink-600">{inv.description || inv.type}</td>
+                            <td data-label="Amount" className="px-5 py-3 font-bold">{inv.currency} {Number(inv.amount).toLocaleString()}</td>
+                            <td data-label="Status" className="px-5 py-3">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-semibold capitalize"
+                                style={{
+                                  background: inv.status === 'paid' ? '#E0F2F1' : '#FFF8E1',
+                                  color: inv.status === 'paid' ? '#00796B' : '#B45309',
+                                }}>{inv.status}</span>
+                            </td>
+                            <td data-label="Due" className="px-5 py-3 text-ink-500 text-xs">{inv.due_at ? new Date(inv.due_at).toLocaleDateString('en-LK') : '—'}</td>
+                            <td className="px-5 py-3">
+                              <button onClick={async () => {
+                                const { data } = await api.get(`/billing/invoices/${inv.id}`);
+                                printInvoice(data);
+                              }} className="p-1.5 rounded-lg text-ink-400 hover:text-blue-600 hover:bg-blue-50" title="Print">
+                                <FileText size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Card>
 
               {/* Transaction history */}
               <Card padding={false}>

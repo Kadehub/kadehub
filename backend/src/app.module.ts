@@ -24,6 +24,7 @@ import { BatchModule } from './modules/batch/batch.module';
 import { StaffModule } from './modules/staff/staff.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { SuperAdminModule } from './modules/super-admin/super-admin.module';
+import { QuotationModule } from './modules/quotation/quotation.module';
 import { EmailService } from './common/email.service';
 
 @Module({
@@ -56,6 +57,7 @@ import { EmailService } from './common/email.service';
     StaffModule,
     BillingModule,
     SuperAdminModule,
+    QuotationModule,
     TypeOrmModule.forFeature([ApiLog, Coupon, Announcement]),
   ],
   providers: [EmailService],

@@ -6,6 +6,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage, memoryStorage } from 'multer';
 import { extname, join } from 'path';
 import { BillingService } from './billing.service';
+import { InvoiceService } from './invoice.service';
 import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto, BankTransferDto } from './billing.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -18,7 +19,7 @@ const logoStorage = diskStorage({
 @Controller('billing')
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class BillingController {
-  constructor(private billingService: BillingService) {}
+  constructor(private billingService: BillingService, private invoiceService: InvoiceService) {}
 
   // Public — no auth needed to view packages
   @Get('packages')
@@ -75,6 +76,23 @@ export class BillingController {
   @UseGuards(JwtAuthGuard)
   getTransactions(@CurrentUser() user: any) {
     return this.billingService.getTransactions(user.tenant_id);
+  }
+
+  @Get('invoices')
+  @UseGuards(JwtAuthGuard)
+  getInvoices(@CurrentUser() user: any) {
+    return this.invoiceService.getForTenant(user.tenant_id);
+  }
+
+  @Get('invoices/:id')
+  @UseGuards(JwtAuthGuard)
+  getInvoice(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.invoiceService.getPrintData(+id).then(data => {
+      if (data.invoice.tenant_id !== user.tenant_id && user.role !== 'SUPER_ADMIN') {
+        throw new BadRequestException('Access denied');
+      }
+      return data;
+    });
   }
 
   @Get('payment-options')

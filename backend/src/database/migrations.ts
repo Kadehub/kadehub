@@ -184,4 +184,97 @@ export const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    id: '008_invoice_quotation',
+    up: async (ds, dialect) => {
+      const pg = dialect === 'postgres';
+      if (!(await tableExists(ds, 'invoice'))) {
+        await ds.query(pg ? `
+          CREATE TABLE invoice (
+            id SERIAL PRIMARY KEY,
+            invoice_number VARCHAR(50) NOT NULL UNIQUE,
+            tenant_id INT NOT NULL,
+            payment_transaction_id INT,
+            package_id INT,
+            type VARCHAR(30) NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            currency VARCHAR(10) NOT NULL DEFAULT 'LKR',
+            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            description TEXT,
+            line_items JSONB,
+            bill_to_name VARCHAR(255),
+            bill_to_email VARCHAR(255),
+            issued_at TIMESTAMP,
+            due_at TIMESTAMP,
+            paid_at TIMESTAMP,
+            notes TEXT,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+          )
+        ` : `
+          CREATE TABLE IF NOT EXISTS \`invoice\` (
+            \`id\` INT NOT NULL AUTO_INCREMENT,
+            \`invoice_number\` VARCHAR(50) NOT NULL UNIQUE,
+            \`tenant_id\` INT NOT NULL,
+            \`payment_transaction_id\` INT NULL,
+            \`package_id\` INT NULL,
+            \`type\` ENUM('registration_fee','subscription','renewal') NOT NULL,
+            \`amount\` DECIMAL(10,2) NOT NULL,
+            \`currency\` VARCHAR(10) NOT NULL DEFAULT 'LKR',
+            \`status\` ENUM('pending','paid','cancelled','overdue') NOT NULL DEFAULT 'pending',
+            \`description\` TEXT NULL,
+            \`line_items\` JSON NULL,
+            \`bill_to_name\` VARCHAR(255) NULL,
+            \`bill_to_email\` VARCHAR(255) NULL,
+            \`issued_at\` DATETIME NULL,
+            \`due_at\` DATETIME NULL,
+            \`paid_at\` DATETIME NULL,
+            \`notes\` TEXT NULL,
+            \`created_at\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (\`id\`),
+            CONSTRAINT \`fk_invoice_tenant\` FOREIGN KEY (\`tenant_id\`) REFERENCES \`tenant\` (\`id\`) ON DELETE CASCADE
+          )
+        `);
+      }
+      if (!(await tableExists(ds, 'quotation'))) {
+        await ds.query(pg ? `
+          CREATE TABLE quotation (
+            id SERIAL PRIMARY KEY,
+            quote_number VARCHAR(50) NOT NULL UNIQUE,
+            contact_name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            business_type VARCHAR(100),
+            country VARCHAR(100),
+            description TEXT,
+            budget_range VARCHAR(100),
+            status VARCHAR(20) NOT NULL DEFAULT 'new',
+            package_id INT,
+            quoted_amount DECIMAL(10,2),
+            valid_until TIMESTAMP,
+            notes TEXT,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+          )
+        ` : `
+          CREATE TABLE IF NOT EXISTS \`quotation\` (
+            \`id\` INT NOT NULL AUTO_INCREMENT,
+            \`quote_number\` VARCHAR(50) NOT NULL UNIQUE,
+            \`contact_name\` VARCHAR(255) NOT NULL,
+            \`email\` VARCHAR(255) NOT NULL,
+            \`business_type\` VARCHAR(100) NULL,
+            \`country\` VARCHAR(100) NULL,
+            \`description\` TEXT NULL,
+            \`budget_range\` VARCHAR(100) NULL,
+            \`status\` ENUM('new','sent','accepted','rejected','converted') NOT NULL DEFAULT 'new',
+            \`package_id\` INT NULL,
+            \`quoted_amount\` DECIMAL(10,2) NULL,
+            \`valid_until\` DATETIME NULL,
+            \`notes\` TEXT NULL,
+            \`created_at\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            \`updated_at\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (\`id\`)
+          )
+        `);
+      }
+    },
+  },
 ];

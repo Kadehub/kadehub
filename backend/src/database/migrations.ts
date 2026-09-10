@@ -277,4 +277,11 @@ export const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    id: '009_quotation_line_items',
+    up: async (ds) => {
+      await addColumn(ds, 'quotation', 'line_items', 'JSON NULL');
+      await addColumn(ds, 'quotation', 'billing_cycle', "ENUM('monthly','yearly') NULL");
+    },
+  },
 ];

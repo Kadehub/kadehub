@@ -6,6 +6,7 @@ import { PaymentTransaction } from '../../database/entities/payment-transaction.
 import { Tenant } from '../../database/entities/tenant.entity';
 import { CompanyProfile } from '../../database/entities/company-profile.entity';
 import { getBankDetails } from '../../common/bank-details';
+import { getPlatformCompany } from '../../common/platform-company';
 
 export const REGISTRATION_FEE_LKR = 25000;
 
@@ -138,6 +139,69 @@ export class InvoiceService {
     const invoice = await this.getById(id);
     const profile = await this.profileRepo.findOne({ where: { tenant_id: invoice.tenant_id } });
     const bank = getBankDetails();
-    return { invoice, tenant: invoice.tenant, profile, bank };
+    const platform = getPlatformCompany();
+    const payment = invoice.payment_transaction || null;
+
+    if (invoice.package && invoice.line_items?.length === 1 && invoice.type === 'subscription') {
+      invoice.line_items = [{
+        description: `${invoice.package.name} Plan — ${invoice.payment_transaction?.billing_cycle || 'monthly'} subscription`,
+        quantity: 1,
+        unit_price: invoice.amount,
+        total: invoice.amount,
+      }];
+    }
+
+    return { invoice, tenant: invoice.tenant, profile, bank, platform, payment };
+  }
+
+  async getPrintDataByTransaction(txId: number) {
+    const invoice = await this.invoiceRepo.findOne({
+      where: { payment_transaction_id: txId },
+      relations: ['tenant', 'package', 'payment_transaction'],
+    });
+    if (invoice) return this.getPrintData(invoice.id);
+
+    const tx = await this.invoiceRepo.manager.getRepository(PaymentTransaction).findOne({
+      where: { id: txId },
+      relations: ['tenant', 'package'],
+    });
+    if (!tx) throw new NotFoundException('Transaction not found');
+
+    const profile = await this.profileRepo.findOne({ where: { tenant_id: tx.tenant_id } });
+    const isRegFee = tx.metadata?.type === 'registration_fee';
+    const syntheticInvoice = {
+      invoice_number: `INV-${new Date(tx.created_at).getFullYear()}-${String(tx.id).padStart(6, '0')}`,
+      tenant_id: tx.tenant_id,
+      type: isRegFee ? 'registration_fee' : 'subscription',
+      amount: tx.amount,
+      currency: tx.currency || 'LKR',
+      status: tx.status === 'completed' ? 'paid' : 'pending',
+      description: isRegFee
+        ? 'KadeHub Registration Fee — 14-day trial access'
+        : `${tx.package?.name || 'KadeHub'} Subscription — ${tx.billing_cycle}`,
+      bill_to_name: tx.tenant?.name,
+      bill_to_email: profile?.email,
+      issued_at: tx.created_at,
+      due_at: tx.created_at,
+      paid_at: tx.status === 'completed' ? tx.created_at : null,
+      line_items: [{
+        description: isRegFee
+          ? 'Registration Fee (One-time)'
+          : `${tx.package?.name || 'Subscription'} Plan (${tx.billing_cycle})`,
+        quantity: 1,
+        unit_price: tx.amount,
+        total: tx.amount,
+      }],
+      created_at: tx.created_at,
+    };
+
+    return {
+      invoice: syntheticInvoice,
+      tenant: tx.tenant,
+      profile,
+      bank: getBankDetails(),
+      platform: getPlatformCompany(),
+      payment: tx,
+    };
   }
 }

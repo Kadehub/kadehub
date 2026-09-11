@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import api from '../../../lib/api';
 import { CreditCard, Download, FileText, Eye } from 'lucide-react';
 import Modal from '../../../components/ui/Modal';
+import { printInvoice } from '../../../lib/invoice-print';
 
 export default function TransactionsPage() {
   const [data, setData] = useState<any[]>([]);
@@ -30,29 +31,8 @@ export default function TransactionsPage() {
   }
 
   async function downloadInvoice(tx: any) {
-    const { data: inv } = await api.get(`/super-admin/transactions/${tx.id}/invoice`);
-    const html = `
-      <html><head><style>
-        body{font-family:sans-serif;padding:40px;color:#0F172A}
-        h1{color:#00796B} table{width:100%;border-collapse:collapse;margin-top:20px}
-        td,th{padding:10px;border:1px solid #e2e8f0;text-align:left}
-        th{background:#f1f5f9;font-size:12px;text-transform:uppercase}
-        .total{font-size:20px;font-weight:bold;color:#00796B}
-      </style></head><body>
-        <h1>KadeHub Invoice</h1>
-        <p><strong>Invoice #:</strong> INV-${tx.id.toString().padStart(6,'0')}</p>
-        <p><strong>Date:</strong> ${new Date(tx.created_at).toLocaleDateString()}</p>
-        <hr/>
-        <p><strong>Shop:</strong> ${inv.tenant?.name}</p>
-        <table>
-          <tr><th>Description</th><th>Cycle</th><th>Amount</th></tr>
-          <tr><td>${tx.package?.name} Plan</td><td>${tx.billing_cycle}</td><td>LKR ${tx.amount?.toLocaleString()}</td></tr>
-        </table>
-        <p class="total" style="margin-top:20px">Total: LKR ${tx.amount?.toLocaleString()}</p>
-        <p style="margin-top:30px;font-size:12px;color:#94a3b8">Gateway: ${tx.gateway} · Ref: ${tx.gateway_ref} · Status: ${tx.status}</p>
-      </body></html>`;
-    const win = window.open('', '_blank');
-    if (win) { win.document.write(html); win.document.close(); win.print(); }
+    const { data } = await api.get(`/super-admin/transactions/${tx.id}/invoice`);
+    printInvoice(data);
   }
 
   const totalRevenue = data.filter(t => t.status === 'completed').reduce((s, t) => s + t.amount, 0);

@@ -9,6 +9,7 @@ import {
 } from './super-admin.service';
 import { BillingService } from '../billing/billing.service';
 import { InvoiceService } from '../billing/invoice.service';
+import { getPlatformCompany, savePlatformCompany } from '../../common/platform-company';
 import { UpdateBankDetailsDto, RejectBankTransferDto } from '../billing/billing.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -70,7 +71,7 @@ export class SuperAdminController {
 
   @Get('transactions/:id/invoice')
   getTransactionInvoice(@CurrentUser() u: any, @Param('id') id: string) {
-    this.guard(u); return this.service.getInvoiceData(+id);
+    this.guard(u); return this.invoices.getPrintDataByTransaction(+id);
   }
 
   // ── Invoices ───────────────────────────────────────────────────────────────
@@ -113,6 +114,16 @@ export class SuperAdminController {
   @Patch('bank-details')
   updateBankDetails(@CurrentUser() u: any, @Body() dto: UpdateBankDetailsDto) {
     this.guard(u); return this.billing.updateBankDetails(dto);
+  }
+
+  @Get('platform-company')
+  getPlatformCompany(@CurrentUser() u: any) {
+    this.guard(u); return getPlatformCompany();
+  }
+
+  @Patch('platform-company')
+  updatePlatformCompany(@CurrentUser() u: any, @Body() dto: Record<string, any>) {
+    this.guard(u); return savePlatformCompany(dto);
   }
 
   // ── Packages ───────────────────────────────────────────────────────────────

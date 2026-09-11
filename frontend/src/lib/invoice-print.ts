@@ -86,6 +86,8 @@ export function printInvoice(data: InvoicePrintData) {
 
   const isPaid = invoice.status === 'paid';
   const typeLabel = String(invoice.type || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+  const isTaxInvoice = vatRate > 0 || Boolean(platform?.vat_number?.trim());
+  const documentTitle = isTaxInvoice ? 'TAX INVOICE' : 'INVOICE';
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -311,7 +313,7 @@ export function printInvoice(data: InvoicePrintData) {
         </div>
       </div>
       <div class="header-right">
-        <div class="invoice-title">TAX INVOICE</div>
+        <div class="invoice-title">${documentTitle}</div>
         <div class="invoice-number">${esc(invoice.invoice_number)}</div>
         <div class="status-badge">${statusLabel(invoice.status)}</div>
       </div>
@@ -405,7 +407,7 @@ export function printInvoice(data: InvoicePrintData) {
 
       <div class="terms">
         <strong>Terms &amp; Conditions</strong><br/>
-        • This is a computer-generated tax invoice and is valid without a signature.<br/>
+        • This is a computer-generated ${isTaxInvoice ? 'tax invoice' : 'invoice'} and is valid without a signature.<br/>
         • Payment is due by the due date shown above. Late payments may result in service suspension.<br/>
         • All amounts are quoted in ${esc(currency)} unless otherwise stated.<br/>
         • For billing enquiries contact ${esc(platform?.email || 'official.kadehub@gmail.com')}.

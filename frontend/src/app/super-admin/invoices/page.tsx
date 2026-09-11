@@ -1,8 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
 import api from '../../../lib/api';
-import { FileText, Filter } from 'lucide-react';
+import { FileText, Filter, Mail } from 'lucide-react';
 import { printInvoice } from '../../../lib/invoice-print';
+import toast from 'react-hot-toast';
 
 export default function InvoicesPage() {
   const [data, setData] = useState<any[]>([]);
@@ -24,6 +25,15 @@ export default function InvoicesPage() {
   async function downloadInvoice(id: number) {
     const { data } = await api.get(`/super-admin/invoices/${id}`);
     printInvoice(data);
+  }
+
+  async function emailInvoice(id: number) {
+    try {
+      const { data } = await api.post(`/super-admin/invoices/${id}/email`);
+      toast.success(`Invoice emailed to ${data.sent_to}`);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to send email');
+    }
   }
 
   const pendingTotal = data.filter(i => i.status === 'pending').reduce((s, i) => s + Number(i.amount), 0);
@@ -69,7 +79,7 @@ export default function InvoicesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-ink-100">
-                {['Invoice #', 'Shop', 'Type', 'Amount', 'Status', 'Issued', 'Due', 'Print'].map(h => (
+                {['Invoice #', 'Shop', 'Type', 'Amount', 'Status', 'Issued', 'Due', 'Actions'].map(h => (
                   <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-ink-400 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -94,10 +104,16 @@ export default function InvoicesPage() {
                   <td className="px-5 py-3.5 text-ink-400 text-xs">{inv.issued_at ? new Date(inv.issued_at).toLocaleDateString() : '—'}</td>
                   <td className="px-5 py-3.5 text-ink-400 text-xs">{inv.due_at ? new Date(inv.due_at).toLocaleDateString() : '—'}</td>
                   <td className="px-5 py-3.5">
-                    <button onClick={() => downloadInvoice(inv.id)}
-                      className="p-2 rounded-lg text-ink-400 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Print Invoice">
-                      <FileText size={15} />
-                    </button>
+                    <div className="flex gap-1">
+                      <button onClick={() => downloadInvoice(inv.id)}
+                        className="p-2 rounded-lg text-ink-400 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Print">
+                        <FileText size={15} />
+                      </button>
+                      <button onClick={() => emailInvoice(inv.id)}
+                        className="p-2 rounded-lg text-ink-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors" title="Email to customer">
+                        <Mail size={15} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

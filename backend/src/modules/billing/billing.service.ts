@@ -7,8 +7,10 @@ import { CompanyProfile } from '../../database/entities/company-profile.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
 import { PaymentTransaction } from '../../database/entities/payment-transaction.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
+import { User } from '../../database/entities/user.entity';
 import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto, BankTransferDto, UpdateBankDetailsDto } from './billing.dto';
 import { InvoiceService } from './invoice.service';
+import { EmailService } from '../../common/email.service';
 import { getBankDetails, saveBankDetails, isOnepayConfigured } from '../../common/bank-details';
 import * as https from 'https';
 import * as crypto from 'crypto';
@@ -53,8 +55,30 @@ export class BillingService {
     @InjectRepository(Subscription) private subRepo: Repository<Subscription>,
     @InjectRepository(PaymentTransaction) private txRepo: Repository<PaymentTransaction>,
     @InjectRepository(Tenant) private tenantRepo: Repository<Tenant>,
+    @InjectRepository(User) private userRepo: Repository<User>,
     private invoiceService: InvoiceService,
+    private emailService: EmailService,
   ) {}
+
+  private async getShopContact(tenantId: number) {
+    const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
+    const profile = await this.profileRepo.findOne({ where: { tenant_id: tenantId } });
+    const admin = await this.userRepo.findOne({ where: { tenant_id: tenantId, role: 'ADMIN' } });
+    return { shopName: tenant?.name || 'Shop', email: profile?.email || admin?.email };
+  }
+
+  private async notifyPaymentSuccess(tx: PaymentTransaction, pkg?: Package | null) {
+    const { shopName, email } = await this.getShopContact(tx.tenant_id);
+    const planName = pkg?.name || (tx.metadata?.type === 'registration_fee' ? 'Registration Fee' : 'Subscription');
+    if (tx.metadata?.type !== 'registration_fee') {
+      await this.emailService.notifySubscription(shopName, planName, Number(tx.amount), email);
+    }
+  }
+
+  private async notifyPaymentFailure(tenantId: number, planName: string, reason?: string) {
+    const { shopName, email } = await this.getShopContact(tenantId);
+    await this.emailService.notifyPaymentFailed(shopName, planName, email, reason);
+  }
 
   private async syncInvoice(tx: PaymentTransaction) {
     if (tx.status === 'completed') {
@@ -205,6 +229,7 @@ export class BillingService {
         payment_ref: tx.gateway_ref,
       }));
       await this.subRepo.save(subs);
+      await this.notifyPaymentSuccess(tx, pkg);
 
       return { transaction: tx, subscriptions: subs, package: pkg };
     } catch (e: any) {
@@ -326,12 +351,14 @@ export class BillingService {
     await this.txRepo.save(tx);
     await this.syncInvoice(tx);
 
+    const pkg = tx.package_id ? await this.packageRepo.findOne({ where: { id: tx.package_id } }) : null;
     if (tx.metadata?.type === 'registration_fee') {
       await this.activateTrialAfterRegistrationFee(tx.tenant_id);
     } else {
       await this.tenantRepo.update(tx.tenant_id, { status: 'active' });
       await this.activateSubscription(tx);
     }
+    await this.notifyPaymentSuccess(tx, pkg);
 
     return { ok: true, status: 'completed', transaction: tx };
   }
@@ -348,6 +375,10 @@ export class BillingService {
       reject_reason: reason || 'Payment could not be verified',
     };
     await this.txRepo.save(tx);
+
+    const pkg = await this.packageRepo.findOne({ where: { id: tx.package_id } });
+    const planName = tx.metadata?.type === 'registration_fee' ? 'Registration Fee' : (pkg?.name || 'Subscription');
+    await this.notifyPaymentFailure(tx.tenant_id, planName, reason);
 
     return { ok: true, status: 'failed', transaction: tx };
   }
@@ -643,14 +674,19 @@ export class BillingService {
     tx.status = isSuccess ? 'completed' : 'failed';
     tx.metadata = { ...tx.metadata, webhook: body };
     await this.txRepo.save(tx);
-    if (isSuccess) await this.syncInvoice(tx);
-
     if (isSuccess) {
+      await this.syncInvoice(tx);
+      const pkg = await this.packageRepo.findOne({ where: { id: tx.package_id } });
       if (tx.metadata?.type === 'registration_fee') {
         await this.activateTrialAfterRegistrationFee(tx.tenant_id);
       } else {
         await this.activateSubscription(tx);
       }
+      await this.notifyPaymentSuccess(tx, pkg);
+    } else {
+      const pkg = await this.packageRepo.findOne({ where: { id: tx.package_id } });
+      const planName = tx.metadata?.type === 'registration_fee' ? 'Registration Fee' : (pkg?.name || 'Subscription');
+      await this.notifyPaymentFailure(tx.tenant_id, planName, 'Online payment was declined or cancelled');
     }
 
     return { received: true };
@@ -690,6 +726,8 @@ export class BillingService {
           await this.txRepo.save(tx);
           await this.syncInvoice(tx);
           await this.activateSubscription(tx);
+          const pkg = await this.packageRepo.findOne({ where: { id: tx.package_id } });
+          await this.notifyPaymentSuccess(tx, pkg);
         }
       } catch { /* ignore poll errors */ }
     }

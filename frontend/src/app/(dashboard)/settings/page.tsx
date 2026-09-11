@@ -8,7 +8,7 @@ import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../../hooks/useAuth';
 import BankTransferForm from '../../../components/billing/BankTransferForm';
-import { Building2, Camera, CreditCard, Package, Check, Star, ArrowLeft, Clock, FileText } from 'lucide-react';
+import { Building2, Camera, CreditCard, Package, Check, Star, ArrowLeft, Clock, FileText, Mail } from 'lucide-react';
 import { printInvoice } from '../../../lib/invoice-print';
 
 export default function SettingsPage() {
@@ -447,12 +447,24 @@ export default function SettingsPage() {
                             </td>
                             <td data-label="Due" className="px-5 py-3 text-ink-500 text-xs">{inv.due_at ? new Date(inv.due_at).toLocaleDateString('en-LK') : '—'}</td>
                             <td className="px-5 py-3">
-                              <button onClick={async () => {
-                                const { data } = await api.get(`/billing/invoices/${inv.id}`);
-                                printInvoice(data);
-                              }} className="p-1.5 rounded-lg text-ink-400 hover:text-blue-600 hover:bg-blue-50" title="Print">
-                                <FileText size={14} />
-                              </button>
+                              <div className="flex gap-1">
+                                <button onClick={async () => {
+                                  const { data } = await api.get(`/billing/invoices/${inv.id}`);
+                                  printInvoice(data);
+                                }} className="p-1.5 rounded-lg text-ink-400 hover:text-blue-600 hover:bg-blue-50" title="Print">
+                                  <FileText size={14} />
+                                </button>
+                                <button onClick={async () => {
+                                  try {
+                                    const { data } = await api.post(`/billing/invoices/${inv.id}/email`);
+                                    toast.success(`Invoice sent to ${data.sent_to}`);
+                                  } catch (err: any) {
+                                    toast.error(err?.response?.data?.message || 'Email failed');
+                                  }
+                                }} className="p-1.5 rounded-lg text-ink-400 hover:text-indigo-600 hover:bg-indigo-50" title="Email">
+                                  <Mail size={14} />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}

@@ -17,7 +17,7 @@ function esc(s: unknown): string {
 
 function fmtDate(d: string | Date | null | undefined): string {
   if (!d) return '—';
-  return new Date(d).toLocaleDateString('en-LK', { year: 'numeric', month: 'long', day: 'numeric' });
+  return new Date(d).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 function fmtMoney(amount: number, currency = 'LKR'): string {
@@ -37,10 +37,10 @@ function statusLabel(status: string): string {
 function gatewayLabel(gateway?: string): string {
   const map: Record<string, string> = {
     bank_transfer: 'Bank Transfer',
-    onepay: 'OnePay (Card / Online)',
-    card: 'Credit / Debit Card',
+    onepay: 'OnePay',
+    card: 'Card',
     paypal: 'PayPal',
-    bank: 'Bank Deposit',
+    bank: 'Bank',
   };
   return map[gateway || ''] || gateway || '—';
 }
@@ -72,11 +72,11 @@ export function printInvoice(data: InvoicePrintData) {
     ? invoice.bill_to_name
     : null;
 
-  const rows = items.map((item: any, idx: number) => `
-    <tr class="${idx % 2 === 0 ? 'row-even' : 'row-odd'}">
+  const rows = items.map((item: any) => `
+    <tr>
       <td class="col-desc">
         <span class="item-title">${esc(item.description)}</span>
-        ${invoice.type === 'registration_fee' && idx === 0 ? '<span class="item-sub">Includes 14-day trial access to all modules</span>' : ''}
+        ${invoice.type === 'registration_fee' ? '<span class="item-sub">Includes 14-day trial · all modules</span>' : ''}
       </td>
       <td class="col-qty">${item.quantity ?? 1}</td>
       <td class="col-price">${fmtMoney(Number(item.unit_price ?? item.total), currency)}</td>
@@ -93,211 +93,114 @@ export function printInvoice(data: InvoicePrintData) {
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>${esc(invoice.invoice_number)} — KadeHub Invoice</title>
+  <title>${esc(invoice.invoice_number)}</title>
   <style>
+    @page { size: A4 portrait; margin: 8mm 10mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    html, body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
       color: #0F172A;
       background: #fff;
-      font-size: 13px;
-      line-height: 1.5;
+      font-size: 10px;
+      line-height: 1.35;
     }
     .page {
-      max-width: 820px;
+      width: 100%;
+      max-width: 190mm;
       margin: 0 auto;
-      padding: 0;
     }
     .header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      padding: 32px 40px 28px;
-      border-bottom: 3px solid #00796B;
-      background: linear-gradient(135deg, #f8fffe 0%, #ffffff 100%);
+      align-items: center;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #00796B;
     }
-    .header-left img {
-      height: 44px;
-      width: auto;
-      object-fit: contain;
-    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header-left img { height: 32px; width: auto; object-fit: contain; }
+    .header-co { font-size: 9px; color: #64748B; line-height: 1.4; }
+    .header-co strong { color: #00796B; font-size: 10px; display: block; }
     .header-right { text-align: right; }
-    .invoice-title {
-      font-size: 28px;
-      font-weight: 800;
-      color: #00796B;
-      letter-spacing: -0.02em;
-    }
-    .invoice-number {
-      font-size: 13px;
-      color: #64748B;
-      margin-top: 4px;
-      font-family: 'Consolas', monospace;
-    }
+    .invoice-title { font-size: 20px; font-weight: 800; color: #00796B; line-height: 1.1; }
+    .invoice-number { font-size: 10px; color: #64748B; font-family: Consolas, monospace; margin-top: 2px; }
     .status-badge {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 5px 14px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      background: ${isPaid ? '#E0F2F1' : '#FEF3C7'};
-      color: ${isPaid ? '#00796B' : '#B45309'};
+      display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 10px;
+      font-size: 9px; font-weight: 700; letter-spacing: 0.05em;
+      background: ${isPaid ? '#E0F2F1' : '#FEF3C7'}; color: ${isPaid ? '#00796B' : '#B45309'};
       border: 1px solid ${isPaid ? '#B2DFDB' : '#FDE68A'};
     }
-    .body { padding: 32px 40px 40px; }
     .parties {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      margin-bottom: 28px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;
     }
     .party-box {
-      border: 1px solid #E2E8F0;
-      border-radius: 10px;
-      padding: 18px 20px;
-      background: #FAFBFC;
+      border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 10px; background: #FAFBFC;
     }
-    .party-box.from { border-left: 4px solid #00796B; }
-    .party-box.to { border-left: 4px solid #00A884; }
-    .party-label {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #94A3B8;
-      margin-bottom: 10px;
-    }
-    .party-name {
-      font-size: 15px;
-      font-weight: 700;
-      color: #0F172A;
-      margin-bottom: 6px;
-    }
-    .party-line { color: #475569; font-size: 12.5px; margin-bottom: 3px; }
+    .party-box.from { border-left: 3px solid #00796B; }
+    .party-box.to { border-left: 3px solid #00A884; }
+    .party-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94A3B8; margin-bottom: 4px; }
+    .party-name { font-size: 11px; font-weight: 700; color: #0F172A; margin-bottom: 2px; }
+    .party-line { color: #475569; font-size: 9px; margin-bottom: 1px; }
     .meta-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 28px;
-      padding: 16px 20px;
-      background: #F8FAFC;
-      border-radius: 10px;
-      border: 1px solid #E2E8F0;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+      margin-bottom: 10px; padding: 6px 10px; background: #F8FAFC;
+      border-radius: 6px; border: 1px solid #E2E8F0;
     }
-    .meta-item label {
-      display: block;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #94A3B8;
-      margin-bottom: 4px;
-    }
-    .meta-item span { font-size: 12.5px; font-weight: 600; color: #1E293B; }
-    table.items {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 0;
-    }
+    .meta-item label { display: block; font-size: 7px; font-weight: 700; text-transform: uppercase; color: #94A3B8; margin-bottom: 1px; }
+    .meta-item span { font-size: 9px; font-weight: 600; color: #1E293B; }
+    .items-section { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+    .items-section table { flex: 1; }
+    table.items { width: 100%; border-collapse: collapse; }
     table.items thead th {
-      background: #00796B;
-      color: #fff;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 11px 14px;
-      text-align: left;
+      background: #00796B; color: #fff; font-size: 8px; font-weight: 700;
+      text-transform: uppercase; padding: 5px 8px; text-align: left;
     }
-    table.items thead th.col-qty,
-    table.items thead th.col-price,
-    table.items thead th.col-total { text-align: right; }
-    table.items tbody td {
-      padding: 14px;
-      border-bottom: 1px solid #E2E8F0;
-      vertical-align: top;
-    }
-    .row-even { background: #fff; }
-    .row-odd { background: #FAFBFC; }
-    .col-desc { width: 50%; }
+    table.items thead th.col-qty, table.items thead th.col-price, table.items thead th.col-total { text-align: right; }
+    table.items tbody td { padding: 6px 8px; border-bottom: 1px solid #E2E8F0; vertical-align: top; font-size: 9px; }
+    .col-desc { width: 48%; }
     .col-qty, .col-price, .col-total { text-align: right; white-space: nowrap; }
-    .item-title { font-weight: 600; color: #1E293B; display: block; }
-    .item-sub { font-size: 11px; color: #94A3B8; display: block; margin-top: 3px; }
-    .totals-wrap {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 0;
-    }
+    .item-title { font-weight: 600; color: #1E293B; }
+    .item-sub { font-size: 8px; color: #94A3B8; display: block; }
     .totals {
-      width: 280px;
-      border: 1px solid #E2E8F0;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: -1px;
+      width: 155px; flex-shrink: 0; border: 1px solid #E2E8F0; border-radius: 6px; overflow: hidden;
     }
     .totals-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 16px;
-      font-size: 13px;
-      border-bottom: 1px solid #F1F5F9;
+      display: flex; justify-content: space-between; padding: 4px 8px;
+      font-size: 9px; border-bottom: 1px solid #F1F5F9;
     }
     .totals-row.grand {
-      background: #00796B;
-      color: #fff;
-      font-size: 16px;
-      font-weight: 800;
-      border-bottom: none;
-      padding: 14px 16px;
+      background: #00796B; color: #fff; font-size: 11px; font-weight: 800;
+      border-bottom: none; padding: 6px 8px;
     }
     .payment-box {
-      margin-top: 28px;
-      padding: 18px 20px;
-      border-radius: 10px;
+      margin-bottom: 8px; padding: 7px 10px; border-radius: 6px;
       border: 1px solid ${isPaid ? '#B2DFDB' : '#FDE68A'};
       background: ${isPaid ? '#F0FDF9' : '#FFFBEB'};
     }
     .payment-box h4 {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: ${isPaid ? '#00796B' : '#B45309'};
-      margin-bottom: 10px;
+      font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+      color: ${isPaid ? '#00796B' : '#B45309'}; margin-bottom: 5px;
     }
-    .payment-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px 24px;
-      font-size: 12.5px;
+    .payment-inline {
+      display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 9px;
     }
-    .payment-grid .lbl { color: #64748B; }
-    .payment-grid .val { font-weight: 600; color: #1E293B; }
+    .payment-inline span { color: #64748B; }
+    .payment-inline strong { color: #1E293B; }
     .terms {
-      margin-top: 28px;
-      padding-top: 20px;
-      border-top: 1px solid #E2E8F0;
-      font-size: 11px;
-      color: #94A3B8;
-      line-height: 1.7;
+      font-size: 8px; color: #94A3B8; line-height: 1.45;
+      padding-top: 6px; border-top: 1px solid #E2E8F0; margin-bottom: 6px;
     }
     .footer {
-      margin-top: 24px;
-      padding: 20px 40px;
-      background: #F8FAFC;
-      border-top: 1px solid #E2E8F0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      color: #64748B;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 8px; color: #64748B; padding-top: 4px;
     }
     .footer strong { color: #00796B; }
     @media print {
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .page { max-width: 100%; }
+      html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .page { max-width: none; page-break-after: avoid; page-break-inside: avoid; }
+      .header, .parties, .meta-row, .items-section, .payment-box, .terms, .footer {
+        page-break-inside: avoid;
+      }
     }
   </style>
 </head>
@@ -306,10 +209,9 @@ export function printInvoice(data: InvoicePrintData) {
     <div class="header">
       <div class="header-left">
         ${logoUrl ? `<img src="${esc(logoUrl)}" alt="KadeHub" onerror="this.style.display='none'"/>` : ''}
-        <div style="margin-top:10px;font-size:11px;color:#64748B;line-height:1.6">
-          <strong style="color:#00796B;font-size:12px">${esc(platform?.legal_name || platform?.trading_name || 'KadeHub')}</strong><br/>
-          ${esc(platform?.address || '')}${platform?.city ? `, ${esc(platform.city)}` : ''}<br/>
-          ${esc(platform?.country || 'Sri Lanka')}
+        <div class="header-co">
+          <strong>${esc(platform?.legal_name || platform?.trading_name || 'KadeHub')}</strong>
+          ${esc(platform?.address || '')}${platform?.city ? `, ${esc(platform.city)}` : ''}, ${esc(platform?.country || 'Sri Lanka')}
         </div>
       </div>
       <div class="header-right">
@@ -319,39 +221,35 @@ export function printInvoice(data: InvoicePrintData) {
       </div>
     </div>
 
-    <div class="body">
-      <div class="parties">
-        <div class="party-box from">
-          <div class="party-label">Bill From</div>
-          <div class="party-name">${esc(platform?.legal_name || 'KadeHub (Pvt) Ltd')}</div>
-          <div class="party-line">${esc(platform?.address || '')}</div>
-          <div class="party-line">${esc(platform?.city || '')}${platform?.country ? `, ${esc(platform.country)}` : ''}</div>
-          ${platform?.phone ? `<div class="party-line">Tel: ${esc(platform.phone)}</div>` : ''}
-          ${platform?.email ? `<div class="party-line">${esc(platform.email)}</div>` : ''}
-          ${platform?.website ? `<div class="party-line">${esc(platform.website)}</div>` : ''}
-          ${platform?.vat_number ? `<div class="party-line" style="margin-top:8px"><strong>VAT No:</strong> ${esc(platform.vat_number)}</div>` : ''}
-          ${platform?.registration_number ? `<div class="party-line"><strong>Reg No:</strong> ${esc(platform.registration_number)}</div>` : ''}
-        </div>
-        <div class="party-box to">
-          <div class="party-label">Bill To</div>
-          <div class="party-name">${esc(billToName)}</div>
-          ${contactName ? `<div class="party-line">Attn: ${esc(contactName)}</div>` : ''}
-          ${profile?.address ? `<div class="party-line">${esc(profile.address)}</div>` : ''}
-          ${profile?.city || profile?.country ? `<div class="party-line">${esc([profile?.city, profile?.country].filter(Boolean).join(', '))}</div>` : ''}
-          <div class="party-line">${esc(invoice.bill_to_email || profile?.email || '')}</div>
-          ${profile?.phone ? `<div class="party-line">Tel: ${esc(profile.phone)}</div>` : ''}
-          ${profile?.tax_number ? `<div class="party-line" style="margin-top:8px"><strong>Tax / VAT No:</strong> ${esc(profile.tax_number)}</div>` : ''}
-          ${tenant?.subdomain ? `<div class="party-line"><strong>Subdomain:</strong> ${esc(tenant.subdomain)}.kadehub.com</div>` : ''}
-        </div>
+    <div class="parties">
+      <div class="party-box from">
+        <div class="party-label">Bill From</div>
+        <div class="party-name">${esc(platform?.legal_name || 'KadeHub (Pvt) Ltd')}</div>
+        <div class="party-line">${esc(platform?.address || '')}, ${esc(platform?.city || '')}</div>
+        ${platform?.phone ? `<div class="party-line">Tel: ${esc(platform.phone)}</div>` : ''}
+        ${platform?.email ? `<div class="party-line">${esc(platform.email)}</div>` : ''}
+        ${platform?.vat_number ? `<div class="party-line"><strong>VAT:</strong> ${esc(platform.vat_number)}</div>` : ''}
+        ${platform?.registration_number ? `<div class="party-line"><strong>Reg:</strong> ${esc(platform.registration_number)}</div>` : ''}
       </div>
-
-      <div class="meta-row">
-        <div class="meta-item"><label>Issue Date</label><span>${fmtDate(invoice.issued_at || invoice.created_at)}</span></div>
-        <div class="meta-item"><label>Due Date</label><span>${fmtDate(invoice.due_at)}</span></div>
-        <div class="meta-item"><label>${isPaid ? 'Paid Date' : 'Payment Status'}</label><span>${isPaid ? fmtDate(invoice.paid_at) : statusLabel(invoice.status)}</span></div>
-        <div class="meta-item"><label>Invoice Type</label><span>${esc(typeLabel)}</span></div>
+      <div class="party-box to">
+        <div class="party-label">Bill To</div>
+        <div class="party-name">${esc(billToName)}</div>
+        ${contactName ? `<div class="party-line">Attn: ${esc(contactName)}</div>` : ''}
+        ${profile?.address ? `<div class="party-line">${esc(profile.address)}${profile?.city ? `, ${esc(profile.city)}` : ''}</div>` : ''}
+        <div class="party-line">${esc(invoice.bill_to_email || profile?.email || '')}</div>
+        ${profile?.phone ? `<div class="party-line">Tel: ${esc(profile.phone)}</div>` : ''}
+        ${tenant?.subdomain ? `<div class="party-line">${esc(tenant.subdomain)}.kadehub.com</div>` : ''}
       </div>
+    </div>
 
+    <div class="meta-row">
+      <div class="meta-item"><label>Issue Date</label><span>${fmtDate(invoice.issued_at || invoice.created_at)}</span></div>
+      <div class="meta-item"><label>Due Date</label><span>${fmtDate(invoice.due_at)}</span></div>
+      <div class="meta-item"><label>${isPaid ? 'Paid Date' : 'Status'}</label><span>${isPaid ? fmtDate(invoice.paid_at) : statusLabel(invoice.status)}</span></div>
+      <div class="meta-item"><label>Type</label><span>${esc(typeLabel)}</span></div>
+    </div>
+
+    <div class="items-section">
       <table class="items">
         <thead>
           <tr>
@@ -363,66 +261,43 @@ export function printInvoice(data: InvoicePrintData) {
         </thead>
         <tbody>${rows}</tbody>
       </table>
-
-      <div class="totals-wrap">
-        <div class="totals">
-          <div class="totals-row"><span>Subtotal</span><span>${fmtMoney(subtotal, currency)}</span></div>
-          ${vatRate > 0
-            ? `<div class="totals-row"><span>VAT (${vatRate}%)</span><span>${fmtMoney(taxAmount, currency)}</span></div>`
-            : `<div class="totals-row"><span>Tax</span><span>${fmtMoney(0, currency)}</span></div>`
-          }
-          <div class="totals-row grand"><span>Total Due</span><span>${fmtMoney(grandTotal, currency)}</span></div>
-        </div>
-      </div>
-
-      <div class="payment-box">
-        <h4>${isPaid ? 'Payment Confirmation' : 'Payment Instructions'}</h4>
-        ${isPaid && payment ? `
-          <div class="payment-grid">
-            <div><span class="lbl">Payment Method</span><br/><span class="val">${esc(gatewayLabel(payment.gateway))}</span></div>
-            <div><span class="lbl">Transaction Reference</span><br/><span class="val">${esc(payment.gateway_ref || '—')}</span></div>
-            <div><span class="lbl">Amount Received</span><br/><span class="val">${fmtMoney(Number(payment.amount), payment.currency || currency)}</span></div>
-            <div><span class="lbl">Payment Date</span><br/><span class="val">${fmtDate(invoice.paid_at || payment.created_at)}</span></div>
-          </div>
-        ` : bank ? `
-          <div class="payment-grid">
-            <div><span class="lbl">Bank</span><br/><span class="val">${esc(bank.bank_name)}</span></div>
-            <div><span class="lbl">Branch</span><br/><span class="val">${esc(bank.branch || '—')}</span></div>
-            <div><span class="lbl">Account Name</span><br/><span class="val">${esc(bank.account_name)}</span></div>
-            <div><span class="lbl">Account Number</span><br/><span class="val">${esc(bank.account_number)}</span></div>
-          </div>
-          <p style="margin-top:12px;font-size:12px;color:#475569">
-            Please transfer <strong>${fmtMoney(grandTotal, currency)}</strong> and use invoice number
-            <strong>${esc(invoice.invoice_number)}</strong> as your payment reference.
-            ${bank.instructions ? `<br/>${esc(bank.instructions)}` : ''}
-          </p>
-        ` : `<p style="font-size:12.5px;color:#475569">Contact ${esc(platform?.email || 'billing@kadehub.lk')} for payment options.</p>`}
-      </div>
-
-      ${invoice.notes ? `
-        <div style="margin-top:20px;padding:14px 16px;background:#F8FAFC;border-radius:8px;border:1px solid #E2E8F0;font-size:12px;color:#475569">
-          <strong>Notes:</strong> ${esc(invoice.notes)}
-        </div>
-      ` : ''}
-
-      <div class="terms">
-        <strong>Terms &amp; Conditions</strong><br/>
-        • This is a computer-generated ${isTaxInvoice ? 'tax invoice' : 'invoice'} and is valid without a signature.<br/>
-        • Payment is due by the due date shown above. Late payments may result in service suspension.<br/>
-        • All amounts are quoted in ${esc(currency)} unless otherwise stated.<br/>
-        • For billing enquiries contact ${esc(platform?.email || 'official.kadehub@gmail.com')}.
+      <div class="totals">
+        <div class="totals-row"><span>Subtotal</span><span>${fmtMoney(subtotal, currency)}</span></div>
+        <div class="totals-row"><span>${vatRate > 0 ? `VAT (${vatRate}%)` : 'Tax'}</span><span>${fmtMoney(vatRate > 0 ? taxAmount : 0, currency)}</span></div>
+        <div class="totals-row grand"><span>Total</span><span>${fmtMoney(grandTotal, currency)}</span></div>
       </div>
     </div>
 
+    <div class="payment-box">
+      <h4>${isPaid ? 'Payment Confirmation' : 'Payment Instructions'}</h4>
+      ${isPaid && payment ? `
+        <div class="payment-inline">
+          <div><span>Method: </span><strong>${esc(gatewayLabel(payment.gateway))}</strong></div>
+          <div><span>Ref: </span><strong>${esc(payment.gateway_ref || '—')}</strong></div>
+          <div><span>Amount: </span><strong>${fmtMoney(Number(payment.amount), payment.currency || currency)}</strong></div>
+          <div><span>Date: </span><strong>${fmtDate(invoice.paid_at || payment.created_at)}</strong></div>
+        </div>
+      ` : bank ? `
+        <div class="payment-inline">
+          <div><span>Bank: </span><strong>${esc(bank.bank_name)}</strong></div>
+          <div><span>Acc: </span><strong>${esc(bank.account_number)}</strong></div>
+          <div><span>Name: </span><strong>${esc(bank.account_name)}</strong></div>
+          <div><span>Ref: </span><strong>${esc(invoice.invoice_number)}</strong></div>
+        </div>
+      ` : `<div class="payment-inline">Contact ${esc(platform?.email || 'official.kadehub@gmail.com')}</div>`}
+    </div>
+
+    ${invoice.notes ? `<div style="font-size:8px;color:#64748B;margin-bottom:6px"><strong>Notes:</strong> ${esc(invoice.notes)}</div>` : ''}
+
+    <div class="terms">
+      Computer-generated ${isTaxInvoice ? 'tax invoice' : 'invoice'} · valid without signature ·
+      Payment due by due date · Amounts in ${esc(currency)} ·
+      Enquiries: ${esc(platform?.email || 'official.kadehub@gmail.com')}
+    </div>
+
     <div class="footer">
-      <div>
-        <strong>KadeHub</strong> — Smart Shop Management Platform<br/>
-        Thank you for your business.
-      </div>
-      <div style="text-align:right">
-        ${esc(invoice.invoice_number)}<br/>
-        Generated ${fmtDate(new Date())}
-      </div>
+      <div><strong>KadeHub</strong> — Smart Shop Management · Thank you for your business.</div>
+      <div>${esc(invoice.invoice_number)} · ${fmtDate(new Date())}</div>
     </div>
   </div>
 </body>

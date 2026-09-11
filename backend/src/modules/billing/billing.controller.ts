@@ -95,6 +95,17 @@ export class BillingController {
     });
   }
 
+  @Post('invoices/:id/email')
+  @UseGuards(JwtAuthGuard)
+  emailInvoice(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.invoiceService.getById(+id).then(inv => {
+      if (inv.tenant_id !== user.tenant_id && user.role !== 'SUPER_ADMIN') {
+        throw new BadRequestException('Access denied');
+      }
+      return this.invoiceService.emailInvoiceToCustomer(+id);
+    });
+  }
+
   @Get('payment-options')
   getPaymentOptions() {
     return this.billingService.getPaymentOptions();

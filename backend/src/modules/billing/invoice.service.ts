@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Invoice } from '../../database/entities/invoice.entity';
@@ -7,6 +7,8 @@ import { Tenant } from '../../database/entities/tenant.entity';
 import { CompanyProfile } from '../../database/entities/company-profile.entity';
 import { getBankDetails } from '../../common/bank-details';
 import { getPlatformCompany } from '../../common/platform-company';
+import { buildInvoiceEmailHtml } from '../../common/invoice-html';
+import { EmailService } from '../../common/email.service';
 
 export const REGISTRATION_FEE_LKR = 25000;
 
@@ -16,6 +18,7 @@ export class InvoiceService {
     @InjectRepository(Invoice) private invoiceRepo: Repository<Invoice>,
     @InjectRepository(Tenant) private tenantRepo: Repository<Tenant>,
     @InjectRepository(CompanyProfile) private profileRepo: Repository<CompanyProfile>,
+    private emailService: EmailService,
   ) {}
 
   private async nextInvoiceNumber(): Promise<string> {
@@ -80,7 +83,9 @@ export class InvoiceService {
     invoice.payment_transaction_id = tx.id;
     invoice.paid_at = new Date();
     if (type === 'subscription' && tx.package_id) invoice.package_id = tx.package_id;
-    return this.invoiceRepo.save(invoice);
+    const saved = await this.invoiceRepo.save(invoice);
+    this.emailInvoiceToCustomer(saved.id).catch(() => {});
+    return saved;
   }
 
   async createSubscriptionInvoice(tx: PaymentTransaction) {
@@ -203,5 +208,15 @@ export class InvoiceService {
       platform: getPlatformCompany(),
       payment: tx,
     };
+  }
+
+  async emailInvoiceToCustomer(id: number, overrideEmail?: string) {
+    const data = await this.getPrintData(id);
+    const to = overrideEmail || data.invoice.bill_to_email || data.profile?.email;
+    if (!to) throw new BadRequestException('No email address found for this customer');
+    const html = buildInvoiceEmailHtml(data);
+    const sent = await this.emailService.sendInvoice(to, data.invoice.invoice_number, html);
+    if (!sent) throw new BadRequestException('Email could not be sent. Configure SMTP_USER and SMTP_PASS in .env');
+    return { ok: true, sent_to: to, invoice_number: data.invoice.invoice_number };
   }
 }

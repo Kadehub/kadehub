@@ -54,6 +54,11 @@ export class SuperAdminController {
     this.guard(u); return this.service.deleteTenant(+id);
   }
 
+  @Post('shops/:id/impersonate')
+  impersonateShop(@CurrentUser() u: any, @Param('id') id: string) {
+    this.guard(u); return this.service.impersonateShop(+id);
+  }
+
   // ── Transactions ───────────────────────────────────────────────────────────
   @Get('transactions')
   transactions(@CurrentUser() u: any, @Query('page') page = '1', @Query('limit') limit = '20') {
@@ -83,6 +88,25 @@ export class SuperAdminController {
   @Get('invoices/:id')
   getInvoice(@CurrentUser() u: any, @Param('id') id: string) {
     this.guard(u); return this.invoices.getPrintData(+id);
+  }
+
+  @Post('invoices/:id/email')
+  emailInvoice(@CurrentUser() u: any, @Param('id') id: string) {
+    this.guard(u); return this.invoices.emailInvoiceToCustomer(+id);
+  }
+
+  @Get('revenue')
+  revenueReport(@CurrentUser() u: any) {
+    this.guard(u); return this.service.getRevenueReport();
+  }
+
+  @Get('revenue/export/csv')
+  async exportRevenueCsv(@CurrentUser() u: any, @Res() res: Response) {
+    this.guard(u);
+    const csv = await this.service.getRevenueCsv();
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="revenue-report-${Date.now()}.csv"`);
+    res.send(csv);
   }
 
   // ── Bank transfer slips ────────────────────────────────────────────────────

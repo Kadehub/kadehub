@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '../../hooks/useAuth';
 import Sidebar from '../../components/ui/Sidebar';
 import LanguageSwitcher from '../../components/ui/LanguageSwitcher';
@@ -36,8 +36,11 @@ const ANN_STYLES: Record<string, string> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
+  const setAuth = useAuthStore((s) => s.setAuth);
   const setLogoUrl = useAuthStore((s) => s.setLogoUrl);
   const pathname = usePathname();
+  const router = useRouter();
+  const [impersonating, setImpersonating] = useState(false);
   const { t } = useLang();
   const [online, setOnline] = useState(true);
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -59,7 +62,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Wait for client-side mount
   useEffect(() => {
     setMounted(true);
+    setImpersonating(!!sessionStorage.getItem('sa-impersonation-backup'));
   }, []);
+
+  function exitImpersonation() {
+    const raw = sessionStorage.getItem('sa-impersonation-backup');
+    if (!raw) return;
+    try {
+      const { token: saToken, user: saUser } = JSON.parse(raw);
+      sessionStorage.removeItem('sa-impersonation-backup');
+      setAuth(saUser, saToken);
+      router.push('/super-admin/shops');
+    } catch {
+      sessionStorage.removeItem('sa-impersonation-backup');
+      router.push('/super-admin/login');
+    }
+  }
 
   // Redirect if no token after mount
   useEffect(() => {
@@ -123,6 +141,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
       {/* Main content area */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden w-full">
+        {impersonating && (
+          <div className="flex-shrink-0 flex items-center justify-between gap-3 px-6 py-2.5 border-b text-sm font-medium bg-amber-50 border-amber-200 text-amber-900">
+            <span>Support mode: viewing as <strong>{user?.name}</strong> ({user?.role})</span>
+            <button onClick={exitImpersonation} className="px-3 py-1 rounded-lg bg-amber-200 hover:bg-amber-300 text-xs font-bold">
+              Exit → Super Admin
+            </button>
+          </div>
+        )}
         {/* Announcement banners */}
         {visible.map(ann => {
           const Icon = ANN_ICONS[ann.type] || Info;

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, Logger, OnModuleIni
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { User } from '../../database/entities/user.entity';
@@ -11,6 +12,7 @@ import { Package } from '../../database/entities/package.entity';
 import { Coupon } from '../../database/entities/coupon.entity';
 import { Announcement } from '../../database/entities/announcement.entity';
 import { ApiLog } from '../../database/entities/api-log.entity';
+import { CompanyProfile } from '../../database/entities/company-profile.entity';
 import { EmailService } from '../../common/email.service';
 import { CloudflareService } from '../../common/cloudflare.service';
 import {
@@ -73,8 +75,10 @@ export class SuperAdminService implements OnModuleInit {
     @InjectRepository(Coupon) private couponRepo: Repository<Coupon>,
     @InjectRepository(Announcement) private announcementRepo: Repository<Announcement>,
     @InjectRepository(ApiLog) private apiLogRepo: Repository<ApiLog>,
+    @InjectRepository(CompanyProfile) private profileRepo: Repository<CompanyProfile>,
     private emailService: EmailService,
     private cloudflare: CloudflareService,
+    private jwtService: JwtService,
   ) {}
 
   async onModuleInit() {
@@ -245,10 +249,29 @@ export class SuperAdminService implements OnModuleInit {
 
     if (dto.plan_note !== undefined) { tenant.plan_note = dto.plan_note; await this.tenantRepo.save(tenant); }
 
-    // Email notification
-    await this.emailService.notifySubscription(tenant.name, pkg.name, amount);
+    const admin = await this.userRepo.findOne({ where: { tenant_id: tenantId, role: 'ADMIN' } });
+    const profile = await this.profileRepo.findOne({ where: { tenant_id: tenantId } });
+    const shopEmail = profile?.email || admin?.email;
+    await this.emailService.notifySubscription(tenant.name, pkg.name, amount, shopEmail);
 
     return { tenant, package: pkg, subscriptions: subs, finalAmount: amount };
+  }
+
+  async impersonateShop(tenantId: number) {
+    const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
+    if (!tenant) throw new NotFoundException('Shop not found');
+    if (tenant.slug === 'kadehub-platform') {
+      throw new BadRequestException('Cannot impersonate the platform tenant');
+    }
+    const admin = await this.userRepo.findOne({ where: { tenant_id: tenantId, role: 'ADMIN' } });
+    if (!admin) throw new NotFoundException('No admin user found for this shop');
+
+    const payload = { sub: admin.id, tenant_id: admin.tenant_id, role: admin.role, name: admin.name };
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: { id: admin.id, name: admin.name, role: admin.role, tenant_id: admin.tenant_id },
+      shop: { id: tenant.id, name: tenant.name, subdomain: tenant.subdomain },
+    };
   }
 
   async deleteTenant(tenantId: number) {
@@ -337,6 +360,55 @@ export class SuperAdminService implements OnModuleInit {
        t.gateway_ref || '', t.status,
        new Date(t.created_at).toISOString()].join(',')
     );
+    return [header, ...rows].join('\n');
+  }
+
+  async getRevenueReport() {
+    const txs = await this.txRepo.find({
+      where: { status: 'completed' },
+      relations: ['tenant', 'package'],
+      order: { created_at: 'DESC' },
+    });
+
+    const totalRevenue = txs.reduce((s, t) => s + Number(t.amount), 0);
+    const registrationRevenue = txs.filter(t => t.metadata?.type === 'registration_fee').reduce((s, t) => s + Number(t.amount), 0);
+    const subscriptionRevenue = totalRevenue - registrationRevenue;
+
+    const byMonth = new Map<string, number>();
+    const byGateway = new Map<string, number>();
+    for (const t of txs) {
+      const month = new Date(t.created_at).toISOString().slice(0, 7);
+      byMonth.set(month, (byMonth.get(month) || 0) + Number(t.amount));
+      byGateway.set(t.gateway, (byGateway.get(t.gateway) || 0) + Number(t.amount));
+    }
+
+    return {
+      totalRevenue,
+      registrationRevenue,
+      subscriptionRevenue,
+      transactionCount: txs.length,
+      byMonth: Array.from(byMonth.entries()).map(([month, amount]) => ({ month, amount })).sort((a, b) => a.month.localeCompare(b.month)),
+      byGateway: Array.from(byGateway.entries()).map(([gateway, amount]) => ({ gateway, amount })),
+      recent: txs.slice(0, 10),
+    };
+  }
+
+  async getRevenueCsv(): Promise<string> {
+    const txs = await this.txRepo.find({ relations: ['tenant', 'package'], order: { created_at: 'DESC' } });
+    const header = 'ID,Date,Shop,Type,Package,Amount,Currency,Billing Cycle,Gateway,Reference,Status';
+    const rows = txs.map(t => [
+      t.id,
+      new Date(t.created_at).toISOString().slice(0, 10),
+      `"${(t.tenant?.name || '').replace(/"/g, '""')}"`,
+      t.metadata?.type || 'subscription',
+      `"${(t.package?.name || '').replace(/"/g, '""')}"`,
+      t.amount,
+      t.currency,
+      t.billing_cycle,
+      t.gateway,
+      t.gateway_ref || '',
+      t.status,
+    ].join(','));
     return [header, ...rows].join('\n');
   }
 
@@ -500,7 +572,8 @@ export class SuperAdminService implements OnModuleInit {
         const tenant = await this.tenantRepo.findOne({ where: { id: sub.tenant_id } });
         if (tenant) {
           const daysLeft = Math.ceil((new Date(sub.expires_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-          await this.emailService.notifyExpiringSoon(tenant.name, daysLeft);
+          const admin = await this.userRepo.findOne({ where: { tenant_id: sub.tenant_id, role: 'ADMIN' } });
+          await this.emailService.notifyExpiringSoon(tenant.name, daysLeft, admin?.email);
         }
       }
     }

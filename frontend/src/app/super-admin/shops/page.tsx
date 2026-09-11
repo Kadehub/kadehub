@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '../../../lib/api';
-import { Search, Eye, Lock, Unlock, Store, Trash2 } from 'lucide-react';
+import { Search, Eye, Lock, Unlock, Store, Trash2, LogIn } from 'lucide-react';
+import { useAuthStore } from '../../../hooks/useAuth';
 import Modal from '../../../components/ui/Modal';
 import toast from 'react-hot-toast';
 
@@ -13,6 +14,7 @@ interface Shop {
 
 export default function ShopsPage() {
   const router = useRouter();
+  const { setAuth, token, user } = useAuthStore();
   const [shops, setShops] = useState<Shop[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
@@ -40,6 +42,18 @@ export default function ShopsPage() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault(); setPage(1); load(1, search);
+  }
+
+  async function impersonate(shop: Shop) {
+    try {
+      const { data } = await api.post(`/super-admin/shops/${shop.id}/impersonate`);
+      sessionStorage.setItem('sa-impersonation-backup', JSON.stringify({ token, user }));
+      setAuth(data.user, data.access_token);
+      toast.success(`Logged in as ${shop.name}`);
+      router.push('/dashboard');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Could not impersonate shop');
+    }
   }
 
   async function removeShop() {
@@ -120,6 +134,10 @@ export default function ShopsPage() {
                   <td className="px-5 py-3.5 text-ink-400 text-xs">{new Date(shop.created_at).toLocaleDateString()}</td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-1.5">
+                      <button onClick={() => impersonate(shop)}
+                        className="p-2 rounded-lg text-ink-400 hover:bg-teal-50 hover:text-teal-700 transition-colors" title="Login as this shop">
+                        <LogIn size={15} />
+                      </button>
                       <button onClick={() => router.push(`/super-admin/shops/${shop.id}`)}
                         className="p-2 rounded-lg text-ink-400 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="View Details">
                         <Eye size={15} />

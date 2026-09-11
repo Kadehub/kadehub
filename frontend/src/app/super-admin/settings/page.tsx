@@ -206,21 +206,30 @@ export default function SuperAdminSettingsPage() {
         </form>
       </div>
 
-      {/* Suggested features notice */}
-      <div className="kh-card p-5" style={{ background: '#E0F2F1', borderColor: '#B2DFDB' }}>
-        <h3 className="font-semibold mb-2" style={{ color: '#00796B' }}>💡 Suggested Features to Add</h3>
-        <ul className="text-sm space-y-1.5" style={{ color: '#00796B' }}>
+      <div className="kh-card p-5">
+        <h3 className="font-semibold text-ink-800 mb-3">Platform Features</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
           {[
-            'Email notifications when a shop subscribes or payment fails',
-            'Email invoice PDF directly to customers',
-            'Coupon / promo code management for discounts on plans',
-            'Shop impersonation — log in as any shop for support',
-            'Announcement broadcast to all shops',
-            'API usage / request rate monitoring per shop',
-            'Automated plan expiry reminders',
-            'Revenue reports with CSV export',
-          ].map(f => <li key={f} className="flex items-start gap-2"><span>•</span>{f}</li>)}
-        </ul>
+            { label: 'Subscription & payment email alerts', href: null, status: 'Active' },
+            { label: 'Email invoices to customers', href: '/super-admin/invoices', status: 'Active' },
+            { label: 'Coupon / promo codes', href: '/super-admin/coupons', status: 'Active' },
+            { label: 'Shop impersonation (support login)', href: '/super-admin/shops', status: 'Active' },
+            { label: 'Announcement broadcasts', href: '/super-admin/announcements', status: 'Active' },
+            { label: 'API usage monitoring', href: '/super-admin/api-monitor', status: 'Active' },
+            { label: 'Automated plan expiry reminders', href: null, status: 'Daily cron' },
+            { label: 'Revenue reports & CSV export', href: '/super-admin/revenue', status: 'Active' },
+          ].map(f => (
+            <div key={f.label} className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl bg-ink-50 border border-ink-100">
+              {f.href ? (
+                <a href={f.href} className="text-ink-700 hover:text-teal-700 font-medium">{f.label}</a>
+              ) : (
+                <span className="text-ink-700 font-medium">{f.label}</span>
+              )}
+              <span className="text-2xs font-bold px-2 py-0.5 rounded-full kh-badge-teal whitespace-nowrap">{f.status}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-ink-400 mt-3">Emails require <code className="bg-ink-100 px-1 rounded">SMTP_USER</code> and <code className="bg-ink-100 px-1 rounded">SMTP_PASS</code> in backend .env</p>
       </div>
     </div>
   );

@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         {/* Viewport for proper mobile scaling */}
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         {/* Force browser to pick up the icon immediately */}
         <link rel="icon" href="/logo-icon.png" type="image/png" sizes="any" />
         <link rel="shortcut icon" href="/logo-icon.png" />

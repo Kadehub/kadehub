@@ -544,11 +544,10 @@ export class BillingService {
     return { status: tx.status };
   }
 
-  private async activateTrialAfterRegistrationFee(tenantId: number) {
-    // Activate tenant
+  /** Start 14-day full-access trial (no upfront registration payment). */
+  async activateTrial(tenantId: number) {
     await this.tenantRepo.update(tenantId, { status: 'active' });
 
-    // Only create trial subs if none exist yet
     const existing = await this.subRepo.findOne({ where: { tenant_id: tenantId } });
     if (existing) return;
 
@@ -564,6 +563,26 @@ export class BillingService {
         expires_at: trialExpires,
       }))
     );
+  }
+
+  async hasPaidRegistrationFee(tenantId: number): Promise<boolean> {
+    const txs = await this.txRepo.find({ where: { tenant_id: tenantId, status: 'completed' } });
+    return txs.some(t => t.metadata?.type === 'registration_fee');
+  }
+
+  async getCheckoutInfo(tenantId: number, ip: string) {
+    const pkgs = await this.getPackagesWithCurrency(ip);
+    const registrationFeePaid = await this.hasPaidRegistrationFee(tenantId);
+    return {
+      ...pkgs,
+      registrationFeePaid,
+      registrationFeeDue: registrationFeePaid ? 0 : pkgs.registrationFee,
+    };
+  }
+
+  /** @deprecated Use activateTrial — kept for legacy registration-fee payment flows */
+  private async activateTrialAfterRegistrationFee(tenantId: number) {
+    return this.activateTrial(tenantId);
   }
 
   async initiateOnepay(tenantId: number, dto: InitiateOnepayDto) {

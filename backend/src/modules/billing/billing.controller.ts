@@ -66,6 +66,17 @@ export class BillingController {
     return this.billingService.getActiveSubscriptions(user.tenant_id);
   }
 
+  @Get('checkout-info')
+  @UseGuards(JwtAuthGuard)
+  getCheckoutInfo(@CurrentUser() user: any, @Req() req: any) {
+    const ip =
+      req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+      req.headers['x-real-ip'] ||
+      req.connection?.remoteAddress ||
+      req.ip;
+    return this.billingService.getCheckoutInfo(user.tenant_id, ip);
+  }
+
   @Post('subscribe')
   @UseGuards(JwtAuthGuard)
   subscribe(@CurrentUser() user: any, @Body() dto: CreateSubscriptionDto) {

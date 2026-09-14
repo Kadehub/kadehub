@@ -1,0 +1,66 @@
+.landing-page {
+  font-family: 'Poppins', 'Noto Sans Sinhala', system-ui, sans-serif;
+  color: #0f172a;
+  background: #fff;
+}
+
+.landing-page html {
+  scroll-behavior: smooth;
+}
+
+.landing-page .nav-desktop {
+  display: flex !important;
+}
+
+.landing-page .nav-mobile {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .landing-page .nav-desktop {
+    display: none !important;
+  }
+  .landing-page .nav-mobile {
+    display: flex !important;
+  }
+}
+
+.landing-page .reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.landing-page .revealed {
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 640px) {
+  .landing-page .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .landing-page .step-arrow {
+    display: none !important;
+  }
+  .landing-page .pricing-featured {
+    transform: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .landing-page .step-arrow {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-page .pain-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    text-align: center;
+  }
+  .landing-page .pain-row > div:nth-child(2) {
+    display: none;
+  }
+}

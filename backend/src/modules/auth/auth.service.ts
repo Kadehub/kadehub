@@ -7,7 +7,7 @@ import { User } from '../../database/entities/user.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
 import { CloudflareService } from '../../common/cloudflare.service';
-import { InvoiceService } from '../billing/invoice.service';
+import { BillingService } from '../billing/billing.service';
 import { LoginDto, RegisterDto, PinLoginDto } from './auth.dto';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class AuthService {
     @InjectRepository(Subscription) private subRepo: Repository<Subscription>,
     private jwtService: JwtService,
     private cloudflare: CloudflareService,
-    private invoiceService: InvoiceService,
+    private billingService: BillingService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -31,8 +31,8 @@ export class AuthService {
     const subdomainTaken = await this.tenantRepo.findOne({ where: { subdomain: dto.subdomain } });
     if (subdomainTaken) throw new ConflictException('Subdomain already taken');
 
-    // 1. Save tenant (status: suspended until registration fee is paid)
-    const tenant = this.tenantRepo.create({ name: dto.shopName, slug, subdomain: dto.subdomain, status: 'suspended' });
+    // 1. Save tenant — active immediately with free trial
+    const tenant = this.tenantRepo.create({ name: dto.shopName, slug, subdomain: dto.subdomain, status: 'active' });
     await this.tenantRepo.save(tenant);
 
     // 2. Create Cloudflare DNS record — roll back tenant on failure
@@ -54,19 +54,15 @@ export class AuthService {
     const user = this.userRepo.create({ tenant_id: tenant.id, name: dto.name, email: dto.email, password_hash: hash, role: 'ADMIN' });
     await this.userRepo.save(user);
 
-    // Auto-create registration fee invoice for super admin billing
-    const invoice = await this.invoiceService.createRegistrationInvoice(tenant.id, dto.name, dto.email).catch(() => null);
-
-    // NOTE: No trial subscriptions created here.
-    // Trial is activated only after the LKR 25,000 registration fee is paid.
-    // Frontend redirects to /register/pay after this step.
+    // 14-day full-access trial — no upfront payment
+    await this.billingService.activateTrial(tenant.id);
 
     return {
       ...this.signToken(user),
       subdomain: dto.subdomain,
       shop_url: `https://${dto.subdomain}.${process.env.CLOUDFLARE_BASE_DOMAIN || 'kadehub.com'}`,
-      requires_registration_fee: true,
-      invoice: invoice ? { id: invoice.id, invoice_number: invoice.invoice_number, amount: invoice.amount, status: invoice.status } : undefined,
+      trial_activated: true,
+      trial_days: 14,
     };
   }
 

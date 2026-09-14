@@ -15,18 +15,19 @@ export default function SubscribePage() {
   const { logout } = useAuthStore();
   const [packages, setPackages] = useState<any[]>([]);
   const [currency, setCurrency] = useState('LKR');
-  const [registrationFee, setRegistrationFee] = useState(25000);
+  const [registrationFeeDue, setRegistrationFeeDue] = useState(25000);
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
   const [pendingSlip, setPendingSlip] = useState<any>(null);
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    api.get('/billing/packages').then(r => {
+    api.get('/billing/checkout-info').then(r => {
       const d = r.data;
       setPackages(Array.isArray(d) ? d : (d.packages ?? []));
       if (d.currency) setCurrency(d.currency);
-      if (d.registrationFee != null) setRegistrationFee(d.registrationFee);
+      if (d.registrationFeeDue != null) setRegistrationFeeDue(d.registrationFeeDue);
+      else if (d.registrationFee != null) setRegistrationFeeDue(d.registrationFee);
     }).catch(() => {});
     api.get('/billing/bank-transfer/mine').then(r => {
       const pending = (Array.isArray(r.data) ? r.data : []).find((t: any) => t.status === 'pending');
@@ -37,7 +38,7 @@ export default function SubscribePage() {
   const price = selectedPkg
     ? billing === 'yearly' ? selectedPkg.price_yearly : selectedPkg.price_monthly
     : 0;
-  const total = price + registrationFee;
+  const total = price + registrationFeeDue;
 
   if (pendingSlip || submitted) {
     return (
@@ -78,7 +79,11 @@ export default function SubscribePage() {
           ⏰ Your 14-day free trial has ended
         </div>
         <h1 className="text-3xl font-extrabold text-white mb-2">Choose a Plan to Continue</h1>
-        <p className="text-white/70 text-sm">Registration fee included in your first payment · Renews without it.</p>
+        <p className="text-white/70 text-sm">
+          {registrationFeeDue > 0
+            ? 'One-time registration fee + subscription due with your first payment'
+            : 'Choose a subscription plan to continue'}
+        </p>
 
         <div className="flex items-center justify-center gap-3 mt-5">
           <span className="text-sm font-semibold" style={{ color: billing === 'monthly' ? '#fff' : 'rgba(255,255,255,0.5)' }}>Monthly</span>
@@ -111,19 +116,20 @@ export default function SubscribePage() {
                 <span className="text-3xl font-extrabold" style={{ color: '#00A884' }}>{fmt(pkgPrice, currency)}</span>
                 <span className="text-ink-400 text-sm ml-1">/{billing === 'yearly' ? 'yr' : 'mo'}</span>
               </div>
-              {/* First payment breakdown */}
-              <div className="rounded-xl p-3 mb-4 text-xs space-y-1" style={{ background: '#FEF9C3' }}>
-                <div className="flex justify-between text-ink-600">
-                  <span>Subscription</span><span>{fmt(pkgPrice, currency)}</span>
+              {registrationFeeDue > 0 && (
+                <div className="rounded-xl p-3 mb-4 text-xs space-y-1" style={{ background: '#FEF9C3' }}>
+                  <div className="flex justify-between text-ink-600">
+                    <span>Subscription</span><span>{fmt(pkgPrice, currency)}</span>
+                  </div>
+                  <div className="flex justify-between text-ink-600">
+                    <span>One-time registration fee</span>
+                    <span style={{ color: '#00A884' }}>{fmt(registrationFeeDue, currency)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-ink-800 border-t border-yellow-200 pt-1">
+                    <span>First payment</span><span>{fmt(pkgPrice + registrationFeeDue, currency)}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-ink-600">
-                  <span>Reg. fee <span className="line-through opacity-50">{fmt(registrationFee * 2, currency)}</span></span>
-                  <span style={{ color: '#00A884' }}>{fmt(registrationFee, currency)}</span>
-                </div>
-                <div className="flex justify-between font-bold text-ink-800 border-t border-yellow-200 pt-1">
-                  <span>First payment</span><span>{fmt(pkgPrice + registrationFee, currency)}</span>
-                </div>
-              </div>
+              )}
               <div className="flex-1 space-y-1.5 mb-5">
                 {pkg.modules?.slice(0, 6).map((m: any, i: number) => (
                   <div key={i} className="flex items-center gap-2 text-xs text-ink-600">
@@ -167,7 +173,7 @@ export default function SubscribePage() {
               currency={currency}
               packageId={selectedPkg.id}
               billingCycle={billing}
-              registrationFee={registrationFee}
+              registrationFee={registrationFeeDue > 0 ? registrationFeeDue : undefined}
               onSuccess={() => { setSubmitted(true); setPendingSlip({ gateway_ref: 'pending', amount: total }); }}
             />
           </div>
@@ -185,16 +191,12 @@ export default function SubscribePage() {
               </div>
             </div>
             <div className="border-t border-ink-100 pt-3 mb-3 space-y-2">
-              <div className="flex justify-between text-xs">
-                <div>
-                  <p className="text-ink-500">Registration fee (one-time)</p>
-                  <span className="px-1.5 py-0.5 rounded text-xs font-bold text-white" style={{ background: '#DC2626' }}>50% OFF</span>
+              {registrationFeeDue > 0 && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-ink-500">Registration fee (one-time)</span>
+                  <span className="font-semibold" style={{ color: '#00A884' }}>{fmt(registrationFeeDue, currency)}</span>
                 </div>
-                <div className="text-right">
-                  <p className="line-through text-ink-300 text-xs">{fmt(registrationFee * 2, currency)}</p>
-                  <p className="font-semibold" style={{ color: '#00A884' }}>{fmt(registrationFee, currency)}</p>
-                </div>
-              </div>
+              )}
               <div className="flex justify-between font-bold text-sm border-t border-ink-100 pt-2">
                 <span>Total</span>
                 <span style={{ color: '#00A884' }}>{fmt(total, currency)}</span>

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import api from '../../../lib/api';
+import toast from 'react-hot-toast';
 import { Plus, Trash2, ToggleLeft, ToggleRight, Tag } from 'lucide-react';
 
 interface Coupon {
@@ -23,8 +24,14 @@ export default function CouponsPage() {
 
   async function load() {
     setLoading(true);
-    const { data } = await api.get('/super-admin/coupons');
-    setCoupons(data); setLoading(false);
+    try {
+      const { data } = await api.get('/super-admin/coupons');
+      setCoupons(data);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Could not load coupons');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -45,12 +52,22 @@ export default function CouponsPage() {
   }
 
   async function toggle(id: number) {
-    await api.patch(`/super-admin/coupons/${id}/toggle`); load();
+    try {
+      await api.patch(`/super-admin/coupons/${id}/toggle`);
+      load();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Could not update coupon');
+    }
   }
 
   async function remove(id: number) {
     if (!confirm('Delete this coupon?')) return;
-    await api.delete(`/super-admin/coupons/${id}`); load();
+    try {
+      await api.delete(`/super-admin/coupons/${id}`);
+      load();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Could not delete coupon');
+    }
   }
 
   return (

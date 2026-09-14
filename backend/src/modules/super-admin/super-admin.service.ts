@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { User } from '../../database/entities/user.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
@@ -13,6 +14,7 @@ import { Coupon } from '../../database/entities/coupon.entity';
 import { Announcement } from '../../database/entities/announcement.entity';
 import { ApiLog } from '../../database/entities/api-log.entity';
 import { CompanyProfile } from '../../database/entities/company-profile.entity';
+import { AuditLog } from '../../database/entities/audit-log.entity';
 import { EmailService } from '../../common/email.service';
 import { CloudflareService } from '../../common/cloudflare.service';
 import {
@@ -59,7 +61,6 @@ export class UpdateAnnouncementDto {
 // ── Service ───────────────────────────────────────────────────────────────────
 
 const DEFAULT_SUPER_ADMIN_EMAIL = 'superadmin@kadehub.com';
-const DEFAULT_SUPER_ADMIN_PASSWORD = 'SuperAdmin@123';
 const LEGACY_DUMMY_HASH = '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
 
 @Injectable()
@@ -76,6 +77,7 @@ export class SuperAdminService implements OnModuleInit {
     @InjectRepository(Announcement) private announcementRepo: Repository<Announcement>,
     @InjectRepository(ApiLog) private apiLogRepo: Repository<ApiLog>,
     @InjectRepository(CompanyProfile) private profileRepo: Repository<CompanyProfile>,
+    @InjectRepository(AuditLog) private auditRepo: Repository<AuditLog>,
     private emailService: EmailService,
     private cloudflare: CloudflareService,
     private jwtService: JwtService,
@@ -90,8 +92,8 @@ export class SuperAdminService implements OnModuleInit {
       await this.ensureSuperAdminRole();
 
       const email = (process.env.SUPER_ADMIN_EMAIL || DEFAULT_SUPER_ADMIN_EMAIL).trim().toLowerCase();
-      const password = process.env.SUPER_ADMIN_PASSWORD || DEFAULT_SUPER_ADMIN_PASSWORD;
       const forceReset = process.env.SUPER_ADMIN_RESET_PASSWORD === 'true';
+      let password = process.env.SUPER_ADMIN_PASSWORD;
 
       let tenant = await this.tenantRepo.findOne({ where: { slug: 'kadehub-platform' } });
       if (!tenant) {
@@ -111,31 +113,59 @@ export class SuperAdminService implements OnModuleInit {
         user = await this.userRepo.findOne({ where: { role: 'SUPER_ADMIN' } });
       }
 
-      const hash = await bcrypt.hash(password, 10);
       const brokenSeed = user?.password_hash === LEGACY_DUMMY_HASH;
-      const mustWrite = !user || forceReset || brokenSeed || user.role !== 'SUPER_ADMIN'
-        || !(await bcrypt.compare(password, user.password_hash));
 
-      if (!mustWrite) return;
+      // No usable Super Admin exists yet — create one. Never fall back to a
+      // known/hardcoded password: use the configured one, or generate a random
+      // one-time password and print it to the server log.
+      if (!user || brokenSeed) {
+        const generated = !password;
+        if (!password) password = crypto.randomBytes(9).toString('base64url');
+        const hash = await bcrypt.hash(password, 10);
 
-      if (!user) {
-        await this.userRepo.save(this.userRepo.create({
-          tenant_id: tenant.id,
-          name: 'Super Admin',
-          email,
-          password_hash: hash,
-          role: 'SUPER_ADMIN',
-        }));
-        this.logger.log(`Created Super Admin ${email}`);
+        if (user) {
+          user.email = email;
+          user.role = 'SUPER_ADMIN';
+          if (!user.tenant_id) user.tenant_id = tenant.id;
+          user.password_hash = hash;
+          await this.userRepo.save(user);
+        } else {
+          await this.userRepo.save(this.userRepo.create({
+            tenant_id: tenant.id,
+            name: 'Super Admin',
+            email,
+            password_hash: hash,
+            role: 'SUPER_ADMIN',
+          }));
+        }
+
+        if (generated) {
+          this.logger.warn(
+            `No SUPER_ADMIN_PASSWORD configured — generated a one-time password for ${email}: ${password} ` +
+            `(log in and change it now; it will not be shown again). Set SUPER_ADMIN_PASSWORD in .env to control this.`,
+          );
+        } else {
+          this.logger.log(`Created Super Admin ${email}`);
+        }
         return;
       }
 
-      user.email = email;
-      user.role = 'SUPER_ADMIN';
-      if (!user.tenant_id) user.tenant_id = tenant.id;
-      user.password_hash = hash;
-      await this.userRepo.save(user);
-      this.logger.log(`Reset Super Admin login for ${email}`);
+      // A healthy Super Admin already exists — only touch their password if the
+      // operator explicitly asks for a reset with a real password to reset to.
+      if (forceReset && password) {
+        user.email = email;
+        user.role = 'SUPER_ADMIN';
+        user.password_hash = await bcrypt.hash(password, 10);
+        await this.userRepo.save(user);
+        this.logger.log(`Reset Super Admin login for ${email}`);
+        return;
+      }
+
+      if (user.role !== 'SUPER_ADMIN' || !user.tenant_id) {
+        user.role = 'SUPER_ADMIN';
+        if (!user.tenant_id) user.tenant_id = tenant.id;
+        await this.userRepo.save(user);
+      }
     } catch (err) {
       this.logger.warn(`Could not ensure Super Admin: ${err.message}`);
     }
@@ -230,8 +260,17 @@ export class SuperAdminService implements OnModuleInit {
         if (coupon.value <= 0) throw new BadRequestException('Invalid coupon: fixed value must be positive');
         amount = Math.max(0, amount - coupon.value);
       }
-      coupon.used_count += 1;
-      await this.couponRepo.save(coupon);
+      // Atomic, condition-checked increment — the WHERE clause is re-evaluated
+      // against the row at write time, so two concurrent redemptions of a
+      // max_uses-limited coupon can't both slip past the limit.
+      const result = await this.couponRepo.createQueryBuilder()
+        .update(Coupon)
+        .set({ used_count: () => 'used_count + 1' })
+        .where('id = :id', { id: coupon.id })
+        .andWhere('is_active = true')
+        .andWhere('(max_uses IS NULL OR used_count < max_uses)')
+        .execute();
+      if (!result.affected) throw new BadRequestException('Coupon usage limit reached');
     }
 
     await this.subRepo.delete({ tenant_id: tenantId });
@@ -257,7 +296,7 @@ export class SuperAdminService implements OnModuleInit {
     return { tenant, package: pkg, subscriptions: subs, finalAmount: amount };
   }
 
-  async impersonateShop(tenantId: number) {
+  async impersonateShop(tenantId: number, actingAdminId: number) {
     const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
     if (!tenant) throw new NotFoundException('Shop not found');
     if (tenant.slug === 'kadehub-platform') {
@@ -266,9 +305,20 @@ export class SuperAdminService implements OnModuleInit {
     const admin = await this.userRepo.findOne({ where: { tenant_id: tenantId, role: 'ADMIN' } });
     if (!admin) throw new NotFoundException('No admin user found for this shop');
 
+    await this.auditRepo.save(this.auditRepo.create({
+      tenant_id: tenantId,
+      user_id: actingAdminId,
+      action: 'IMPERSONATE',
+      entity: 'tenant',
+      entity_id: tenantId,
+      details: { impersonated_user_id: admin.id, impersonated_user_email: admin.email },
+    })).catch(err => this.logger.warn(`Could not record impersonation audit log: ${err.message}`));
+
     const payload = { sub: admin.id, tenant_id: admin.tenant_id, role: admin.role, name: admin.name };
     return {
-      access_token: this.jwtService.sign(payload),
+      // Short-lived — unlike a normal 7-day login token, an impersonation
+      // session shouldn't quietly outlive the support ticket it was opened for.
+      access_token: this.jwtService.sign(payload, { expiresIn: '1h' }),
       user: { id: admin.id, name: admin.name, role: admin.role, tenant_id: admin.tenant_id },
       shop: { id: tenant.id, name: tenant.name, subdomain: tenant.subdomain },
     };

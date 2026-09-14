@@ -8,7 +8,7 @@ import KadeHubLogo from '../../components/ui/KadeHubLogo';
 import {
   LayoutDashboard, Store, CreditCard, Package,
   LogOut, ChevronRight, ShieldCheck, BarChart2, Settings,
-  Tag, Megaphone, Activity, Banknote, FileText, ClipboardList, DollarSign,
+  Tag, Megaphone, Activity, Banknote, FileText, ClipboardList, DollarSign, Menu,
 } from 'lucide-react';
 
 const NAV = [
@@ -54,6 +54,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   const [hydrated, setHydrated] = useState(false);
   const [pendingSlips, setPendingSlips] = useState(0);
   const [newQuotes, setNewQuotes] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isLogin = pathname === '/super-admin/login';
 
@@ -78,8 +79,14 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
 
   return (
     <div className="flex h-screen overflow-hidden bg-ink-50" style={{ background: '#F1F5F9' }}>
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
       {/* Sidebar */}
-      <aside className="w-60 flex-shrink-0 flex flex-col h-full border-r border-ink-200 bg-white">
+      <aside className={`fixed inset-y-0 left-0 z-50 lg:static lg:z-auto w-60 flex-shrink-0 flex flex-col h-full border-r border-ink-200 bg-white transition-transform duration-300 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
         {/* Logo */}
         <div className="flex-shrink-0 px-4 py-4 border-b border-ink-100">
           <KadeHubLogo width={168} variant="full" theme="color" />
@@ -111,7 +118,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                 {group.items.map(({ href, label, icon: Icon, exact }) => {
                   const active = exact ? pathname === href : pathname.startsWith(href);
                   return (
-                    <Link key={href} href={href}
+                    <Link key={href} href={href} onClick={() => setSidebarOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
                         active ? 'text-white' : 'text-ink-600 hover:bg-ink-50 hover:text-ink-900'
                       }`}
@@ -151,22 +158,27 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
       </aside>
 
       {/* Main content */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden w-full">
         {/* Top bar */}
-        <header className="flex-shrink-0 h-14 bg-white border-b border-ink-200 flex items-center justify-between px-6">
-          <div>
-            <h1 className="text-base font-semibold text-ink-800">Platform Administration</h1>
-            <p className="text-2xs text-ink-400">
-              {new Date().toLocaleDateString('en-LK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
+        <header className="flex-shrink-0 h-14 bg-white border-b border-ink-200 flex items-center justify-between px-4 lg:px-6">
+          <div className="flex items-center min-w-0">
+            <button className="lg:hidden mr-2 p-1.5 rounded-lg hover:bg-ink-100 text-ink-500 flex-shrink-0" onClick={() => setSidebarOpen(true)}>
+              <Menu size={20} />
+            </button>
+            <div className="min-w-0">
+              <h1 className="text-base font-semibold text-ink-800 truncate">Platform Administration</h1>
+              <p className="text-2xs text-ink-400 hidden sm:block">
+                {new Date().toLocaleDateString('en-LK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold flex-shrink-0"
             style={{ background: '#E0F2F1', color: '#00796B' }}>
             <ShieldCheck size={13} />
-            Super Admin Portal
+            <span className="hidden sm:inline">Super Admin Portal</span>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
       </div>
     </div>
   );

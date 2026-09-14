@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Supplier } from '../../database/entities/supplier.entity';
 import { PurchaseOrder } from '../../database/entities/purchase-order.entity';
 import { PurchaseOrderItem } from '../../database/entities/purchase-order-item.entity';
 import { Inventory } from '../../database/entities/inventory.entity';
+import { Product } from '../../database/entities/product.entity';
 import { CreateSupplierDto, UpdateSupplierDto, CreatePurchaseOrderDto } from './supplier.dto';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class SupplierService {
     @InjectRepository(PurchaseOrder) private orderRepo: Repository<PurchaseOrder>,
     @InjectRepository(PurchaseOrderItem) private orderItemRepo: Repository<PurchaseOrderItem>,
     @InjectRepository(Inventory) private inventoryRepo: Repository<Inventory>,
+    @InjectRepository(Product) private productRepo: Repository<Product>,
   ) {}
 
   getSuppliers(tenantId: number) {
@@ -40,6 +42,15 @@ export class SupplierService {
   }
 
   async createOrder(tenantId: number, userId: number, dto: CreatePurchaseOrderDto) {
+    const supplier = await this.supplierRepo.findOne({ where: { id: dto.supplier_id, tenant_id: tenantId } });
+    if (!supplier) throw new NotFoundException('Supplier not found');
+
+    const productIds = dto.items.map(i => i.product_id);
+    const products = await this.productRepo.find({ where: { id: In(productIds), tenant_id: tenantId } });
+    if (products.length !== new Set(productIds).size) {
+      throw new BadRequestException('One or more products were not found');
+    }
+
     const total = dto.items.reduce((s, i) => s + i.cost * i.quantity, 0);
     const order = await this.orderRepo.save(
       this.orderRepo.create({ tenant_id: tenantId, user_id: userId, supplier_id: dto.supplier_id, total_amount: total, notes: dto.notes }),

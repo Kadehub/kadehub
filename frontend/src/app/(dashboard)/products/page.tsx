@@ -26,6 +26,7 @@ export default function ProductsPage() {
   const [addImage, setAddImage] = useState<File | null>(null);
   const [addPreview, setAddPreview] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [addError, setAddError] = useState('');
 
   const [deleting, setDeleting] = useState<number | null>(null);
 
@@ -35,6 +36,7 @@ export default function ProductsPage() {
   const [editImage, setEditImage] = useState<File | null>(null);
   const [editPreview, setEditPreview] = useState<string>('');
   const [editing, setEditing] = useState(false);
+  const [editError, setEditError] = useState('');
 
   const addFileRef = useRef<HTMLInputElement>(null);
   const editFileRef = useRef<HTMLInputElement>(null);
@@ -51,6 +53,7 @@ export default function ProductsPage() {
   // ── Create product ──
   const submitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAddError('');
     setSaving(true);
     try {
       const res = await api.post('/inventory/products', {
@@ -70,7 +73,9 @@ export default function ProductsPage() {
       setShowAdd(false); refresh();
     } catch (e: any) {
       const msg = e.response?.data?.message;
-      toast.error(Array.isArray(msg) ? msg[0] : msg || 'Failed to create product');
+      const text = Array.isArray(msg) ? msg[0] : msg || 'Failed to create product';
+      setAddError(text);
+      toast.error(text);
     } finally { setSaving(false); }
   };
 
@@ -101,6 +106,7 @@ export default function ProductsPage() {
   const submitEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editProduct) return;
+    setEditError('');
     setEditing(true);
     try {
       await api.patch(`/inventory/products/${editProduct.id}`, {
@@ -119,7 +125,9 @@ export default function ProductsPage() {
       refresh();
     } catch (e: any) {
       const msg = e.response?.data?.message;
-      toast.error(Array.isArray(msg) ? msg[0] : msg || 'Failed to update product');
+      const text = Array.isArray(msg) ? msg[0] : msg || 'Failed to update product';
+      setEditError(text);
+      toast.error(text);
     } finally { setEditing(false); }
   };
 
@@ -133,14 +141,14 @@ export default function ProductsPage() {
     <div className="space-y-5 max-w-6xl">
       <Card padding={false}>
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-ink-100">
-          <div className="relative flex-1 max-w-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-ink-100">
+          <div className="relative w-full sm:w-auto sm:flex-1 sm:max-w-xs">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
-            <input placeholder="Search products…" value={search}
+            <input placeholder="Search products…" aria-label="Search products" value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-8 pr-3 py-2 border border-ink-200 rounded-lg text-sm bg-white" />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <span className="text-sm text-ink-400">{filtered.length} products</span>
             <Button size="sm" icon={<Plus size={15} />} onClick={() => setShowAdd(true)}>
               Add Product
@@ -209,8 +217,11 @@ export default function ProductsPage() {
       </Card>
 
       {/* ── ADD PRODUCT MODAL ── */}
-      <Modal open={showAdd} onClose={() => { setShowAdd(false); setAddImage(null); setAddPreview(''); }} title="Add New Product" width="max-w-xl">
+      <Modal open={showAdd} onClose={() => { setShowAdd(false); setAddImage(null); setAddPreview(''); setAddError(''); }} title="Add New Product" width="max-w-xl">
         <form onSubmit={submitAdd} className="space-y-4">
+          {addError && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{addError}</p>
+          )}
           {/* Image picker */}
           <ImagePicker
             preview={addPreview}
@@ -247,8 +258,11 @@ export default function ProductsPage() {
       </Modal>
 
       {/* ── EDIT PRODUCT MODAL ── */}
-      <Modal open={!!editProduct} onClose={() => { setEditProduct(null); setEditImage(null); setEditPreview(''); }} title="Edit Product" width="max-w-xl">
+      <Modal open={!!editProduct} onClose={() => { setEditProduct(null); setEditImage(null); setEditPreview(''); setEditError(''); }} title="Edit Product" width="max-w-xl">
         <form onSubmit={submitEdit} className="space-y-4">
+          {editError && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{editError}</p>
+          )}
           <ImagePicker
             preview={editPreview}
             category={editForm.category}

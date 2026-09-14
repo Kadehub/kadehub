@@ -3,10 +3,13 @@ import { CustomerService } from './customer.service';
 import { CreateCustomerDto, UpdateCustomerDto } from './customer.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TrialGuard } from '../../common/guards/trial.guard';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
+import { Module as SubModule } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('customers')
-@UseGuards(JwtAuthGuard, TrialGuard)
+@UseGuards(JwtAuthGuard, TrialGuard, SubscriptionGuard)
+@SubModule('customer')
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class CustomerController {
   constructor(private customerService: CustomerService) {}

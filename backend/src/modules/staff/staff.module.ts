@@ -5,13 +5,14 @@ import { Shift } from '../../database/entities/shift.entity';
 import { Sale } from '../../database/entities/sale.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
 import { TrialGuard } from '../../common/guards/trial.guard';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
 import { StaffService } from './staff.service';
 import { StaffController } from './staff.controller';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([AuditLog, Shift, Sale, Subscription]), AuthModule],
-  providers: [StaffService, TrialGuard],
+  providers: [StaffService, TrialGuard, SubscriptionGuard],
   controllers: [StaffController],
   exports: [StaffService],
 })

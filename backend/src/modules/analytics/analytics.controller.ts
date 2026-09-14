@@ -2,10 +2,13 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TrialGuard } from '../../common/guards/trial.guard';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
+import { Module as SubModule } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('analytics')
-@UseGuards(JwtAuthGuard, TrialGuard)
+@UseGuards(JwtAuthGuard, TrialGuard, SubscriptionGuard)
+@SubModule('analytics')
 export class AnalyticsController {
   constructor(private analyticsService: AnalyticsService) {}
 
@@ -85,15 +88,18 @@ export class AnalyticsController {
     return this.analyticsService.getDailySummary(u.tenant_id, date || today);
   }
 
-  // Free basic sales list — available on all plans (no subscription guard)
+  // Free basic sales list — available on all plans; @SubModule('') overrides
+  // the class-level 'analytics' gate so SubscriptionGuard lets it through.
   @Get('basic-sales')
+  @SubModule('')
   basicSales(@CurrentUser() u: any, @Query('from') from?: string, @Query('to') to?: string) {
     const d = this.dates(from, to);
     return this.analyticsService.getBasicSales(u.tenant_id, d.from, d.to);
   }
 
-  // Free basic report — available on all plans (no subscription guard)
+  // Free basic report — available on all plans; see basicSales() above.
   @Get('basic-report')
+  @SubModule('')
   basicReport(@CurrentUser() u: any, @Query('from') from?: string, @Query('to') to?: string) {
     const d = this.dates(from, to);
     return this.analyticsService.getBasicReport(u.tenant_id, d.from, d.to);

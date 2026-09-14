@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreditSale } from '../../database/entities/credit-sale.entity';
 import { CreditPayment } from '../../database/entities/credit-payment.entity';
+import { Sale } from '../../database/entities/sale.entity';
+import { Customer } from '../../database/entities/customer.entity';
 import { CreateCreditSaleDto, RecordPaymentDto } from './credit.dto';
 
 @Injectable()
@@ -10,6 +12,8 @@ export class CreditService {
   constructor(
     @InjectRepository(CreditSale) private creditRepo: Repository<CreditSale>,
     @InjectRepository(CreditPayment) private paymentRepo: Repository<CreditPayment>,
+    @InjectRepository(Sale) private saleRepo: Repository<Sale>,
+    @InjectRepository(Customer) private customerRepo: Repository<Customer>,
   ) {}
 
   getAll(tenantId: number) {
@@ -45,7 +49,14 @@ export class CreditService {
       .getRawOne();
   }
 
-  create(tenantId: number, dto: CreateCreditSaleDto) {
+  async create(tenantId: number, dto: CreateCreditSaleDto) {
+    const [sale, customer] = await Promise.all([
+      this.saleRepo.findOne({ where: { id: dto.sale_id, tenant_id: tenantId } }),
+      this.customerRepo.findOne({ where: { id: dto.customer_id, tenant_id: tenantId } }),
+    ]);
+    if (!sale) throw new NotFoundException('Sale not found');
+    if (!customer) throw new NotFoundException('Customer not found');
+
     return this.creditRepo.save(this.creditRepo.create({ tenant_id: tenantId, ...dto }));
   }
 

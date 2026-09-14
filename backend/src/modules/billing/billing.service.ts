@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Package } from '../../database/entities/package.entity';
@@ -8,7 +8,7 @@ import { Subscription } from '../../database/entities/subscription.entity';
 import { PaymentTransaction } from '../../database/entities/payment-transaction.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { User } from '../../database/entities/user.entity';
-import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto, BankTransferDto, UpdateBankDetailsDto } from './billing.dto';
+import { UpdateCompanyDto, InitiateOnepayDto, BankTransferDto, UpdateBankDetailsDto } from './billing.dto';
 import { InvoiceService } from './invoice.service';
 import { EmailService } from '../../common/email.service';
 import { getBankDetails, saveBankDetails, isOnepayConfigured } from '../../common/bank-details';
@@ -48,6 +48,8 @@ async function isSriLankanIp(ip: string): Promise<boolean> {
 
 @Injectable()
 export class BillingService {
+  private readonly logger = new Logger(BillingService.name);
+
   constructor(
     @InjectRepository(Package) private packageRepo: Repository<Package>,
     @InjectRepository(PackageModule) private pkgModuleRepo: Repository<PackageModule>,
@@ -82,7 +84,9 @@ export class BillingService {
 
   private async syncInvoice(tx: PaymentTransaction) {
     if (tx.status === 'completed') {
-      await this.invoiceService.markPaidByTransaction(tx).catch(() => {});
+      await this.invoiceService.markPaidByTransaction(tx).catch(err =>
+        this.logger.error(`Failed to sync invoice for transaction #${tx.id}: ${err?.message || err}`),
+      );
     }
   }
 
@@ -164,77 +168,6 @@ export class BillingService {
       return Array.from(seen.values());
     } catch {
       return [];
-    }
-  }
-
-  async subscribe(tenantId: number, dto: CreateSubscriptionDto) {
-    try {
-      const pkg = await this.packageRepo.findOne({
-        where: { id: dto.package_id },
-        relations: ['modules'],
-      });
-      if (!pkg) throw new NotFoundException('Package not found');
-
-      const currency = dto.currency || 'LKR';
-      const amount = dto.billing_cycle === 'yearly' ? pkg.price_yearly : pkg.price_monthly;
-      const gatewayRef = dto.gateway_ref || `TXN-${Date.now()}`;
-
-      // Record subscription payment
-      const tx = this.txRepo.create({
-        tenant_id: tenantId,
-        package_id: pkg.id,
-        amount,
-        currency,
-        billing_cycle: dto.billing_cycle,
-        gateway: dto.gateway,
-        gateway_ref: gatewayRef,
-        status: 'completed',
-        metadata: { type: 'subscription' },
-      });
-      await this.txRepo.save(tx);
-      await this.syncInvoice(tx);
-
-      // Record one-time registration fee if provided
-      if (dto.registration_fee && dto.registration_fee > 0) {
-        const regTx = this.txRepo.create({
-          tenant_id: tenantId,
-          package_id: pkg.id,
-          amount: dto.registration_fee,
-          currency,
-          billing_cycle: dto.billing_cycle,
-          gateway: dto.gateway,
-          gateway_ref: `REG-${gatewayRef}`,
-          status: 'completed',
-          metadata: { type: 'registration_fee' },
-        });
-        await this.txRepo.save(regTx);
-        await this.syncInvoice(regTx);
-      }
-
-      const expiresAt = new Date();
-      if (dto.billing_cycle === 'yearly') expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-      else expiresAt.setMonth(expiresAt.getMonth() + 1);
-
-      await this.subRepo.delete({ tenant_id: tenantId });
-
-      const subs = pkg.modules.map(m => this.subRepo.create({
-        tenant_id: tenantId,
-        module_name: m.module_name,
-        status: 'active',
-        package_id: pkg.id,
-        billing_cycle: dto.billing_cycle,
-        started_at: new Date(),
-        expires_at: expiresAt,
-        payment_status: 'paid',
-        payment_ref: tx.gateway_ref,
-      }));
-      await this.subRepo.save(subs);
-      await this.notifyPaymentSuccess(tx, pkg);
-
-      return { transaction: tx, subscriptions: subs, package: pkg };
-    } catch (e: any) {
-      if (e instanceof NotFoundException) throw e;
-      throw new InternalServerErrorException('Subscription failed. Run migrate-billing.sql first.');
     }
   }
 
@@ -330,7 +263,9 @@ export class BillingService {
     });
     await this.txRepo.save(tx);
 
-    this.sendBankTransferNotification(tenantId, pkg?.name || 'Registration fee', amount, dto, slipUrl).catch(() => {});
+    this.sendBankTransferNotification(tenantId, pkg?.name || 'Registration fee', amount, dto, slipUrl).catch(err =>
+      this.logger.error(`Failed to send bank-transfer notification for tenant #${tenantId}: ${err?.message || err}`),
+    );
 
     return {
       ok: true,
@@ -672,13 +607,13 @@ export class BillingService {
     const hashSalt = process.env.ONEPAY_HASH_SALT;
     const appId    = process.env.ONEPAY_APP_ID;
 
-    // Verify hash from OnePay
-    if (hashSalt && appId && body.ipg_transaction_id) {
+    // Verify hash from OnePay — reject unless the hash is present and matches.
+    if (hashSalt && appId) {
       const expectedHash = crypto
         .createHash('sha256')
         .update(`${appId}${body.amount}${body.reference}${hashSalt}`)
         .digest('hex');
-      if (body.hash && body.hash !== expectedHash) {
+      if (!body.hash || body.hash !== expectedHash) {
         throw new BadRequestException('Invalid webhook hash');
       }
     }

@@ -20,9 +20,14 @@ export default function PaymentSlipsPage() {
 
   async function load() {
     setLoading(true);
-    const { data } = await api.get('/super-admin/bank-transfers', { params: filter ? { status: filter } : {} });
-    setRows(Array.isArray(data) ? data : []);
-    setLoading(false);
+    try {
+      const { data } = await api.get('/super-admin/bank-transfers', { params: filter ? { status: filter } : {} });
+      setRows(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Could not load payment slips');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function approve(id: number) {

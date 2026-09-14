@@ -6,14 +6,16 @@ import { Subscription } from '../../database/entities/subscription.entity';
 import { User } from '../../database/entities/user.entity';
 import { Package } from '../../database/entities/package.entity';
 import { CompanyProfile } from '../../database/entities/company-profile.entity';
-import { IsString, IsEmail, MinLength, IsOptional } from 'class-validator';
+import { IsString, IsEmail, MinLength, IsOptional, IsEnum } from 'class-validator';
 import * as bcrypt from 'bcryptjs';
+
+const ASSIGNABLE_ROLES = ['ADMIN', 'CASHIER'] as const;
 
 export class CreateUserDto {
   @IsString() name: string;
   @IsEmail() email: string;
   @IsString() @MinLength(6) password: string;
-  @IsString() role: 'ADMIN' | 'CASHIER';
+  @IsEnum(ASSIGNABLE_ROLES) role: 'ADMIN' | 'CASHIER';
   @IsOptional() @IsString() phone?: string;
   @IsOptional() @IsString() emp_no?: string;
 }
@@ -22,7 +24,7 @@ export class UpdateUserDto {
   @IsOptional() @IsString() name?: string;
   @IsOptional() @IsEmail() email?: string;
   @IsOptional() @IsString() @MinLength(6) password?: string;
-  @IsOptional() @IsString() role?: 'ADMIN' | 'CASHIER';
+  @IsOptional() @IsEnum(ASSIGNABLE_ROLES) role?: 'ADMIN' | 'CASHIER';
   @IsOptional() @IsString() phone?: string;
   @IsOptional() @IsString() emp_no?: string;
   @IsOptional() @IsString() pin?: string;
@@ -58,7 +60,7 @@ export class TenantService {
     if (dto.role) user.role = dto.role;
     if (dto.phone !== undefined) user.phone = dto.phone;
     if (dto.emp_no !== undefined) user.emp_no = dto.emp_no;
-    if (dto.pin !== undefined) user.pin = dto.pin || null;
+    if (dto.pin !== undefined) user.pin = dto.pin ? await bcrypt.hash(dto.pin, 10) : null;
     if (dto.password) user.password_hash = await bcrypt.hash(dto.password, 10);
     return this.userRepo.save(user);
   }

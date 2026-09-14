@@ -13,9 +13,13 @@ export class SubscriptionGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const module = this.reflector.get<string>('module', context.getHandler());
+    const module = this.reflector.getAllAndOverride<string>('module', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     if (!module) return true;
     const { user } = context.switchToHttp().getRequest();
+    if (user?.role === 'SUPER_ADMIN') return true;
     const sub = await this.subRepo.findOne({
       where: { tenant_id: user.tenant_id, module_name: module, status: 'active' },
     });

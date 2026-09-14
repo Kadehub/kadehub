@@ -93,6 +93,12 @@ export default function SettingsPage() {
     api.get('/tenant/users').then(r => setUserCount(Array.isArray(r.data) ? r.data.length : null)).catch(() => {});
   }, []);
 
+  // Open the requested tab on load (e.g. the "View Plans" upsell link to ?tab=billing)
+  useEffect(() => {
+    const requestedTab = new URLSearchParams(window.location.search).get('tab');
+    if (requestedTab === 'billing' || requestedTab === 'company') setTab(requestedTab);
+  }, []);
+
   // Handle OnePay return redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

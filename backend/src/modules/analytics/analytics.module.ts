@@ -9,11 +9,12 @@ import { Product } from '../../database/entities/product.entity';
 import { Inventory } from '../../database/entities/inventory.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
 import { TrialGuard } from '../../common/guards/trial.guard';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Sale, SaleItem, Customer, Product, Inventory, Subscription]), AuthModule],
   controllers: [AnalyticsController],
-  providers: [AnalyticsService, TrialGuard],
+  providers: [AnalyticsService, TrialGuard, SubscriptionGuard],
 })
 export class AnalyticsModule {}

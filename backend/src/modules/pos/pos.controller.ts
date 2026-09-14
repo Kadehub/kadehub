@@ -3,10 +3,13 @@ import { PosService } from './pos.service';
 import { CreateSaleDto } from './pos.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TrialGuard } from '../../common/guards/trial.guard';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
+import { Module as SubModule } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('pos')
-@UseGuards(JwtAuthGuard, TrialGuard)
+@UseGuards(JwtAuthGuard, TrialGuard, SubscriptionGuard)
+@SubModule('pos')
 export class PosController {
   constructor(private posService: PosService) {}
 

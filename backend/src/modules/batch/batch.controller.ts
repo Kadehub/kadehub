@@ -3,10 +3,13 @@ import { BatchService } from './batch.service';
 import { CreateBatchDto } from './batch.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TrialGuard } from '../../common/guards/trial.guard';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
+import { Module as SubModule } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('batches')
-@UseGuards(JwtAuthGuard, TrialGuard)
+@UseGuards(JwtAuthGuard, TrialGuard, SubscriptionGuard)
+@SubModule('batch')
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class BatchController {
   constructor(private svc: BatchService) {}

@@ -4,7 +4,10 @@ import { Product } from '../types';
 import api from '../lib/api';
 
 const CACHE_KEY = 'products_cache';
-const CACHE_TTL = 5 * 60 * 1000;
+// Short TTL: this cache only smooths rapid page navigation. Checkout always
+// re-prices server-side from the live product record, so a stale price shown
+// here can't under/overcharge — it can only look briefly out of date.
+const CACHE_TTL = 60 * 1000;
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);

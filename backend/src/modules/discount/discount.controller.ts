@@ -4,11 +4,13 @@ import { CreateDiscountDto, UpdateDiscountDto } from './discount.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { TrialGuard } from '../../common/guards/trial.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
+import { Roles, Module as SubModule } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('discounts')
-@UseGuards(JwtAuthGuard, RolesGuard, TrialGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, TrialGuard, SubscriptionGuard)
+@SubModule('discount')
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class DiscountController {
   constructor(private svc: DiscountService) {}

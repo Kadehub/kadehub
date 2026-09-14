@@ -28,16 +28,27 @@ export default function ShopsPage() {
 
   async function load(p: number, s: string) {
     setLoading(true);
-    const { data } = await api.get('/super-admin/shops', { params: { page: p, limit: 20, search: s || undefined } });
-    setShops(data.data); setTotal(data.total); setLoading(false);
+    try {
+      const { data } = await api.get('/super-admin/shops', { params: { page: p, limit: 20, search: s || undefined } });
+      setShops(data.data); setTotal(data.total);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Could not load shops');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function toggleStatus(shop: Shop) {
     setTogglingId(shop.id);
-    const newStatus = shop.status === 'active' ? 'blocked' : 'active';
-    await api.patch(`/super-admin/shops/${shop.id}/status`, { status: newStatus });
-    await load(page, search);
-    setTogglingId(null);
+    try {
+      const newStatus = shop.status === 'active' ? 'blocked' : 'active';
+      await api.patch(`/super-admin/shops/${shop.id}/status`, { status: newStatus });
+      await load(page, search);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Could not update shop status');
+    } finally {
+      setTogglingId(null);
+    }
   }
 
   function handleSearch(e: React.FormEvent) {

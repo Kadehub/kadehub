@@ -140,7 +140,9 @@ export default function RegisterPage() {
               </div>
               <Input label="Email Address" type="email" placeholder="you@example.com" required
                 value={account.email} onChange={e => setAccount(a => ({ ...a, email: e.target.value }))} />
-              <Input label="Password" type="password" placeholder="Min 6 characters" required
+              <Input label="Password" type="password" placeholder="Min 8 characters, 1 uppercase, 1 number" required
+                minLength={8} pattern="(?=.*[A-Z])(?=.*\d).{8,}"
+                title="At least 8 characters, including one uppercase letter and one number"
                 value={account.password} onChange={e => setAccount(a => ({ ...a, password: e.target.value }))} />
               <button type="submit" disabled={loading}
                 className="kh-btn-primary w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm sm:text-base">
@@ -205,7 +207,7 @@ export default function RegisterPage() {
             <p className="text-xs text-ink-400 mb-8">
               After your trial, choose a plan from Settings. A one-time registration fee (LKR 25,000) applies with your first subscription payment.
             </p>
-            <button onClick={() => router.push('/pos')}
+            <button onClick={() => router.push('/dashboard')}
               className="kh-btn-primary w-full py-3 rounded-xl text-base font-bold flex items-center justify-center gap-2">
               Go to Dashboard <ChevronRight size={16} />
             </button>

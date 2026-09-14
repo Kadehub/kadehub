@@ -124,7 +124,7 @@ export default function InventoryPage() {
         <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-ink-100">
           <div className="relative w-full sm:w-auto sm:flex-1 sm:max-w-xs">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
-            <input placeholder={t('common.search')} value={search}
+            <input placeholder={t('common.search')} aria-label={t('common.search')} value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-8 pr-3 py-2 border border-ink-200 rounded-lg text-sm bg-white" />
           </div>

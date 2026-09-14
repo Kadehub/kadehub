@@ -18,6 +18,7 @@ const features = [
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const { setAuth, token, user } = useAuthStore();
   const hydrated = useAuthHydrated();
   const router = useRouter();
@@ -31,6 +32,7 @@ export default function LoginPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
     try {
       const { data } = await api.post('/auth/login', form);
@@ -43,7 +45,9 @@ export default function LoginPage() {
       router.replace('/pos');
     } catch (err: any) {
       const msg = err.response?.data?.message;
-      toast.error(Array.isArray(msg) ? msg[0] : msg || 'Invalid credentials');
+      const text = Array.isArray(msg) ? msg[0] : msg || 'Invalid credentials';
+      setError(text);
+      toast.error(text);
     } finally {
       setLoading(false);
     }
@@ -90,9 +94,11 @@ export default function LoginPage() {
 
             <form onSubmit={submit} className="space-y-4">
               <Input label="Email address" type="email" placeholder="you@example.com" required
-                value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                error={error ? ' ' : undefined}
+                value={form.email} onChange={e => { setForm(f => ({ ...f, email: e.target.value })); setError(''); }} />
               <Input label="Password" type="password" placeholder="••••••••" required
-                value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
+                error={error || undefined}
+                value={form.password} onChange={e => { setForm(f => ({ ...f, password: e.target.value })); setError(''); }} />
 
               <button type="submit" disabled={loading}
                 className="kh-btn-primary w-full py-2.5 rounded-xl flex items-center justify-center gap-2">

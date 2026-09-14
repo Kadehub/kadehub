@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
   const [creditSummary, setCreditSummary] = useState<any>(null);
   const [lowStock, setLowStock] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export default function DashboardPage() {
       setData(report.data);
       setCreditSummary(credit.data);
       setLowStock(Array.isArray(stock.data) ? stock.data.slice(0, 5) : []);
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const greeting = () => {
@@ -44,24 +45,36 @@ export default function DashboardPage() {
 
       {/* Today's KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Today's Sales",       value: +data?.total_sales || 0,                    icon: ShoppingCart, color: '#009688', bg: '#E0F2F1', href: '/pos' },
-          { label: "Today's Revenue",     value: LKR(+data?.revenue || 0),                   icon: TrendingUp,   color: '#F59E0B', bg: '#FFF8E1', href: '/reports' },
-          { label: 'Outstanding Credit',  value: LKR(+creditSummary?.total_outstanding || 0), icon: CreditCard,   color: '#6366F1', bg: '#EEF2FF', href: '/credit' },
-          { label: 'Low / Out of Stock',  value: `${+data?.low_stock || 0} / ${+data?.out_of_stock || 0}`, icon: AlertTriangle, color: '#FF6B6B', bg: '#FFF0F0', href: '/inventory' },
-        ].map(({ label, value, icon: Icon, color, bg, href }) => (
-          <Link key={label} href={href} className="kh-card p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-ink-500 font-medium">{label}</p>
-                <p className="text-2xl font-bold mt-1" style={{ color }}>{value}</p>
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="kh-card p-5">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <div className="h-3.5 w-24 rounded bg-ink-100 animate-pulse" />
+                    <div className="h-6 w-16 rounded bg-ink-100 animate-pulse" />
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-ink-100 animate-pulse flex-shrink-0" />
+                </div>
               </div>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: bg }}>
-                <Icon size={18} style={{ color }} />
-              </div>
-            </div>
-          </Link>
-        ))}
+            ))
+          : [
+              { label: "Today's Sales",       value: +data?.total_sales || 0,                    icon: ShoppingCart, color: '#009688', bg: '#E0F2F1', href: '/pos' },
+              { label: "Today's Revenue",     value: LKR(+data?.revenue || 0),                   icon: TrendingUp,   color: '#F59E0B', bg: '#FFF8E1', href: '/reports' },
+              { label: 'Outstanding Credit',  value: LKR(+creditSummary?.total_outstanding || 0), icon: CreditCard,   color: '#6366F1', bg: '#EEF2FF', href: '/credit' },
+              { label: 'Low / Out of Stock',  value: `${+data?.low_stock || 0} / ${+data?.out_of_stock || 0}`, icon: AlertTriangle, color: '#FF6B6B', bg: '#FFF0F0', href: '/inventory' },
+            ].map(({ label, value, icon: Icon, color, bg, href }) => (
+              <Link key={label} href={href} className="kh-card p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-ink-500 font-medium">{label}</p>
+                    <p className="text-2xl font-bold mt-1" style={{ color }}>{value}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: bg }}>
+                    <Icon size={18} style={{ color }} />
+                  </div>
+                </div>
+              </Link>
+            ))}
       </div>
 
       {/* Quick actions */}

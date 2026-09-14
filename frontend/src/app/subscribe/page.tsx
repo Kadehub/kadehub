@@ -20,20 +20,28 @@ export default function SubscribePage() {
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
   const [pendingSlip, setPendingSlip] = useState<any>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
-  useEffect(() => {
+  const loadCheckoutInfo = () => {
+    setLoading(true);
+    setLoadError(false);
     api.get('/billing/checkout-info').then(r => {
       const d = r.data;
       setPackages(Array.isArray(d) ? d : (d.packages ?? []));
       if (d.currency) setCurrency(d.currency);
       if (d.registrationFeeDue != null) setRegistrationFeeDue(d.registrationFeeDue);
       else if (d.registrationFee != null) setRegistrationFeeDue(d.registrationFee);
-    }).catch(() => {});
+    }).catch(() => {
+      setLoadError(true);
+    }).finally(() => setLoading(false));
     api.get('/billing/bank-transfer/mine').then(r => {
       const pending = (Array.isArray(r.data) ? r.data : []).find((t: any) => t.status === 'pending');
       if (pending) setPendingSlip(pending);
     }).catch(() => {});
-  }, []);
+  };
+
+  useEffect(() => { loadCheckoutInfo(); }, []);
 
   const price = selectedPkg
     ? billing === 'yearly' ? selectedPkg.price_yearly : selectedPkg.price_monthly
@@ -58,6 +66,33 @@ export default function SubscribePage() {
           )}
           <button onClick={() => { logout(); window.location.href = '/login'; }}
             className="text-sm font-semibold" style={{ color: '#00A884' }}>
+            Sign out
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg,#0a4f40,#0d6e5a)' }}>
+        <div className="w-8 h-8 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg,#0a4f40,#0d6e5a)' }}>
+        <div className="w-full max-w-md bg-white rounded-2xl p-8 text-center shadow-sm">
+          <h2 className="text-xl font-bold text-ink-900 mb-2">Couldn&apos;t load plans</h2>
+          <p className="text-sm text-ink-500 mb-6">Something went wrong reaching KadeHub. Check your connection and try again.</p>
+          <button onClick={loadCheckoutInfo}
+            className="kh-btn-primary w-full py-2.5 rounded-xl font-semibold">
+            Try again
+          </button>
+          <button onClick={() => { logout(); window.location.href = '/login'; }}
+            className="mt-4 text-sm font-semibold" style={{ color: '#00A884' }}>
             Sign out
           </button>
         </div>

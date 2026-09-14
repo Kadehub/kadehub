@@ -6,12 +6,14 @@ import { CreateSupplierDto, UpdateSupplierDto, CreatePurchaseOrderDto } from './
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { TrialGuard } from '../../common/guards/trial.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
+import { Roles, Module as SubModule } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { uploadToCloudinary } from '../../common/cloudinary';
 
 @Controller('suppliers')
-@UseGuards(JwtAuthGuard, RolesGuard, TrialGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, TrialGuard, SubscriptionGuard)
+@SubModule('supplier')
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class SupplierController {
   constructor(private svc: SupplierService) {}

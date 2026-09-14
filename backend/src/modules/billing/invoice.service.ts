@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Invoice } from '../../database/entities/invoice.entity';
@@ -14,6 +14,8 @@ export const REGISTRATION_FEE_LKR = 25000;
 
 @Injectable()
 export class InvoiceService {
+  private readonly logger = new Logger(InvoiceService.name);
+
   constructor(
     @InjectRepository(Invoice) private invoiceRepo: Repository<Invoice>,
     @InjectRepository(Tenant) private tenantRepo: Repository<Tenant>,
@@ -84,7 +86,9 @@ export class InvoiceService {
     invoice.paid_at = new Date();
     if (type === 'subscription' && tx.package_id) invoice.package_id = tx.package_id;
     const saved = await this.invoiceRepo.save(invoice);
-    this.emailInvoiceToCustomer(saved.id).catch(() => {});
+    this.emailInvoiceToCustomer(saved.id).catch(err =>
+      this.logger.error(`Failed to email invoice #${saved.id}: ${err?.message || err}`),
+    );
     return saved;
   }
 

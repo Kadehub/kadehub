@@ -7,7 +7,7 @@ import { diskStorage, memoryStorage } from 'multer';
 import { extname, join } from 'path';
 import { BillingService } from './billing.service';
 import { InvoiceService } from './invoice.service';
-import { UpdateCompanyDto, CreateSubscriptionDto, InitiateOnepayDto, BankTransferDto } from './billing.dto';
+import { UpdateCompanyDto, InitiateOnepayDto, BankTransferDto } from './billing.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -75,12 +75,6 @@ export class BillingController {
       req.connection?.remoteAddress ||
       req.ip;
     return this.billingService.getCheckoutInfo(user.tenant_id, ip);
-  }
-
-  @Post('subscribe')
-  @UseGuards(JwtAuthGuard)
-  subscribe(@CurrentUser() user: any, @Body() dto: CreateSubscriptionDto) {
-    return this.billingService.subscribe(user.tenant_id, dto);
   }
 
   @Get('transactions')

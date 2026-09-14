@@ -3,10 +3,13 @@ import { CreditService } from './credit.service';
 import { CreateCreditSaleDto, RecordPaymentDto } from './credit.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TrialGuard } from '../../common/guards/trial.guard';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
+import { Module as SubModule } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('credit')
-@UseGuards(JwtAuthGuard, TrialGuard)
+@UseGuards(JwtAuthGuard, TrialGuard, SubscriptionGuard)
+@SubModule('credit')
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class CreditController {
   constructor(private svc: CreditService) {}

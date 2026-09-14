@@ -13,24 +13,6 @@ export class UpdateCompanyDto {
   @IsOptional() @IsString() currency?: string;
 }
 
-export class CreateSubscriptionDto {
-  @Type(() => Number)
-  @IsNumber()
-  package_id: number;
-
-  @IsEnum(['monthly', 'yearly'])
-  billing_cycle: 'monthly' | 'yearly';
-
-  @IsEnum(['paypal', 'card', 'bank', 'bank_transfer', 'onepay'])
-  gateway: 'paypal' | 'card' | 'bank' | 'bank_transfer' | 'onepay';
-
-  @IsOptional() @IsString() gateway_ref?: string;
-
-  @IsOptional() @IsEnum(['LKR', 'USD']) currency?: 'LKR' | 'USD';
-
-  @IsOptional() @IsNumber() registration_fee?: number;
-}
-
 export class InitiateOnepayDto {
   @Type(() => Number)
   @IsNumber()

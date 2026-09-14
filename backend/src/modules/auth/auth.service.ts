@@ -10,8 +10,16 @@ import { CloudflareService } from '../../common/cloudflare.service';
 import { BillingService } from '../billing/billing.service';
 import { LoginDto, RegisterDto, PinLoginDto } from './auth.dto';
 
+const PIN_LOGIN_MAX_ATTEMPTS = 5;
+const PIN_LOGIN_LOCKOUT_MS = 5 * 60 * 1000;
+
 @Injectable()
 export class AuthService {
+  // In-memory PIN brute-force guard, keyed by tenant slug. Resets on restart —
+  // acceptable for this single-instance deployment; the goal is to blunt
+  // automated guessing of a 4-6 digit PIN, not to be a durable audit trail.
+  private pinAttempts = new Map<string, { count: number; lockedUntil: number }>();
+
   constructor(
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Tenant) private tenantRepo: Repository<Tenant>,
@@ -98,11 +106,35 @@ export class AuthService {
   }
 
   async pinLogin(dto: PinLoginDto) {
+    const key = dto.tenant_slug.toLowerCase();
+    const attempt = this.pinAttempts.get(key);
+    if (attempt?.lockedUntil && attempt.lockedUntil > Date.now()) {
+      const waitMin = Math.ceil((attempt.lockedUntil - Date.now()) / 60000);
+      throw new UnauthorizedException(`Too many failed attempts. Try again in ${waitMin} minute(s).`);
+    }
+
     const tenant = await this.tenantRepo.findOne({ where: { slug: dto.tenant_slug } });
-    if (!tenant) throw new UnauthorizedException('Shop not found');
-    const user = await this.userRepo.findOne({ where: { tenant_id: tenant.id, pin: dto.pin } });
-    if (!user) throw new UnauthorizedException('Invalid PIN');
-    return this.signToken(user);
+    const candidates = tenant
+      ? await this.userRepo.find({ where: { tenant_id: tenant.id }, select: ['id', 'tenant_id', 'name', 'role', 'pin'] })
+      : [];
+
+    let match: User | undefined;
+    for (const candidate of candidates) {
+      if (candidate.pin && (await bcrypt.compare(dto.pin, candidate.pin))) {
+        match = candidate;
+        break;
+      }
+    }
+
+    if (!match) {
+      const count = (attempt?.count || 0) + 1;
+      const lockedUntil = count >= PIN_LOGIN_MAX_ATTEMPTS ? Date.now() + PIN_LOGIN_LOCKOUT_MS : 0;
+      this.pinAttempts.set(key, { count, lockedUntil });
+      throw new UnauthorizedException('Invalid PIN');
+    }
+
+    this.pinAttempts.delete(key);
+    return this.signToken(match);
   }
 
   async checkSubdomain(subdomain: string) {

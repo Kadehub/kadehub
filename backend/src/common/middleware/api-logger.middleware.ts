@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ApiLog } from '../../database/entities/api-log.entity';
@@ -6,6 +6,8 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class ApiLoggerMiddleware implements NestMiddleware {
+  private readonly logger = new Logger(ApiLoggerMiddleware.name);
+
   constructor(
     @InjectRepository(ApiLog) private logRepo: Repository<ApiLog>,
     private jwtService: JwtService,
@@ -27,7 +29,7 @@ export class ApiLoggerMiddleware implements NestMiddleware {
       if (path.startsWith('/api/super-admin') || path.startsWith('/uploads')) return;
       this.logRepo.save(
         this.logRepo.create({ tenant_id, method: req.method, path, status_code: res.statusCode, response_ms: ms }),
-      ).catch((err) => console.error('[ApiLogger] Failed to save log:', err?.message));
+      ).catch((err) => this.logger.error(`Failed to save log: ${err?.message}`));
     });
     next();
   }

@@ -421,10 +421,10 @@ function Pricing() {
   );
 }
 
-const TESTIMONIALS = [
-  { name: 'Amal Perera', shop: 'Grocery Store, Colombo', quote: 'KadeHub transformed how we manage our shop. The POS is lightning fast and the inventory tracking saves us hours every week.', avatar: 'AP' },
-  { name: 'Nisha Fernando', shop: 'Pharmacy, Kandy', quote: 'The batch and expiry tracking feature is a lifesaver for our pharmacy. We never miss an expiring product anymore.', avatar: 'NF' },
-  { name: 'Rohan Silva', shop: 'Retail Store, Galle', quote: 'Customer loyalty points have brought back so many repeat customers. The analytics dashboard gives us exactly what we need.', avatar: 'RS' },
+const USE_CASES = [
+  { icon: '🛒', shop: 'Grocery Stores', text: 'A fast POS and inventory tracking built to keep checkout lines moving and shelves stocked, without a second person watching stock levels by hand.' },
+  { icon: '💊', shop: 'Pharmacies', text: 'Batch and expiry tracking flags stock approaching its expiry date automatically, so nothing gets sold — or written off — by surprise.' },
+  { icon: '🏪', shop: 'Retail Shops', text: 'Loyalty points and an analytics dashboard designed to bring customers back and show, at a glance, what is actually selling.' },
 ];
 
 function Testimonials() {
@@ -432,26 +432,18 @@ function Testimonials() {
     <section style={{ padding: '96px 24px', background: '#f8fffe' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         <div className="reveal" style={{ textAlign: 'center', marginBottom: 16 }}>
-          <span style={{ display: 'inline-block', padding: '6px 16px', borderRadius: 100, background: '#e6f4f1', color: '#0d6e5a', fontSize: 13, fontWeight: 700, marginBottom: 16, fontFamily: 'Poppins,sans-serif' }}>Testimonials</span>
-          <h2 style={{ fontSize: 'clamp(1.8rem,4vw,2.6rem)', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', fontFamily: 'Poppins,sans-serif' }}>Trusted by Sri Lankan Retailers</h2>
-          <p style={{ marginTop: 12, color: '#9ca3af', fontSize: 13, fontFamily: 'Poppins,sans-serif' }}>Representative stories from early KadeHub shop owners</p>
+          <span style={{ display: 'inline-block', padding: '6px 16px', borderRadius: 100, background: '#e6f4f1', color: '#0d6e5a', fontSize: 13, fontWeight: 700, marginBottom: 16, fontFamily: 'Poppins,sans-serif' }}>Built For</span>
+          <h2 style={{ fontSize: 'clamp(1.8rem,4vw,2.6rem)', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', fontFamily: 'Poppins,sans-serif' }}>Built for Sri Lankan Retailers</h2>
+          <p style={{ marginTop: 12, color: '#9ca3af', fontSize: 13, fontFamily: 'Poppins,sans-serif' }}>What KadeHub is designed to solve for shops like yours</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 24, marginTop: 48 }}>
-          {TESTIMONIALS.map(t => (
-            <div key={t.name} className="reveal" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, padding: '32px 28px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-              <div style={{ display: 'flex', gap: 4, marginBottom: 20 }}>
-                {[...Array(5)].map((_, i) => <span key={i} style={{ color: '#f5a623', fontSize: 18 }}>★</span>)}
+          {USE_CASES.map(u => (
+            <div key={u.shop} className="reveal" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 20, padding: '32px 28px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(135deg,#0d6e5a,#14a085)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, fontSize: 20 }}>
+                {u.icon}
               </div>
-              <p style={{ fontSize: 15, color: '#374151', lineHeight: 1.7, marginBottom: 24, fontFamily: 'Poppins,sans-serif', fontWeight: 400, fontStyle: 'italic' }}>&ldquo;{t.quote}&rdquo;</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#0d6e5a,#14a085)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ color: '#fff', fontWeight: 700, fontSize: 14, fontFamily: 'Poppins,sans-serif' }}>{t.avatar}</span>
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a', fontFamily: 'Poppins,sans-serif' }}>{t.name}</div>
-                  <div style={{ fontSize: 12, color: '#9ca3af', fontFamily: 'Poppins,sans-serif', fontWeight: 500 }}>{t.shop}</div>
-                </div>
-              </div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: '#0f172a', marginBottom: 10, fontFamily: 'Poppins,sans-serif' }}>{u.shop}</div>
+              <p style={{ fontSize: 14, color: '#374151', lineHeight: 1.7, fontFamily: 'Poppins,sans-serif', fontWeight: 400 }}>{u.text}</p>
             </div>
           ))}
         </div>

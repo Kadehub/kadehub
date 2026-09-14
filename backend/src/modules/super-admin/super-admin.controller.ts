@@ -56,7 +56,7 @@ export class SuperAdminController {
 
   @Post('shops/:id/impersonate')
   impersonateShop(@CurrentUser() u: any, @Param('id') id: string) {
-    this.guard(u); return this.service.impersonateShop(+id);
+    this.guard(u); return this.service.impersonateShop(+id, u.sub);
   }
 
   // ── Transactions ───────────────────────────────────────────────────────────

@@ -4,6 +4,12 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
   },
+  // Static portfolio (built from the Astro project into public/portfolio)
+  async rewrites() {
+    return [
+      { source: '/portfolio', destination: '/portfolio/index.html' },
+    ];
+  },
   images: {
     remotePatterns: [
       {

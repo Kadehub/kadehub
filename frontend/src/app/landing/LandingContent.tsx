@@ -80,6 +80,12 @@ function Navbar() {
         </div>
 
         <div className="nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <a href="/portfolio" style={{
+            padding: '8px 16px', borderRadius: 10, fontWeight: 600, fontSize: 14,
+            border: `2px solid ${scrolled ? '#0d6e5a' : 'rgba(255,255,255,0.7)'}`,
+            color: scrolled ? '#0d6e5a' : '#fff', textDecoration: 'none',
+            fontFamily: 'Poppins,sans-serif',
+          }}>Portfolio</a>
           <a href="/login" style={{
             padding: '10px 16px', borderRadius: 10, fontWeight: 600, fontSize: 14,
             color: scrolled ? '#0d6e5a' : '#fff', textDecoration: 'none',
@@ -115,6 +121,9 @@ function Navbar() {
           </a>
           <a href="/login" style={{ display: 'block', marginTop: 10, padding: '12px 0', textAlign: 'center', borderRadius: 10, border: '2px solid #0d6e5a', color: '#0d6e5a', fontWeight: 700, fontSize: 15, textDecoration: 'none', fontFamily: 'Poppins,sans-serif' }}>
             Sign In
+          </a>
+          <a href="/portfolio" style={{ display: 'block', marginTop: 10, padding: '12px 0', textAlign: 'center', borderRadius: 10, border: '2px solid #e5e7eb', color: '#374151', fontWeight: 700, fontSize: 15, textDecoration: 'none', fontFamily: 'Poppins,sans-serif' }}>
+            Portfolio
           </a>
         </div>
       )}
@@ -621,8 +630,8 @@ function QuoteForm() {
 }
 
 function Footer() {
-  const links = ['Features', 'Pricing', 'FAQ', 'Register', 'Sign In'];
-  const hrefs: Record<string, string> = { Features: '#features', Pricing: '#pricing', FAQ: '#faq', Register: '/register', 'Sign In': '/login' };
+  const links = ['Features', 'Pricing', 'FAQ', 'Portfolio', 'Register', 'Sign In'];
+  const hrefs: Record<string, string> = { Features: '#features', Pricing: '#pricing', FAQ: '#faq', Portfolio: '/portfolio', Register: '/register', 'Sign In': '/login' };
   const socials = [
     { label: 'WhatsApp', href: WHATSAPP_URL, icon: '💬' },
     { label: 'Email', href: 'mailto:official.kadehub@gmail.com', icon: '📧' },

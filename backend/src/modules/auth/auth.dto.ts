@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, MaxLength, Matches, Length } from 'class-validator';
+import { IsEmail, IsString, MinLength, MaxLength, Matches, Length, IsIn, IsOptional } from 'class-validator';
 
 export class LoginDto {
   @IsEmail()
@@ -40,4 +40,29 @@ export class PinLoginDto {
 
   @IsString()
   tenant_slug: string;
+}
+
+/** Sign-up from a product other than POS (cod., tasks.): a KadeHub account without a shop subdomain. */
+export class RegisterAccountDto {
+  @IsIn(['cod', 'tasks'])
+  product: 'cod' | 'tasks';
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  name: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(8)
+  @Matches(/^(?=.*[A-Z])(?=.*\d)/, { message: 'Password must contain at least one uppercase letter and one number' })
+  password: string;
+
+  /** Business name for COD; Tasks accounts use the person's name. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  businessName?: string;
 }

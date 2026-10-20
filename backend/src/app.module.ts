@@ -25,6 +25,9 @@ import { StaffModule } from './modules/staff/staff.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { SuperAdminModule } from './modules/super-admin/super-admin.module';
 import { QuotationModule } from './modules/quotation/quotation.module';
+import { PlatformModule } from './modules/platform/platform.module';
+import { CodModule } from './modules/cod/cod.module';
+import { TasksModule } from './modules/tasks/tasks.module';
 import { EmailService } from './common/email.service';
 
 @Module({
@@ -58,6 +61,9 @@ import { EmailService } from './common/email.service';
     BillingModule,
     SuperAdminModule,
     QuotationModule,
+    PlatformModule,
+    CodModule,
+    TasksModule,
     TypeOrmModule.forFeature([ApiLog, Coupon, Announcement]),
   ],
   providers: [EmailService],

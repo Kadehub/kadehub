@@ -3,17 +3,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import KadeHubLogo from '../../../components/ui/KadeHubLogo';
 import { Input } from '../../../components/ui/Input';
-import { ShoppingCart, Boxes, Users, BarChart2, ArrowRight } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
+import Mascot from '../../../components/brand/Mascot';
 import { useAuthHydrated, useAuthStore } from '../../../hooks/useAuth';
 import api from '../../../lib/api';
+import { homeAfterLogin, navigate, resolveHost, productForHost, PRODUCTS, type ProductDef } from '../../../lib/platform';
 import toast from 'react-hot-toast';
-
-const features = [
-  { icon: ShoppingCart, label: 'Fast POS',   desc: 'Process sales in seconds' },
-  { icon: Boxes,        label: 'Inventory',   desc: 'Real-time stock tracking' },
-  { icon: Users,        label: 'Loyalty CRM', desc: 'Reward your customers' },
-  { icon: BarChart2,    label: 'Analytics',   desc: 'Daily business insights' },
-];
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -22,12 +17,18 @@ export default function LoginPage() {
   const { setAuth, token, user } = useAuthStore();
   const hydrated = useAuthHydrated();
   const router = useRouter();
+  // Same page on every subdomain; COD/Tasks get their own copy and sign-up link
+  const [product, setProduct] = useState<ProductDef | null>(null);
+  useEffect(() => {
+    const p = productForHost(resolveHost(window.location.host));
+    setProduct(p && p.slug !== 'pos' ? p : null);
+  }, []);
 
-  // Shop login never sends Super Admin to POS
+  // Destination depends on the subdomain: hub → app launcher, POS → /pos, other products → their home.
+  // Super Admin is always sent to the hub's /super-admin, never into a product.
   useEffect(() => {
     if (!hydrated || !token || !user) return;
-    if (user.role === 'SUPER_ADMIN') router.replace('/super-admin');
-    else router.replace('/pos');
+    navigate(homeAfterLogin(user, window.location.host), router);
   }, [hydrated, token, user, router]);
 
   const submit = async (e: React.FormEvent) => {
@@ -36,13 +37,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/login', form);
-      if (data.user?.role === 'SUPER_ADMIN') {
-        setAuth(data.user, data.access_token);
-        router.replace('/super-admin');
-        return;
-      }
       setAuth(data.user, data.access_token);
-      router.replace('/pos');
+      navigate(homeAfterLogin(data.user, window.location.host), router);
     } catch (err: any) {
       const msg = err.response?.data?.message;
       const text = Array.isArray(msg) ? msg[0] : msg || 'Invalid credentials';
@@ -60,23 +56,21 @@ export default function LoginPage() {
         style={{ background: 'linear-gradient(160deg, #004D40 0%, #00796B 50%, #00A884 100%)' }}>
         <KadeHubLogo width={200} theme="white" />
         <div>
-          <h2 className="text-3xl font-extrabold leading-tight">
-            Smart retail,<br />
-            <span style={{ color: '#FFB703' }}>simplified.</span>
+          <Mascot size="lg" animation="enter" decorative priority />
+          <h2 className="mt-6 text-3xl font-extrabold leading-tight">
+            {product ? product.name : <>One account,<br /><span style={{ color: '#FFB703' }}>every KadeHub app.</span></>}
           </h2>
           <p className="mt-3 text-sm opacity-70 leading-relaxed">
-            Everything your shop needs — POS, inventory, customers and analytics — in one fast platform.
+            {product ? product.tagline : 'Sign in once to use POS, COD and Tasks.'}
           </p>
-          <div className="mt-8 grid grid-cols-2 gap-3">
-            {features.map(({ icon: Icon, label, desc }) => (
-              <div key={label} className="rounded-xl p-3.5"
-                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
-                <Icon size={18} style={{ color: '#FFB703' }} />
-                <p className="mt-2 text-sm font-semibold">{label}</p>
-                <p className="text-xs opacity-60 mt-0.5">{desc}</p>
-              </div>
+          <ul className="mt-6 space-y-2.5">
+            {(product ? product.features : PRODUCTS.map(p => `${p.name} — ${p.tagline.toLowerCase()}`)).map(f => (
+              <li key={f} className="flex items-start gap-2 text-sm opacity-90">
+                <Check size={16} className="mt-0.5 flex-shrink-0" style={{ color: '#FFB703' }} />
+                {f}
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
         <p className="text-xs opacity-40">© {new Date().getFullYear()} KadeHub</p>
       </div>
@@ -90,7 +84,7 @@ export default function LoginPage() {
 
           <div className="kh-card p-8">
             <h2 className="text-xl font-bold text-ink-900 mb-1">Welcome back 👋</h2>
-            <p className="text-sm text-ink-400 mb-6">Sign in to your KadeHub account</p>
+            <p className="text-sm text-ink-400 mb-6">Sign in to your KadeHub account{product ? ` to open ${product.name}` : ''}</p>
 
             <form onSubmit={submit} className="space-y-4">
               <Input label="Email address" type="email" placeholder="you@example.com" required
@@ -112,15 +106,15 @@ export default function LoginPage() {
             <div className="mt-6 pt-5 border-t border-ink-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-ink-700">New to KadeHub?</p>
-                  <p className="text-xs text-ink-400 mt-0.5">Create your shop in 4 easy steps</p>
+                  <p className="text-sm font-semibold text-ink-700">New to {product ? product.name : 'KadeHub'}?</p>
+                  <p className="text-xs text-ink-400 mt-0.5">{product ? 'Create a free KadeHub account' : 'Create your shop in 4 easy steps'}</p>
                 </div>
                 <a href="/register"
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all border-2"
                   style={{ borderColor: '#00A884', color: '#00A884' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#00A884'; (e.currentTarget as HTMLElement).style.color = 'white'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#00A884'; }}>
-                  Register Shop <ArrowRight size={14} />
+                  {product ? 'Sign up' : 'Register Shop'} <ArrowRight size={14} />
                 </a>
               </div>
             </div>

@@ -11,6 +11,7 @@ import KadeHubLogo from './KadeHubLogo';
 import { useSubscribedModules } from '../../hooks/useSubscribedModules';
 import { useLang } from '../../hooks/useLang';
 import { TranslationKey } from '../../lib/i18n';
+import ProductSwitcher from '../platform/ProductSwitcher';
 
 const ALL_NAV: { href: string; labelKey: TranslationKey; icon: any; module: string; groupKey: TranslationKey }[] = [
   { href: '/dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, module: 'pos', groupKey: 'nav.operations' },
@@ -116,8 +117,9 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         )}
       </nav>
 
-      {/* Bottom: Settings + Logout */}
+      {/* Bottom: Product switcher + Settings + Logout */}
       <div className="flex-shrink-0 px-3 py-3 border-t border-ink-100 space-y-0.5">
+        <ProductSwitcher current="pos" label={t('nav.apps')} />
         <Link href="/settings" onClick={handleNav}
           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
             pathname.startsWith('/settings') ? 'text-white' : 'text-ink-500 hover:bg-ink-50 hover:text-ink-800'

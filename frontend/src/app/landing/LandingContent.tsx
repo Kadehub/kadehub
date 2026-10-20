@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { PRODUCTS, productUrl, hubUrl } from '../../lib/platform';
 
 const WHATSAPP_URL = 'https://wa.me/94702470064';
 
@@ -672,6 +673,21 @@ function Footer() {
                   {l}
                 </a>
               ))}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16, fontFamily: 'Poppins,sans-serif' }}>KadeHub Apps</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {PRODUCTS.map(p => (
+                <a key={p.slug} href={productUrl(p.slug, '/')}
+                  style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', textDecoration: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 500 }}>
+                  {p.name}
+                </a>
+              ))}
+              <a href={hubUrl('/')}
+                style={{ fontSize: 14, color: '#f5a623', textDecoration: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 600 }}>
+                All apps →
+              </a>
             </div>
           </div>
           <div>

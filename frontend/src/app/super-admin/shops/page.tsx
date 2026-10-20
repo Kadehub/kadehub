@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import api from '../../../lib/api';
 import { Search, Eye, Lock, Unlock, Store, Trash2, LogIn } from 'lucide-react';
 import { useAuthStore } from '../../../hooks/useAuth';
+import { saveImpersonationBackup } from '../../../lib/session';
+import { productUrl } from '../../../lib/platform';
 import Modal from '../../../components/ui/Modal';
 import toast from 'react-hot-toast';
 
@@ -58,10 +60,10 @@ export default function ShopsPage() {
   async function impersonate(shop: Shop) {
     try {
       const { data } = await api.post(`/super-admin/shops/${shop.id}/impersonate`);
-      sessionStorage.setItem('sa-impersonation-backup', JSON.stringify({ token, user }));
+      saveImpersonationBackup({ token, user });
       setAuth(data.user, data.access_token);
       toast.success(`Logged in as ${shop.name}`);
-      router.push('/dashboard');
+      window.location.assign(productUrl('pos', '/dashboard'));
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Could not impersonate shop');
     }

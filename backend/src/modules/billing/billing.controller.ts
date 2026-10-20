@@ -1,6 +1,6 @@
 import {
   Controller, Get, Post, Patch, Body, UseGuards, BadRequestException,
-  UsePipes, ValidationPipe, UseInterceptors, UploadedFile, Req, Param, HttpCode,
+  UsePipes, ValidationPipe, UseInterceptors, UploadedFile, Req, Param, HttpCode, Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage, memoryStorage } from 'multer';
@@ -23,13 +23,13 @@ export class BillingController {
 
   // Public — no auth needed to view packages
   @Get('packages')
-  getPackages(@Req() req: any) {
+  getPackages(@Req() req: any, @Query('product') product?: string) {
     const ip =
       req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
       req.headers['x-real-ip'] ||
       req.connection?.remoteAddress ||
       req.ip;
-    return this.billingService.getPackagesWithCurrency(ip);
+    return this.billingService.getPackagesWithCurrency(ip, product || undefined);
   }
 
   // Protected routes below
@@ -62,8 +62,8 @@ export class BillingController {
 
   @Get('subscriptions')
   @UseGuards(JwtAuthGuard)
-  getSubscriptions(@CurrentUser() user: any) {
-    return this.billingService.getActiveSubscriptions(user.tenant_id);
+  getSubscriptions(@CurrentUser() user: any, @Query('product') product?: string) {
+    return this.billingService.getActiveSubscriptions(user.tenant_id, product || undefined);
   }
 
   @Get('checkout-info')

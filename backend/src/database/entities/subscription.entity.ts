@@ -6,6 +6,7 @@ export class Subscription {
   @PrimaryGeneratedColumn() id: number;
   @Column() tenant_id: number;
   @Column() module_name: string;
+  @Column({ length: 30, default: 'pos' }) product: string;
   @Column({ type: 'enum', enum: ['active', 'inactive'], default: 'active' }) status: string;
   @Column({ nullable: true }) package_id: number;
   @Column({ type: 'enum', enum: ['monthly', 'yearly'], nullable: true }) billing_cycle: string;

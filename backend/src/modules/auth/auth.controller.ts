@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Param, Body, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto, PinLoginDto } from './auth.dto';
+import { LoginDto, RegisterDto, PinLoginDto, RegisterAccountDto } from './auth.dto';
 
 @Controller('auth')
 @UsePipes(new ValidationPipe({ whitelist: true }))
@@ -10,6 +10,11 @@ export class AuthController {
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Post('register-account')
+  registerAccount(@Body() dto: RegisterAccountDto) {
+    return this.authService.registerAccount(dto);
   }
 
   @Post('login')

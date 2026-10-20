@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import {
   Check, ChevronRight, Building2, ArrowLeft, Loader2,
 } from 'lucide-react';
+import Mascot from '../../../components/brand/Mascot';
 
 type Step = 'account' | 'company' | 'done';
 
@@ -196,9 +197,7 @@ export default function RegisterPage() {
 
         {step === 'done' && (
           <div className="w-full max-w-md kh-card p-10 text-center">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#E0F2F1' }}>
-              <Check size={32} style={{ color: '#00A884' }} />
-            </div>
+            <Mascot size="lg" animation="celebrate" decorative priority className="mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-ink-900 mb-2">You&apos;re all set!</h2>
             <p className="text-ink-400 mb-2">Your 14-day free trial is now active with full access to all modules.</p>
             <p className="text-sm text-ink-400 mb-2">

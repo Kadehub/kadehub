@@ -7,8 +7,10 @@ import { User } from '../../database/entities/user.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
 import { CloudflareService } from '../../common/cloudflare.service';
+import { RESERVED_SUBDOMAINS } from '../../common/products';
 import { BillingService } from '../billing/billing.service';
-import { LoginDto, RegisterDto, PinLoginDto } from './auth.dto';
+import { LoginDto, RegisterDto, PinLoginDto, RegisterAccountDto } from './auth.dto';
+import { ProductAccessService } from '../platform/product-access.service';
 
 const PIN_LOGIN_MAX_ATTEMPTS = 5;
 const PIN_LOGIN_LOCKOUT_MS = 5 * 60 * 1000;
@@ -27,6 +29,7 @@ export class AuthService {
     private jwtService: JwtService,
     private cloudflare: CloudflareService,
     private billingService: BillingService,
+    private productAccess: ProductAccessService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -36,6 +39,7 @@ export class AuthService {
     const existing = await this.userRepo.findOne({ where: { email: dto.email } });
     if (existing) throw new ConflictException('Email already registered');
 
+    if (RESERVED_SUBDOMAINS.has(dto.subdomain)) throw new ConflictException('Subdomain is reserved');
     const subdomainTaken = await this.tenantRepo.findOne({ where: { subdomain: dto.subdomain } });
     if (subdomainTaken) throw new ConflictException('Subdomain already taken');
 
@@ -72,6 +76,28 @@ export class AuthService {
       trial_activated: true,
       trial_days: 14,
     };
+  }
+
+  /** Account sign-up from cod./tasks.: tenant (no shop subdomain) + ADMIN user + the product turned on. */
+  async registerAccount(dto: RegisterAccountDto) {
+    const email = dto.email.trim().toLowerCase();
+    const existing = await this.userRepo
+      .createQueryBuilder('u')
+      .where('LOWER(u.email) = :email', { email })
+      .getOne();
+    if (existing) throw new ConflictException('Email already registered — sign in and enable this product from your apps page');
+
+    const name = (dto.product === 'cod' && dto.businessName?.trim()) || dto.name.trim();
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const slug = (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'account') + '-' + randomSuffix;
+    const tenant = await this.tenantRepo.save(this.tenantRepo.create({ name, slug, status: 'active' }));
+
+    const hash = await bcrypt.hash(dto.password, 10);
+    const user = await this.userRepo.save(this.userRepo.create({
+      tenant_id: tenant.id, name: dto.name.trim(), email, password_hash: hash, role: 'ADMIN',
+    }));
+    await this.productAccess.enableProduct(tenant.id, dto.product);
+    return this.signToken(user);
   }
 
   private parsePlanNote(note: string | null): Record<string, any> {
@@ -138,8 +164,7 @@ export class AuthService {
   }
 
   async checkSubdomain(subdomain: string) {
-    const reserved = ['www', 'api', 'app', 'admin', 'mail', 'ftp', 'kadehub', 'support', 'billing', 'dashboard'];
-    if (reserved.includes(subdomain)) return { available: false, reason: 'reserved' };
+    if (RESERVED_SUBDOMAINS.has(subdomain)) return { available: false, reason: 'reserved' };
     const taken = await this.tenantRepo.findOne({ where: { subdomain } });
     return { available: !taken };
   }

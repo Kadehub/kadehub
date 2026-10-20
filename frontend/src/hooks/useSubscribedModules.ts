@@ -7,7 +7,7 @@ export function useSubscribedModules() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    api.get('/billing/subscriptions')
+    api.get('/billing/subscriptions?product=pos')
       .then(r => {
         const subs = Array.isArray(r.data) ? r.data : [];
         // deduplicate module names

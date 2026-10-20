@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAuthStore } from '../../hooks/useAuth';
 import Sidebar from '../../components/ui/Sidebar';
 import LanguageSwitcher from '../../components/ui/LanguageSwitcher';
@@ -8,6 +8,8 @@ import { useLang } from '../../hooks/useLang';
 import { TranslationKey } from '../../lib/i18n';
 import { Wifi, WifiOff, X, Info, AlertTriangle, CheckCircle, AlertCircle, Menu } from 'lucide-react';
 import api from '../../lib/api';
+import { readAuthToken, readImpersonationBackup, clearImpersonationBackup } from '../../lib/session';
+import { hubUrl } from '../../lib/platform';
 
 const pageTitleKeys: Record<string, TranslationKey> = {
   '/dashboard': 'page.dashboard',
@@ -39,7 +41,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const setAuth = useAuthStore((s) => s.setAuth);
   const setLogoUrl = useAuthStore((s) => s.setLogoUrl);
   const pathname = usePathname();
-  const router = useRouter();
   const [impersonating, setImpersonating] = useState(false);
   const { t } = useLang();
   const [online, setOnline] = useState(true);
@@ -48,35 +49,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Detect logout in another tab
+  // The session cookie is shared by every product subdomain, so pick up a logout
+  // (or a different login) from another tab whenever this one regains focus.
   useEffect(() => {
-    const handler = (e: StorageEvent) => {
-      if (e.key === 'auth-store' && !e.newValue) {
-        window.location.href = '/login';
-      }
+    const sync = () => {
+      if (document.visibilityState === 'hidden') return;
+      if (!readAuthToken()) window.location.href = '/login';
+      else useAuthStore.persist.rehydrate();
     };
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
+    window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', sync);
+    return () => {
+      window.removeEventListener('focus', sync);
+      document.removeEventListener('visibilitychange', sync);
+    };
   }, []);
 
   // Wait for client-side mount
   useEffect(() => {
     setMounted(true);
-    setImpersonating(!!sessionStorage.getItem('sa-impersonation-backup'));
+    setImpersonating(!!readImpersonationBackup());
   }, []);
 
   function exitImpersonation() {
-    const raw = sessionStorage.getItem('sa-impersonation-backup');
-    if (!raw) return;
-    try {
-      const { token: saToken, user: saUser } = JSON.parse(raw);
-      sessionStorage.removeItem('sa-impersonation-backup');
-      setAuth(saUser, saToken);
-      router.push('/super-admin/shops');
-    } catch {
-      sessionStorage.removeItem('sa-impersonation-backup');
-      router.push('/super-admin/login');
+    const backup = readImpersonationBackup();
+    clearImpersonationBackup();
+    if (!backup) {
+      window.location.assign(hubUrl('/super-admin/login'));
+      return;
     }
+    setAuth(backup.user, backup.token);
+    window.location.assign(hubUrl('/super-admin/shops'));
   }
 
   // Redirect if no token after mount
@@ -100,7 +103,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       window.location.href = '/super-admin';
       return;
     }
-    api.get('/billing/subscriptions').then(({ data }) => {
+    api.get('/billing/subscriptions?product=pos').then(({ data }) => {
       const now = new Date();
       const hasPaid = data.some((s: any) => s.payment_status === 'paid');
       const trialActive = data.some((s: any) => s.payment_status === 'trial' && (!s.expires_at || new Date(s.expires_at) > now));

@@ -46,7 +46,7 @@ export default function SettingsPage() {
     }).catch(() => {});
 
     Promise.all([
-      api.get('/billing/subscriptions'),
+      api.get('/billing/subscriptions?product=pos'),
       api.get('/billing/transactions'),
       api.get('/billing/invoices'),
       api.get('/billing/packages'),
@@ -120,7 +120,7 @@ export default function SettingsPage() {
           window.history.replaceState({}, '', '/settings?tab=billing');
           setBillingLoaded(false);
           Promise.all([
-            api.get('/billing/subscriptions'),
+            api.get('/billing/subscriptions?product=pos'),
             api.get('/billing/transactions'),
             api.get('/billing/invoices'),
             api.get('/billing/packages'),

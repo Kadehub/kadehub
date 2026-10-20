@@ -1,8 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { User } from '../types';
+import { authCookieStorage } from '../lib/session';
 
 interface AuthStore {
   user: User | null;
@@ -23,7 +24,8 @@ export const useAuthStore = create<AuthStore>()(
       setLogoUrl: (logoUrl) => set({ logoUrl }),
       logout: () => set({ user: null, token: null, logoUrl: null }),
     }),
-    { name: 'auth-store' },
+    // Cookie on the parent domain, so one login covers every product subdomain
+    { name: 'auth-store', storage: createJSONStorage(() => authCookieStorage) },
   ),
 );
 

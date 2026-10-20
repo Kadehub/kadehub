@@ -1,6 +1,8 @@
 import { DataSource } from 'typeorm';
 import { Logger } from '@nestjs/common';
 import { MIGRATIONS } from './migrations';
+import { COD_MIGRATIONS } from './migrations-cod';
+import { TASKS_MIGRATIONS } from './migrations-tasks';
 
 const logger = new Logger('Migrations');
 
@@ -21,7 +23,7 @@ export async function runPendingMigrations(ds: DataSource) {
   const appliedRows: Array<{ id: string }> = await ds.query('SELECT id FROM schema_migration');
   const applied = new Set(appliedRows.map(r => r.id));
 
-  for (const migration of MIGRATIONS) {
+  for (const migration of [...MIGRATIONS, ...COD_MIGRATIONS, ...TASKS_MIGRATIONS]) {
     if (applied.has(migration.id)) continue;
     logger.log(`Applying ${migration.id}…`);
     try {

@@ -5,6 +5,7 @@ import api from '../../../lib/api';
 import { ShoppingCart, TrendingUp, AlertTriangle, CreditCard, Package, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '../../../hooks/useAuth';
+import Mascot from '../../../components/brand/Mascot';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -36,11 +37,14 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Greeting */}
-      <div>
-        <h2 className="text-xl font-bold text-ink-800">{greeting()}, {user?.name?.split(' ')[0]} 👋</h2>
-        <p className="text-sm text-ink-400 mt-0.5">
-          {new Date().toLocaleDateString('en-LK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
+      <div className="flex items-center gap-3">
+        <Mascot size="xs" animation="enter" decorative priority />
+        <div>
+          <h2 className="text-xl font-bold text-ink-800">{greeting()}, {user?.name?.split(' ')[0]}</h2>
+          <p className="text-sm text-ink-400 mt-0.5">
+            {new Date().toLocaleDateString('en-LK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
       </div>
 
       {/* Today's KPIs */}

@@ -150,3 +150,25 @@ input:focus, select:focus, textarea:focus {
   .kh-badge-orange { background: #FFF8E1; color: #F59E0B; }
   .kh-badge-red    { background: #FFF0F0; color: #E53E3E; }
 }
+
+/* ── Capybara mascot (components/brand/Mascot.tsx) ── */
+@keyframes kh-mascot-enter {
+  from { opacity: 0; transform: translateY(6px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes kh-mascot-celebrate {
+  0%   { opacity: 0; transform: scale(0.9); }
+  40%  { opacity: 1; transform: translateY(-10px) scale(1.03); }
+  65%  { transform: translateY(0) scale(0.99); }
+  100% { transform: none; }
+}
+@keyframes kh-mascot-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+.kh-mascot-enter     { animation: kh-mascot-enter 0.45s ease-out both; }
+.kh-mascot-celebrate { animation: kh-mascot-celebrate 0.8s cubic-bezier(.34,1.56,.64,1) both; }
+.kh-mascot-bob       { animation: kh-mascot-bob 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .kh-mascot-enter, .kh-mascot-celebrate, .kh-mascot-bob { animation: none; }
+}

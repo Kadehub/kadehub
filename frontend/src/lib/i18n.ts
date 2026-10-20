@@ -21,6 +21,7 @@ export const translations = {
     'nav.reports': 'Reports',
     'nav.staff': 'Staff',
     'nav.settings': 'Settings',
+    'nav.apps': 'KadeHub apps',
     'nav.signOut': 'Sign out',
     // Page titles
     'page.dashboard': 'Dashboard',
@@ -262,6 +263,7 @@ export const translations = {
     'nav.reports': 'වාර්තා',
     'nav.staff': 'කාර්යමණ්ඩලය',
     'nav.settings': 'සැකසුම්',
+    'nav.apps': 'KadeHub ඇප්ස්',
     'nav.signOut': 'ඉවත් වන්න',
     // Page titles
     'page.dashboard': 'උපකරණ පුවරුව',

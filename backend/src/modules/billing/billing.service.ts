@@ -13,6 +13,7 @@ import { InvoiceService } from './invoice.service';
 import { EmailService } from '../../common/email.service';
 import { getBankDetails, saveBankDetails, isOnepayConfigured } from '../../common/bank-details';
 import * as https from 'https';
+import { DEFAULT_PRODUCT } from '../../common/products';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -90,10 +91,10 @@ export class BillingService {
     }
   }
 
-  async getPackagesWithCurrency(ip: string) {
+  async getPackagesWithCurrency(ip: string, product = DEFAULT_PRODUCT) {
     try {
       const packages = await this.packageRepo.find({
-        where: { is_active: true },
+        where: { is_active: true, product },
         relations: ['modules'],
         order: { sort_order: 'ASC' },
       });
@@ -154,9 +155,10 @@ export class BillingService {
     }
   }
 
-  async getActiveSubscriptions(tenantId: number) {
+  /** Active subscriptions for a tenant, optionally limited to one product (pos, cod, tasks). */
+  async getActiveSubscriptions(tenantId: number, product?: string) {
     try {
-      const all = await this.subRepo.find({ where: { tenant_id: tenantId, status: 'active' } });
+      const all = await this.subRepo.find({ where: { tenant_id: tenantId, status: 'active', ...(product ? { product } : {}) } });
       // Deduplicate by module_name — keep latest
       const seen = new Map<string, typeof all[0]>();
       for (const sub of all) {
@@ -483,7 +485,7 @@ export class BillingService {
   async activateTrial(tenantId: number) {
     await this.tenantRepo.update(tenantId, { status: 'active' });
 
-    const existing = await this.subRepo.findOne({ where: { tenant_id: tenantId } });
+    const existing = await this.subRepo.findOne({ where: { tenant_id: tenantId, product: 'pos' } });
     if (existing) return;
 
     const modules = ['pos', 'inventory', 'customer', 'analytics', 'expense', 'credit', 'discount', 'supplier', 'batch', 'staff'];
@@ -492,6 +494,7 @@ export class BillingService {
     await this.subRepo.save(
       modules.map(m => this.subRepo.create({
         tenant_id: tenantId,
+        product: 'pos',
         module_name: m,
         status: 'active',
         payment_status: 'trial',
@@ -700,10 +703,12 @@ export class BillingService {
     if (tx.billing_cycle === 'yearly') expiresAt.setFullYear(expiresAt.getFullYear() + 1);
     else expiresAt.setMonth(expiresAt.getMonth() + 1);
 
-    await this.subRepo.delete({ tenant_id: tx.tenant_id });
+    // Replace only this product's subscriptions — a COD plan must not wipe out POS
+    await this.subRepo.delete({ tenant_id: tx.tenant_id, product: pkg.product });
 
     const subs = pkg.modules.map(m => this.subRepo.create({
       tenant_id: tx.tenant_id,
+      product: pkg.product,
       module_name: m.module_name,
       status: 'active',
       package_id: pkg.id,

@@ -11,7 +11,8 @@ import { ProductImage, getCategoryConfig } from '../../../components/ui/ProductI
 import { LKR } from '../../../lib/format';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
-import { Plus, Search, Package, Pencil, Camera, X, Trash2 } from 'lucide-react';
+import { Plus, Search, Pencil, Camera, X, Trash2 } from 'lucide-react';
+import { MascotState } from '../../../components/brand/Mascot';
 
 const CATEGORIES = ['Grocery', 'Dairy', 'Bakery', 'Beverages', 'Snacks', 'Pharmacy', 'Personal Care', 'Household', 'Vegetables', 'Fruits', 'Meat', 'Other'];
 const EMPTY_FORM = { name: '', barcode: '', price: '', cost: '', category: 'Grocery', initialStock: '0', reorderLevel: '10' };
@@ -158,12 +159,17 @@ export default function ProductsPage() {
 
         {/* Table */}
         {loading ? (
-          <div className="py-16 text-center text-ink-400 text-sm">Loading products…</div>
+          <MascotState variant="loading" size="sm" description="Loading products…" className="py-12" />
         ) : filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <Package size={32} className="mx-auto mb-2 text-ink-200" />
-            <p className="text-sm text-ink-400">{search ? 'No products match your search' : 'No products yet'}</p>
-          </div>
+          <MascotState
+            size="sm"
+            className="py-12"
+            title={search ? 'No products match your search' : 'No products yet'}
+            description={search ? undefined : 'Add your first product to start selling.'}
+            action={search ? undefined : (
+              <Button size="sm" icon={<Plus size={15} />} onClick={() => setShowAdd(true)}>Add Product</Button>
+            )}
+          />
         ) : (
           <div className="overflow-x-auto">
           <table className="mob-cards w-full text-sm">

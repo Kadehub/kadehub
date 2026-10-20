@@ -1,0 +1,133 @@
+import type { DataSource } from 'typeorm';
+import type { Migration } from './migrations';
+import { tableExists } from './migration-utils';
+import { COD_PLANS } from '../modules/cod/cod-plans';
+
+/** Column spec: name, Postgres type, MySQL type (constraints included). */
+type Col = [string, string, string];
+
+const ID: Col = ['id', 'SERIAL PRIMARY KEY', 'INT NOT NULL AUTO_INCREMENT PRIMARY KEY'];
+const TENANT: Col = ['tenant_id', 'INT NOT NULL REFERENCES tenant(id) ON DELETE CASCADE', 'INT NOT NULL'];
+const CREATED: Col = ['created_at', 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP'];
+const UPDATED: Col = ['updated_at', 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'];
+const money = (name: string, def = '0'): Col => [name, `DECIMAL(14,2) NOT NULL DEFAULT ${def}`, `DECIMAL(14,2) NOT NULL DEFAULT ${def}`];
+const text = (name: string, len = 255, def = "''"): Col => [name, `VARCHAR(${len}) NOT NULL DEFAULT ${def}`, `VARCHAR(${len}) NOT NULL DEFAULT ${def}`];
+
+/** CREATE TABLE for either dialect; `extra` holds table constraints written for both (UNIQUE …). */
+async function createTable(ds: DataSource, pg: boolean, table: string, cols: Col[], extra: string[] = [], mysqlOnly: string[] = []) {
+  if (await tableExists(ds, table)) return;
+  const q = (n: string) => (pg ? n : `\`${n}\``);
+  const body = [
+    ...cols.map(([n, p, m]) => `${q(n)} ${pg ? p : m}`),
+    ...extra,
+    ...(pg ? [] : mysqlOnly),
+  ].join(',\n  ');
+  await ds.query(`CREATE TABLE ${q(table)} (\n  ${body}\n)`);
+}
+
+async function createIndex(ds: DataSource, pg: boolean, name: string, table: string, cols: string) {
+  if (pg) await ds.query(`CREATE INDEX IF NOT EXISTS ${name} ON ${table} (${cols})`);
+  else await ds.query(`CREATE INDEX ${name} ON \`${table}\` (${cols})`).catch(() => {});
+}
+
+export const COD_MIGRATIONS: Migration[] = [
+  {
+    id: '100_cod_schema',
+    up: async (ds, dialect) => {
+      const pg = dialect === 'postgres';
+      const bool = (name: string, def: boolean): Col => [name, `BOOLEAN NOT NULL DEFAULT ${def ? 'TRUE' : 'FALSE'}`, `TINYINT(1) NOT NULL DEFAULT ${def ? 1 : 0}`];
+      const tenantFk = 'FOREIGN KEY (`tenant_id`) REFERENCES `tenant` (`id`) ON DELETE CASCADE';
+
+      // One business profile per tenant: name, branding and business type used across COD
+      await createTable(ds, pg, 'cod_business', [
+        ID, TENANT,
+        text('name'), text('phone', 40), text('address', 300), text('city', 100),
+        ['logo_url', 'VARCHAR(500) NULL', 'VARCHAR(500) NULL'],
+        text('business_type', 40, "'general'"), text('tagline', 100),
+        text('brand_color', 7, "'#0f172a'"), text('invoice_footer', 300),
+        bool('imports_goods', true),
+        CREATED, UPDATED,
+      ], ['UNIQUE (tenant_id)'], [tenantFk]);
+
+      await createTable(ds, pg, 'cod_item', [
+        ID, TENANT,
+        text('name'), text('sku', 100), text('category', 100, "'Uncategorized'"),
+        ['image_url', 'VARCHAR(500) NULL', 'VARCHAR(500) NULL'],
+        text('cost_currency', 3, "'LKR'"),
+        ['buying_price', 'DECIMAL(14,4) NOT NULL DEFAULT 0', 'DECIMAL(14,4) NOT NULL DEFAULT 0'],
+        ['exchange_rate', 'DECIMAL(14,6) NOT NULL DEFAULT 1', 'DECIMAL(14,6) NOT NULL DEFAULT 1'],
+        money('shipping_cost'), money('customs_price'), money('other_cost'), money('selling_price'),
+        ['stock_quantity', 'INT NOT NULL DEFAULT 0', 'INT NOT NULL DEFAULT 0'],
+        ['low_stock_threshold', 'INT NOT NULL DEFAULT 5', 'INT NOT NULL DEFAULT 5'],
+        // Stored by the service on every save (Postgres generated columns in the original)
+        money('landed_cost'), money('profit_per_unit'),
+        CREATED, UPDATED,
+      ], ['UNIQUE (tenant_id, sku)'], [tenantFk]);
+      await createIndex(ds, pg, 'cod_item_category_idx', 'cod_item', 'tenant_id, category');
+
+      await createTable(ds, pg, 'cod_expense', [
+        ID, TENANT,
+        text('title'), text('category', 100, "'Misc'"), money('amount'),
+        ['expense_date', 'DATE NOT NULL', 'DATE NOT NULL'],
+        ['notes', 'TEXT NULL', 'TEXT NULL'],
+        CREATED,
+      ], [], [tenantFk]);
+      await createIndex(ds, pg, 'cod_expense_date_idx', 'cod_expense', 'tenant_id, expense_date');
+
+      await createTable(ds, pg, 'cod_order', [
+        ID, TENANT,
+        text('invoice_number', 30), text('customer_name'), text('customer_phone', 40),
+        text('customer_address', 300), text('city', 100),
+        text('status', 20, "'pending'"),
+        money('subtotal'), money('delivery_charge'), money('discount'), money('total_amount'),
+        ['notes', 'TEXT NULL', 'TEXT NULL'],
+        bool('stock_deducted', false),
+        CREATED, UPDATED,
+      ], ['UNIQUE (tenant_id, invoice_number)'], [tenantFk]);
+      await createIndex(ds, pg, 'cod_order_status_idx', 'cod_order', 'tenant_id, status');
+      await createIndex(ds, pg, 'cod_order_date_idx', 'cod_order', 'tenant_id, created_at');
+
+      await createTable(ds, pg, 'cod_order_item', [
+        ID, TENANT,
+        ['order_id', 'INT NOT NULL REFERENCES cod_order(id) ON DELETE CASCADE', 'INT NOT NULL'],
+        // Nullable so an item can be deleted later; the name/price snapshot keeps the invoice intact
+        ['item_id', 'INT NULL REFERENCES cod_item(id) ON DELETE SET NULL', 'INT NULL'],
+        text('item_name'),
+        ['quantity', 'INT NOT NULL DEFAULT 1', 'INT NOT NULL DEFAULT 1'],
+        money('unit_price'), money('line_total'),
+      ], [], [
+        tenantFk,
+        'FOREIGN KEY (`order_id`) REFERENCES `cod_order` (`id`) ON DELETE CASCADE',
+        'FOREIGN KEY (`item_id`) REFERENCES `cod_item` (`id`) ON DELETE SET NULL',
+      ]);
+      await createIndex(ds, pg, 'cod_order_item_order_idx', 'cod_order_item', 'order_id');
+    },
+  },
+  {
+    id: '101_cod_packages',
+    up: async (ds, dialect) => {
+      // COD plans live in the shared package table (product = 'cod') so the existing
+      // bank-transfer / OnePay checkout can sell them; each grants the single 'cod' module.
+      const pg = dialect === 'postgres';
+      const p = (i: number) => (pg ? `$${i}` : '?');
+      for (const plan of COD_PLANS) {
+        const found: Array<{ id: number }> = await ds.query(`SELECT id FROM package WHERE slug = ${p(1)}`, [plan.slug]);
+        let packageId = found[0]?.id;
+        if (!packageId) {
+          const values = [plan.slug, plan.name, plan.description, plan.monthly_price_lkr, plan.monthly_price_lkr * 12, plan.sort_order, plan.slug === 'cod-pro'];
+          const cols = 'slug, name, description, price_monthly, price_yearly, sort_order, is_popular, is_active, product';
+          const ph = values.map((_, i) => p(i + 1)).join(', ');
+          if (pg) {
+            const rows = await ds.query(`INSERT INTO package (${cols}) VALUES (${ph}, TRUE, 'cod') RETURNING id`, values);
+            packageId = rows[0].id;
+          } else {
+            await ds.query(`INSERT INTO package (${cols}) VALUES (${ph}, 1, 'cod')`, values);
+            packageId = (await ds.query('SELECT id FROM package WHERE slug = ?', [plan.slug]))[0].id;
+          }
+        }
+        const mod = await ds.query(`SELECT id FROM package_module WHERE package_id = ${p(1)} AND module_name = 'cod'`, [packageId]);
+        if (!mod.length) await ds.query(`INSERT INTO package_module (package_id, module_name) VALUES (${p(1)}, 'cod')`, [packageId]);
+      }
+    },
+  },
+];

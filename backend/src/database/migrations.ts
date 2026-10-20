@@ -1,5 +1,7 @@
 import { DataSource } from 'typeorm';
+import { Logger } from '@nestjs/common';
 import { addColumn, addEnumValue, tableExists } from './migration-utils';
+import { PRODUCTS } from '../common/products';
 
 export type Migration = {
   id: string;
@@ -282,6 +284,24 @@ export const MIGRATIONS: Migration[] = [
     up: async (ds) => {
       await addColumn(ds, 'quotation', 'line_items', 'JSON NULL');
       await addColumn(ds, 'quotation', 'billing_cycle', "ENUM('monthly','yearly') NULL");
+    },
+  },
+  {
+    id: '010_multi_product',
+    up: async (ds, dialect) => {
+      // Packages and subscriptions now belong to a product; everything that exists today is POS.
+      await addColumn(ds, 'package', 'product', "VARCHAR(30) NOT NULL DEFAULT 'pos'");
+      await addColumn(ds, 'subscription', 'product', "VARCHAR(30) NOT NULL DEFAULT 'pos'");
+
+      // Product subdomains are now reserved — flag any shop that already holds one.
+      const subs = PRODUCTS.map(p => p.subdomain);
+      const placeholders = dialect === 'postgres' ? subs.map((_, i) => `$${i + 1}`).join(',') : subs.map(() => '?').join(',');
+      const clashes: Array<{ id: number; subdomain: string }> = await ds.query(
+        `SELECT id, subdomain FROM tenant WHERE subdomain IN (${placeholders})`, subs,
+      );
+      for (const c of clashes) {
+        new Logger('Migrations').warn(`Tenant ${c.id} owns product subdomain '${c.subdomain}' — rename it before routing that product`);
+      }
     },
   },
 ];

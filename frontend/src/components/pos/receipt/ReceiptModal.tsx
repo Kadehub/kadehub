@@ -102,10 +102,10 @@ export default function ReceiptModal({ data, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center sm:p-4 animate-fade-in">
       <div className="absolute inset-0 bg-ink-900/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-modal overflow-hidden animate-slide-up flex flex-col"
-        style={{ maxHeight: '90vh' }}>
+      {/* Full screen on phones, centred card from sm: up */}
+      <div className="relative w-full max-w-4xl h-[100dvh] sm:h-auto sm:max-h-[90vh] bg-white sm:rounded-2xl shadow-modal overflow-hidden animate-slide-up flex flex-col">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-ink-100 flex-shrink-0">

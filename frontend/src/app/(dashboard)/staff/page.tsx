@@ -152,7 +152,9 @@ export default function StaffPage() {
     } finally { setSaving(false); }
   };
 
-  const EmpForm = ({ mode }: { mode: 'add' | 'edit' }) => (
+  // A render function, not a component: declaring a component inside this one made React remount
+  // the form on every keystroke, so each input lost focus after one character.
+  const renderEmpForm = (mode: 'add' | 'edit') => (
     <form onSubmit={(e) => submitEmployee(e, mode)} className="space-y-4">
       {/* Photo picker */}
       <div className="flex items-center gap-4">
@@ -425,12 +427,12 @@ export default function StaffPage() {
 
       {/* Add Employee Modal */}
       <Modal open={showAddEmployee} onClose={() => { setShowAddEmployee(false); setEmpPhoto(null); setEmpPhotoPreview(''); }} title={t('staff.addEmployee')} width="max-w-lg">
-        <EmpForm mode="add" />
+        {renderEmpForm('add')}
       </Modal>
 
       {/* Edit Employee Modal */}
       <Modal open={!!editEmployee} onClose={() => { setEditEmployee(null); setEmpPhoto(null); setEmpPhotoPreview(''); }} title={t('staff.editEmployee')} width="max-w-lg">
-        <EmpForm mode="edit" />
+        {renderEmpForm('edit')}
       </Modal>
 
       {/* Open Shift Modal */}

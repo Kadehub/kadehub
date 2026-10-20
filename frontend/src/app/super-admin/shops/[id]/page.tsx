@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import api from '../../../../lib/api';
+import Modal from '../../../../components/ui/Modal';
 import { ArrowLeft, Lock, Unlock, RefreshCw, Users, CreditCard, Package, AlertTriangle } from 'lucide-react';
 
 export default function ShopDetailPage() {
@@ -202,10 +203,8 @@ export default function ShopDetailPage() {
       </div>
 
       {/* Change Plan Modal */}
-      {planModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-lg font-bold text-ink-900 mb-1">Change Plan</h3>
+      <Modal open={planModal} onClose={() => setPlanModal(false)} title="Change Plan" width="max-w-md">
+          <div>
             <p className="text-sm text-ink-400 mb-5">Updating plan for <span className="font-semibold text-ink-700">{tenant.name}</span></p>
             <div className="space-y-4">
               <div>
@@ -233,7 +232,7 @@ export default function ShopDetailPage() {
                   className="border border-ink-200 rounded-xl px-4 py-2.5 text-sm w-full focus:outline-none" />
               </div>
             </div>
-            <div className="flex gap-3 mt-6">
+            <div className="kh-modal-actions flex gap-3 mt-6">
               <button onClick={() => setPlanModal(false)}
                 className="flex-1 px-4 py-2.5 border border-ink-200 rounded-xl text-sm font-semibold hover:bg-ink-50">Cancel</button>
               <button onClick={changePlan} disabled={saving || !planForm.package_id}
@@ -242,8 +241,7 @@ export default function ShopDetailPage() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+      </Modal>
     </div>
   );
 }

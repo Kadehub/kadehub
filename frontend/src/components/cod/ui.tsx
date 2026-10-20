@@ -128,9 +128,8 @@ export const tbl = {
 
 export function Dialog({ open, onClose, title, children, width }: { open: boolean; onClose: () => void; title: string; children: ReactNode; width?: string }) {
   return (
-    <Modal open={open} onClose={onClose} title={title} width={width}>
-      <div className="max-h-[75vh] overflow-y-auto -mx-6 px-6">{children}</div>
-    </Modal>
+    // Modal scrolls its own body (and pins the submit row), so no extra scroll box here
+    <Modal open={open} onClose={onClose} title={title} width={width}>{children}</Modal>
   );
 }
 

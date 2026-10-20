@@ -179,8 +179,10 @@ export default function ExpensesPage() {
             </select>
           </div>
           <Input label={t('expenses.description')} required value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
-          <Input label={t('expenses.amountLkr')} type="number" required min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} />
-          <Input label={t('expenses.date')} type="date" required value={form.expense_date} onChange={e => setForm(f => ({ ...f, expense_date: e.target.value }))} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label={t('expenses.amountLkr')} type="number" required min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} />
+            <Input label={t('expenses.date')} type="date" required value={form.expense_date} onChange={e => setForm(f => ({ ...f, expense_date: e.target.value }))} />
+          </div>
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={() => setShowModal(false)}>{t('common.cancel')}</Button>
             <Button type="submit" className="flex-1" loading={saving}>{t('expenses.save')}</Button>

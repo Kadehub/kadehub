@@ -120,11 +120,12 @@ export function OrderForm({ items, onCreated }: { items: Item[]; onCreated?: () 
       <Button onClick={() => setOpen(true)}><Plus /> {t('orders.new')}</Button>
       <Dialog open={open} onClose={() => { setOpen(false); reset(); }} title={t('orders.formTitle')} width="max-w-2xl">
         <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field label={t('orders.customerName')} htmlFor="customer_name"><TextInput id="customer_name" required {...c('customer_name')} /></Field>
+          {/* Two columns even on phones: phone + city share a row so the order fits on one screen */}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t('orders.customerName')} htmlFor="customer_name" className="col-span-2 sm:col-span-1"><TextInput id="customer_name" required {...c('customer_name')} /></Field>
             <Field label={t('common.phone')} htmlFor="customer_phone"><TextInput id="customer_phone" type="tel" {...c('customer_phone')} /></Field>
-            <Field label={t('common.address')} htmlFor="customer_address"><TextInput id="customer_address" {...c('customer_address')} /></Field>
-            <Field label={t('common.city')} htmlFor="city"><TextInput id="city" {...c('city')} /></Field>
+            <Field label={t('common.city')} htmlFor="city" className="sm:order-last"><TextInput id="city" {...c('city')} /></Field>
+            <Field label={t('common.address')} htmlFor="customer_address" className="col-span-2 sm:col-span-1"><TextInput id="customer_address" {...c('customer_address')} /></Field>
           </div>
 
           <div className="space-y-2">
@@ -171,17 +172,17 @@ export function OrderForm({ items, onCreated }: { items: Item[]; onCreated?: () 
           </div>
           <Field label={t('common.notes')} htmlFor="notes"><TextArea id="notes" rows={2} {...c('notes')} /></Field>
 
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-ink-200 bg-ink-50 p-3 text-sm">
-            <span className="text-ink-500">
-              {t('orders.summary', { subtotal: formatLKR(subtotal), delivery: formatLKR(deliveryCharge) })}
-              {discount > 0 && t('orders.summaryDiscount', { discount: formatLKR(discount) })}
-            </span>
-            <span className="text-base font-bold text-ink-900">{formatLKR(total)}</span>
-          </div>
-
           {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-          <div className="flex justify-end">
-            <Button type="submit" disabled={pending}>{pending ? t('orders.creating') : t('orders.create')}</Button>
+          {/* Total sits with the button in the pinned bar, so it's always visible while filling the form */}
+          <div className="flex items-center justify-between gap-3">
+            <span className="min-w-0 text-sm">
+              <span className="block text-base font-bold text-ink-900">{formatLKR(total)}</span>
+              <span className="block truncate text-xs text-ink-500">
+                {t('orders.summary', { subtotal: formatLKR(subtotal), delivery: formatLKR(deliveryCharge) })}
+                {discount > 0 && t('orders.summaryDiscount', { discount: formatLKR(discount) })}
+              </span>
+            </span>
+            <Button type="submit" disabled={pending} className="flex-shrink-0">{pending ? t('orders.creating') : t('orders.create')}</Button>
           </div>
         </form>
       </Dialog>

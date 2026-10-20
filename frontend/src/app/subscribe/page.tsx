@@ -4,7 +4,9 @@ import { useAuthStore } from '../../hooks/useAuth';
 import api from '../../lib/api';
 import { LKR } from '../../lib/format';
 import BankTransferForm from '../../components/billing/BankTransferForm';
-import { Check, ArrowLeft, Star, Clock } from 'lucide-react';
+import { Check, ArrowLeft, Star, Clock, ArrowRight } from 'lucide-react';
+import ProductIcon from '../../components/platform/ProductIcon';
+import { hubUrl } from '../../lib/platform';
 
 const fmt = (n: number, currency: string) =>
   currency === 'USD'
@@ -22,6 +24,9 @@ export default function SubscribePage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  // Accounts that came from COD or Tasks have never had POS: offer the trial instead of "your trial has ended"
+  const [neverStarted, setNeverStarted] = useState<boolean | null>(null);
+  const [starting, setStarting] = useState(false);
 
   const loadCheckoutInfo = () => {
     setLoading(true);
@@ -35,6 +40,9 @@ export default function SubscribePage() {
     }).catch(() => {
       setLoadError(true);
     }).finally(() => setLoading(false));
+    api.get('/billing/subscriptions?product=pos').then(r => {
+      setNeverStarted(Array.isArray(r.data) && r.data.length === 0);
+    }).catch(() => setNeverStarted(false));
     api.get('/billing/bank-transfer/mine').then(r => {
       const pending = (Array.isArray(r.data) ? r.data : []).find((t: any) => t.status === 'pending');
       if (pending) setPendingSlip(pending);
@@ -73,7 +81,37 @@ export default function SubscribePage() {
     );
   }
 
-  if (loading) {
+  async function startTrial() {
+    setStarting(true);
+    try {
+      await api.post('/platform/enable/pos');
+      window.location.href = '/dashboard';
+    } catch (err: any) {
+      setStarting(false);
+      alert(err?.response?.data?.message ?? 'Could not start the trial. Please try again.');
+    }
+  }
+
+  if (!loading && neverStarted === true && !pendingSlip) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg,#0a4f40,#0d6e5a)' }}>
+        <div className="group w-full max-w-md bg-white rounded-2xl p-8 text-center shadow-sm">
+          <div className="flex justify-center"><ProductIcon slug="pos" color="#00A884" size={56} /></div>
+          <h2 className="mt-4 text-xl font-bold text-ink-900">Start using KadeHub POS</h2>
+          <p className="mt-2 text-sm text-ink-500">
+            Your KadeHub account doesn’t use POS yet. Start a 14-day free trial with every module unlocked. No payment needed.
+          </p>
+          <button onClick={startTrial} disabled={starting}
+            className="kh-btn-primary mt-6 w-full py-3 rounded-xl font-bold inline-flex items-center justify-center gap-2 disabled:opacity-60">
+            {starting ? 'Starting…' : <>Start free trial <ArrowRight size={16} /></>}
+          </button>
+          <a href={hubUrl('/apps')} className="mt-4 inline-block text-sm font-semibold" style={{ color: '#00A884' }}>Back to your apps</a>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || neverStarted === null) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg,#0a4f40,#0d6e5a)' }}>
         <div className="w-8 h-8 rounded-full border-2 border-white/30 border-t-white animate-spin" />

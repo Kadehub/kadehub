@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { PRODUCTS, resolveHost, productForHost, ROOT_DOMAIN, type ProductDef } from './lib/platform';
 
 /** Served only on the hub (bare domain). */
-const HUB_PATHS = ['/hub', '/apps', '/super-admin', '/portfolio'];
+const HUB_PATHS = ['/hub', '/apps', '/account', '/super-admin', '/portfolio'];
 /** Served on every host as-is: one login page for the whole platform. */
 const SHARED_PATHS = ['/login'];
 /** Products whose pages live under src/app/<slug>; POS owns the app root. */

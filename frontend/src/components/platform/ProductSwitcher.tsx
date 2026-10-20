@@ -31,9 +31,14 @@ export default function ProductSwitcher({ current, label }: { current: ProductSl
               </a>
             );
           })}
-          <a href={hubUrl('/apps')} className="block mt-1 px-2.5 py-2 rounded-lg text-xs font-semibold text-ink-500 hover:bg-ink-50 border-t border-ink-100">
-            All apps →
-          </a>
+          <div className="mt-1 pt-1 border-t border-ink-100">
+            <a href={hubUrl('/account')} className="block px-2.5 py-2 rounded-lg text-xs font-semibold text-ink-500 hover:bg-ink-50">
+              Account & subscriptions
+            </a>
+            <a href={hubUrl('/apps')} className="block px-2.5 py-2 rounded-lg text-xs font-semibold text-ink-500 hover:bg-ink-50">
+              All apps →
+            </a>
+          </div>
         </div>
       )}
       <button onClick={() => setOpen(o => !o)}

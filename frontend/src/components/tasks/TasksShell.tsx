@@ -113,6 +113,9 @@ export default function TasksShell({ children }: { children: React.ReactNode }) 
                         {pr.name}
                       </a>
                     ))}
+                    <a href={hubUrl('/account')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-ink-600 hover:bg-ink-50">
+                      <UserRound size={15} /> {t('nav.account')}
+                    </a>
                     <a href={hubUrl('/apps')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-ink-600 hover:bg-ink-50">
                       <LayoutGrid size={15} /> {t('nav.apps')}
                     </a>
@@ -148,6 +151,7 @@ export default function TasksShell({ children }: { children: React.ReactNode }) 
                 <Link href={p('/my-tasks')} className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-ink-700 hover:bg-ink-50">{t('nav.myTasks')}</Link>
                 <Link href={p('/messages')} className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-ink-700 hover:bg-ink-50">{t('nav.messages')}</Link>
                 <Link href={p('/profile')} className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-ink-700 hover:bg-ink-50">{t('nav.profile')}</Link>
+                <a href={hubUrl('/account')} className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-ink-700 hover:bg-ink-50">{t('nav.account')}</a>
                 <a href={hubUrl('/apps')} className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-ink-700 hover:bg-ink-50">{t('nav.apps')}</a>
                 <button onClick={signOut} className="block w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50">{t('nav.signOut')}</button>
               </>

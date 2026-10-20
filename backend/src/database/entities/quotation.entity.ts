@@ -14,7 +14,7 @@ export class Quotation {
   @Column({ type: 'enum', enum: ['new', 'sent', 'accepted', 'rejected', 'converted'], default: 'new' }) status: string;
   @Column({ nullable: true }) package_id: number;
   @Column('decimal', { precision: 10, scale: 2, nullable: true, transformer: { to: v => v, from: v => v == null ? null : parseFloat(v) } }) quoted_amount: number;
-  @Column({ type: 'datetime', nullable: true }) valid_until: Date;
+  @Column({ nullable: true }) valid_until: Date;
   @Column({ type: 'text', nullable: true }) notes: string;
   @Column({ type: 'json', nullable: true }) line_items: any;
   @Column({ type: 'enum', enum: ['monthly', 'yearly'], nullable: true }) billing_cycle: string;

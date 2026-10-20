@@ -6,16 +6,14 @@ import { LangProvider } from '../hooks/useLang';
 export const metadata: Metadata = {
   title: 'KadeHub — Business apps for growing businesses',
   description: 'One KadeHub account for POS, COD order management and a local task marketplace.',
+  // Square icons made from the K mark (public/logo-icon.png is a wide logo and shrinks to a speck in a tab)
   icons: {
     icon: [
-      { url: '/logo-icon.png', sizes: '32x32',  type: 'image/png' },
-      { url: '/logo-icon.png', sizes: '64x64',  type: 'image/png' },
-      { url: '/logo-icon.png', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: [
-      { url: '/logo-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
-    shortcut: '/logo-icon.png',
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
   },
 };
 
@@ -25,10 +23,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Viewport for proper mobile scaling */}
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        {/* Force browser to pick up the icon immediately */}
-        <link rel="icon" href="/logo-icon.png" type="image/png" sizes="any" />
-        <link rel="shortcut icon" href="/logo-icon.png" />
-        <link rel="apple-touch-icon" href="/logo-icon.png" />
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" rel="stylesheet" />
       </head>
       <body suppressHydrationWarning>

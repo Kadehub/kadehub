@@ -18,9 +18,9 @@ export class Invoice {
   @Column({ type: 'json', nullable: true }) line_items: any;
   @Column({ nullable: true }) bill_to_name: string;
   @Column({ nullable: true }) bill_to_email: string;
-  @Column({ type: 'datetime', nullable: true }) issued_at: Date;
-  @Column({ type: 'datetime', nullable: true }) due_at: Date;
-  @Column({ type: 'datetime', nullable: true }) paid_at: Date;
+  @Column({ nullable: true }) issued_at: Date;
+  @Column({ nullable: true }) due_at: Date;
+  @Column({ nullable: true }) paid_at: Date;
   @Column({ type: 'text', nullable: true }) notes: string;
   @CreateDateColumn() created_at: Date;
   @ManyToOne(() => Tenant) @JoinColumn({ name: 'tenant_id' }) tenant: Tenant;

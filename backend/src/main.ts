@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import * as dotenv from 'dotenv';
 dotenv.config();
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, ForbiddenException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
@@ -32,7 +32,8 @@ async function bootstrap() {
         return origin === pattern;
       });
       if (allowed) callback(null, true);
-      else callback(new Error(`Origin ${origin} not allowed by CORS`));
+      // 403, not a plain Error: the exception filter turns unknown errors into 500s
+      else callback(new ForbiddenException(`Origin ${origin} not allowed by CORS`));
     },
     credentials: true,
   });

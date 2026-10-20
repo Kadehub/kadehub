@@ -23,6 +23,14 @@ KadeHub is one platform with several products. Each product runs on its own subd
 - **Reserved subdomains.** Product subdomains, plus names like `api`, `accounts` and `admin`, can't be registered as shop subdomains (`RESERVED_SUBDOMAINS`, checked in both `check-subdomain` and `register`).
 - **Billing per product.** `package.product` and `subscription.product` (migration `010_multi_product`, default `pos`). `GET /api/platform/my-products` returns the registry with `enabled` flags for the signed-in account, and `/apps` uses it. The migration logs a warning if an existing shop already owns a product subdomain.
 
+## Accounts and subscriptions
+
+- **One account, many products.** An account is a tenant plus its users. Each product the account uses is one or more `subscription` rows with that `product`.
+- **Product states** (`GET /api/platform/my-products`, `GET /api/platform/account`): `not_started`, `trial`, `active`, `expired`, or `free` (Tasks). One function (`PlatformService.summarize`) decides this for every screen.
+- **`kadehub.com/account`** lets the person edit their name and phone, change the password for every app, and see each app's plan, trial days left or expiry. From there they can start an app, open it, choose a plan or renew. It's linked from the app launcher, the product switcher in POS and COD, and the Tasks user menu.
+- **Starting another product:** `POST /api/platform/enable/:product` (account admins). POS shows a "Start using KadeHub POS" screen to accounts that never had it. COD sends new accounts to its set-up wizard. Tasks turns itself on at the first post or offer.
+- **Product pages:** the public landing page is at `/` and the app itself at `/dashboard` (POS and COD), for example `cod.kadehub.com/dashboard`.
+
 ## Adding a product
 
 1. Add it to `PRODUCTS` in both registry files.

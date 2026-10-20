@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { LogOut, ShieldCheck } from 'lucide-react';
+import { LogOut, ShieldCheck, UserRound } from 'lucide-react';
 import KadeHubLogo from '../../components/ui/KadeHubLogo';
 import ProductCard from '../../components/platform/ProductCard';
 import InteractiveMascot from '../../components/brand/InteractiveMascot';
@@ -8,26 +8,38 @@ import { useAuthHydrated, useAuthStore } from '../../hooks/useAuth';
 import { PRODUCTS, productUrl, type ProductDef } from '../../lib/platform';
 import api from '../../lib/api';
 
-type MyProduct = { slug: string; enabled: boolean };
+type MyProduct = { slug: string; enabled: boolean; state: 'not_started' | 'trial' | 'active' | 'expired' | 'free'; days_left: number | null };
+
+const RENEW_PATH: Record<string, string> = { pos: '/subscribe', cod: '/billing' };
 
 // App launcher on the hub: every product, with the ones this account uses marked active.
 export default function AppsPage() {
   const hydrated = useAuthHydrated();
   const { token, user, logout } = useAuthStore();
-  const [enabled, setEnabled] = useState<Set<string> | null>(null);
+  const [mine, setMine] = useState<Record<string, MyProduct> | null>(null);
 
   useEffect(() => {
     if (!hydrated) return;
     if (!token) { window.location.href = '/login'; return; }
     api.get<MyProduct[]>('/platform/my-products')
-      .then(({ data }) => setEnabled(new Set(data.filter(p => p.enabled).map(p => p.slug))))
-      .catch(() => setEnabled(new Set()));
+      .then(({ data }) => setMine(Object.fromEntries(data.map(p => [p.slug, p]))))
+      .catch(() => setMine({}));
   }, [hydrated, token]);
 
   function cardProps(p: ProductDef) {
     if (p.status === 'coming_soon') return { href: productUrl(p.slug, '/'), cta: 'Learn more' };
-    if (enabled?.has(p.slug)) return { href: productUrl(p.slug), cta: 'Open', badge: { text: 'Active', cls: 'kh-badge-green' } };
-    return { href: productUrl(p.slug, '/'), cta: 'Get started' };
+    const m = mine?.[p.slug];
+    switch (m?.state) {
+      case 'active':
+      case 'free':
+        return { href: productUrl(p.slug), cta: 'Open', badge: { text: 'Active', cls: 'kh-badge-green' } };
+      case 'trial':
+        return { href: productUrl(p.slug), cta: 'Open', badge: { text: `Trial · ${m.days_left ?? 0}d left`, cls: 'kh-badge-blue' } };
+      case 'expired':
+        return { href: productUrl(p.slug, RENEW_PATH[p.slug] ?? '/'), cta: 'Renew plan', badge: { text: 'Expired', cls: 'kh-badge-red' } };
+      default:
+        return { href: productUrl(p.slug, '/'), cta: 'Get started' };
+    }
   }
 
   return (
@@ -36,6 +48,9 @@ export default function AppsPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           <a href="/"><KadeHubLogo width={140} theme="color" /></a>
           <div className="flex items-center gap-2 min-w-0">
+            <a href="/account" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-ink-600 hover:bg-ink-50">
+              <UserRound size={16} /> <span className="hidden sm:inline">Account</span>
+            </a>
             {user?.role === 'SUPER_ADMIN' && (
               <a href="/super-admin" className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-ink-600 hover:bg-ink-50">
                 <ShieldCheck size={16} /> Super admin
@@ -60,7 +75,7 @@ export default function AppsPage() {
           </div>
         </div>
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {enabled === null
+          {mine === null
             ? PRODUCTS.map(p => <div key={p.slug} className="kh-card h-72 animate-pulse" />)
             : PRODUCTS.map(p => <ProductCard key={p.slug} product={p} {...cardProps(p)} />)}
         </div>

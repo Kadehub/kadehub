@@ -281,9 +281,11 @@ export const MIGRATIONS: Migration[] = [
   },
   {
     id: '009_quotation_line_items',
-    up: async (ds) => {
-      await addColumn(ds, 'quotation', 'line_items', 'JSON NULL');
-      await addColumn(ds, 'quotation', 'billing_cycle', "ENUM('monthly','yearly') NULL");
+    up: async (ds, dialect) => {
+      // MySQL statements unchanged (already applied in production); Postgres has no inline ENUM / JSON NULL syntax
+      const pg = dialect === 'postgres';
+      await addColumn(ds, 'quotation', 'line_items', pg ? 'JSONB NULL' : 'JSON NULL');
+      await addColumn(ds, 'quotation', 'billing_cycle', pg ? 'VARCHAR(10) NULL' : "ENUM('monthly','yearly') NULL");
     },
   },
   {

@@ -28,8 +28,9 @@ const GATE_EXEMPT = ['/billing', '/settings'];
 /** Path inside COD ("/orders"), whether served at cod.kadehub.com/orders or localhost/cod/orders. */
 export function useCodPath() {
   const pathname = usePathname() || '/';
-  const prefixed = codHref('/x') !== '/x';
-  if (prefixed && (pathname === '/cod' || pathname.startsWith('/cod/'))) return pathname.slice(4) || '/';
+  // Strip "/cod" whenever present: on plain localhost it's in the URL, and during server rendering of the
+  // subdomain rewrite usePathname() reports the internal /cod/... path. (The proxy never serves /cod/... on cod.)
+  if (pathname === '/cod' || pathname.startsWith('/cod/')) return pathname.slice(4) || '/';
   return pathname;
 }
 

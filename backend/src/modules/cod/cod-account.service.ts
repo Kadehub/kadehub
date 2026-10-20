@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -158,7 +158,8 @@ export class CodAccountService {
   async changePassword(userId: number, dto: ChangePasswordDto) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user || !(await bcrypt.compare(dto.current_password, user.password_hash))) {
-      throw new UnauthorizedException('CURRENT_PASSWORD_WRONG');
+      // 400, not 401: the frontend treats any 401 as an expired session and signs the user out
+      throw new BadRequestException('CURRENT_PASSWORD_WRONG');
     }
     user.password_hash = await bcrypt.hash(dto.password, 10);
     await this.userRepo.save(user);

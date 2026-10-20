@@ -190,7 +190,7 @@ export default function PostTaskPage() {
               <span className="text-sm font-medium text-ink-700">{t('post.when')}</span>
               <input type="date" min={today} className={fieldCls} value={form.due_date} onChange={e => set('due_date', e.target.value)} />
               <label className="flex items-center gap-2 text-sm text-ink-600">
-                <input type="checkbox" checked={form.flexible} onChange={e => set('flexible', e.target.checked)} className="accent-amber-500" />
+                <input type="checkbox" checked={form.flexible} onChange={e => set('flexible', e.target.checked)} className="accent-amber-dark" />
                 {t('post.flexible')}
               </label>
             </div>

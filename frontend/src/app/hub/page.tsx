@@ -3,16 +3,17 @@ import { KeyRound, Languages, Smartphone, Wallet, ArrowRight } from 'lucide-reac
 import KadeHubLogo from '../../components/ui/KadeHubLogo';
 import ProductCard from '../../components/platform/ProductCard';
 import Mascot from '../../components/brand/Mascot';
+import InteractiveMascot from '../../components/brand/InteractiveMascot';
 import { PRODUCTS, productUrl } from '../../lib/platform';
 
 export const metadata: Metadata = {
-  title: 'KadeHub — Business apps for Sri Lankan businesses',
+  title: 'KadeHub — Business apps for growing businesses',
   description: 'One KadeHub account for every tool your business needs: POS for shops, COD order management, and a local task marketplace.',
 };
 
 const BENEFITS = [
   { icon: KeyRound,   title: 'One login',               desc: 'Sign in once and move between POS, COD and Tasks without signing in again.' },
-  { icon: Languages,  title: 'Built for Sri Lanka',      desc: 'Prices in LKR, local payments, and Sinhala and Tamil where you need them.' },
+  { icon: Languages,  title: 'Your language',            desc: 'Local currency and payments, with Sinhala and Tamil where you need them.' },
   { icon: Smartphone, title: 'Any device',               desc: 'Works in the browser on desktop, tablet and phone. Nothing to install.' },
   { icon: Wallet,     title: 'Pay for what you use',     desc: 'Each app has its own plan and free trial. Add another app when you need it.' },
 ];
@@ -38,11 +39,7 @@ export default function HubPage() {
         <section style={{ background: 'linear-gradient(180deg, #E0F2F1 0%, #F8FAFC 100%)' }}>
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-20 grid gap-10 md:grid-cols-[1.2fr_1fr] items-center">
             <div className="text-center md:text-left order-2 md:order-1">
-              <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-white border border-teal-light text-teal-dark">
-                <span className="w-2 h-2 rounded-full" style={{ background: '#FFB703' }} />
-                Built for Sri Lankan businesses
-              </span>
-              <h1 className="mt-5 text-3xl sm:text-5xl font-extrabold text-ink-900 leading-tight tracking-tight">
+              <h1 className="text-3xl sm:text-5xl font-extrabold text-ink-900 leading-tight tracking-tight">
                 One account. <span style={{ color: '#00A884' }}>Every tool</span> your business needs.
               </h1>
               <p className="mt-4 text-base sm:text-lg text-ink-500 max-w-xl mx-auto md:mx-0">
@@ -57,13 +54,16 @@ export default function HubPage() {
                 </a>
               </div>
             </div>
-            <div className="order-1 md:order-2 flex justify-center">
+            <div className="order-1 md:order-2 flex justify-center pt-12 md:pt-0">
               <div className="relative flex items-center justify-center">
                 <div className="absolute inset-4 rounded-full blur-2xl" style={{ background: 'rgba(255,183,3,0.25)' }} aria-hidden />
-                <Mascot width={260} animation="enter" priority className="relative hidden sm:block"
-                  alt="KadeHub's capybara mascot holding a cup of tea" />
-                <Mascot size="lg" animation="enter" priority className="relative sm:hidden"
-                  alt="KadeHub's capybara mascot holding a cup of tea" />
+                <InteractiveMascot width="clamp(170px, 30vw, 260px)" priority className="relative kh-mascot-enter"
+                  greeting="Hi there! Welcome to KadeHub."
+                  messages={[
+                    'One account opens POS, COD and Tasks.',
+                    'Every app comes with a free trial.',
+                    'Pick an app below to get started!',
+                  ]} />
               </div>
             </div>
           </div>
@@ -107,7 +107,7 @@ export default function HubPage() {
         <section className="px-4 sm:px-6 pb-16 bg-white">
           <div className="max-w-6xl mx-auto rounded-3xl px-6 py-10 sm:px-10 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left"
             style={{ background: 'linear-gradient(135deg,#004D40 0%,#00796B 55%,#00A884 100%)' }}>
-            <Mascot size="md" decorative />
+            <Mascot pose="love" size="md" decorative />
             <div className="flex-1">
               <h2 className="text-xl sm:text-2xl font-extrabold text-white">Start with the app you need today</h2>
               <p className="mt-1 text-sm text-white/75">Every app comes with a free trial. No card needed to begin.</p>

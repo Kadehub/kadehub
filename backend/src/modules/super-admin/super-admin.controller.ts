@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import {
-  SuperAdminService, BlockTenantDto, ChangePlanDto,
+  SuperAdminService, BlockTenantDto, ChangePlanDto, SetPackageProductDto,
   CreateCouponDto, CreateAnnouncementDto, UpdateAnnouncementDto,
 } from './super-admin.service';
 import { BillingService } from '../billing/billing.service';
@@ -153,6 +153,11 @@ export class SuperAdminController {
   // ── Packages ───────────────────────────────────────────────────────────────
   @Get('packages')
   packages(@CurrentUser() u: any) { this.guard(u); return this.service.getPackages(); }
+
+  @Patch('packages/:id/product')
+  setPackageProduct(@CurrentUser() u: any, @Param('id') id: string, @Body() dto: SetPackageProductDto) {
+    this.guard(u); return this.service.setPackageProduct(+id, dto.product);
+  }
 
   // ── Coupons ────────────────────────────────────────────────────────────────
   @Get('coupons')

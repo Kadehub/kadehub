@@ -14,8 +14,7 @@ export const COST_CURRENCIES = ["LKR", "USD", "CNY"] as const;
 export type CostCurrency = (typeof COST_CURRENCIES)[number];
 
 export interface Business {
-  id: string;
-  owner_id: string;
+  id: number;
   name: string;
   phone: string;
   address: string;
@@ -31,9 +30,10 @@ export interface Business {
   updated_at: string;
 }
 
+/** COD business profile as returned by GET /api/cod/me (one per KadeHub tenant). */
 export interface Profile {
-  id: string;
-  business_id: string;
+  id: number;
+  tenant_id: number;
   full_name: string;
   role: string;
   created_at: string;
@@ -50,8 +50,8 @@ export interface Plan {
 }
 
 export interface Subscription {
-  id: string;
-  business_id: string;
+  id: number;
+  tenant_id: number;
   plan_id: string;
   status: SubscriptionStatus;
   trial_ends_at: string | null;
@@ -64,8 +64,8 @@ export interface Subscription {
 }
 
 export interface Item {
-  id: string;
-  business_id: string;
+  id: number;
+  tenant_id: number;
   name: string;
   sku: string;
   category: string;
@@ -86,8 +86,8 @@ export interface Item {
 }
 
 export interface Expense {
-  id: string;
-  business_id: string;
+  id: number;
+  tenant_id: number;
   title: string;
   category: string;
   amount: number;
@@ -97,10 +97,11 @@ export interface Expense {
 }
 
 export interface OrderItem {
-  id: string;
-  business_id: string;
-  order_id: string;
-  item_id: string;
+  id: number;
+  tenant_id: number;
+  order_id: number;
+  /** Null once the item was deleted (the line keeps its name/price snapshot). */
+  item_id: number | null;
   item_name: string;
   quantity: number;
   unit_price: number;
@@ -108,8 +109,8 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id: string;
-  business_id: string;
+  id: number;
+  tenant_id: number;
   invoice_number: string;
   customer_name: string;
   customer_phone: string;

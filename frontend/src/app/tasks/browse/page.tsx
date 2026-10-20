@@ -137,7 +137,7 @@ function BrowseContent() {
           ) : !data ? (
             <PageLoader />
           ) : data.items.length === 0 ? (
-            <EmptyState title={t('empty.browseTitle')} text={t('browse.empty')}
+            <EmptyState pose="curious" title={t('empty.browseTitle')} text={t('browse.empty')}
               action={<Link href={p('/post')} className="inline-flex px-4 py-2 rounded-xl text-sm kh-btn-amber">{t('nav.post')}</Link>} />
           ) : (
             <>

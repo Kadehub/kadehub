@@ -5,10 +5,12 @@ import api from '../../../lib/api';
 import { ShoppingCart, TrendingUp, AlertTriangle, CreditCard, Package, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '../../../hooks/useAuth';
-import Mascot from '../../../components/brand/Mascot';
+import InteractiveMascot from '../../../components/brand/InteractiveMascot';
+import { useLang } from '../../../hooks/useLang';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
+  const { t } = useLang();
   const [data, setData] = useState<any>(null);
   const [creditSummary, setCreditSummary] = useState<any>(null);
   const [lowStock, setLowStock] = useState<any[]>([]);
@@ -38,7 +40,8 @@ export default function DashboardPage() {
     <div className="space-y-6 max-w-5xl">
       {/* Greeting */}
       <div className="flex items-center gap-3">
-        <Mascot size="xs" animation="enter" decorative priority />
+        <InteractiveMascot width={52} priority bubbleSide="right" className="kh-mascot-enter" label={t('mascot.label')}
+          messages={[t('mascot.dash.1'), t('mascot.dash.2'), t('mascot.dash.3')]} />
         <div>
           <h2 className="text-xl font-bold text-ink-800">{greeting()}, {user?.name?.split(' ')[0]}</h2>
           <p className="text-sm text-ink-400 mt-0.5">

@@ -22,6 +22,10 @@ export const translations = {
     'nav.staff': 'Staff',
     'nav.settings': 'Settings',
     'nav.apps': 'KadeHub apps',
+    'mascot.label': 'Say hi to the KadeHub capybara',
+    'mascot.dash.1': 'Tap POS in the sidebar to start a sale.',
+    'mascot.dash.2': 'Check low-stock items before the rush.',
+    'mascot.dash.3': 'Your daily numbers are under Reports.',
     'nav.signOut': 'Sign out',
     // Page titles
     'page.dashboard': 'Dashboard',
@@ -264,6 +268,10 @@ export const translations = {
     'nav.staff': 'කාර්යමණ්ඩලය',
     'nav.settings': 'සැකසුම්',
     'nav.apps': 'KadeHub ඇප්ස්',
+    'mascot.label': 'KadeHub කැපිබාරාට හායි කියන්න',
+    'mascot.dash.1': 'විකුණුමක් පටන් ගන්න මෙනුවේ POS ඔබන්න.',
+    'mascot.dash.2': 'කලබල වෙලාවට කලින් අඩු තොග භාණ්ඩ බලන්න.',
+    'mascot.dash.3': 'දවසේ විස්තර Reports යටතේ තියෙනවා.',
     'nav.signOut': 'ඉවත් වන්න',
     // Page titles
     'page.dashboard': 'උපකරණ පුවරුව',

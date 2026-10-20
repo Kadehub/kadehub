@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { LogOut, ShieldCheck } from 'lucide-react';
 import KadeHubLogo from '../../components/ui/KadeHubLogo';
 import ProductCard from '../../components/platform/ProductCard';
-import Mascot from '../../components/brand/Mascot';
+import InteractiveMascot from '../../components/brand/InteractiveMascot';
 import { useAuthHydrated, useAuthStore } from '../../hooks/useAuth';
 import { PRODUCTS, productUrl, type ProductDef } from '../../lib/platform';
 import api from '../../lib/api';
@@ -52,7 +52,8 @@ export default function AppsPage() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
         <div className="flex items-center gap-4">
-          <Mascot size="sm" animation="enter" decorative priority />
+          <InteractiveMascot width={64} priority bubbleSide="right" className="kh-mascot-enter"
+            messages={['Pick an app to open it.', 'Apps marked Active are ready for you.']} />
           <div>
             <h1 className="text-2xl font-extrabold text-ink-900">Your KadeHub apps</h1>
             <p className="mt-1 text-sm text-ink-500">One account works across every product.</p>

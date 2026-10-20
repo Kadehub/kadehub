@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search, ArrowRight, PenLine, MessageSquare, CheckCircle2, Briefcase } from 'lucide-react';
-import Mascot from '../../components/brand/Mascot';
+import InteractiveMascot from '../../components/brand/InteractiveMascot';
 import TaskCard from '../../components/tasks/TaskCard';
 import { CategoryIcon, EmptyState } from '../../components/tasks/ui';
 import { productPath } from '../../lib/platform';
@@ -62,9 +62,11 @@ export default function TasksHomePage() {
               </Link>
             </div>
           </div>
-          <div className="flex justify-center">
-            <Mascot size="xl" animation="enter" priority className="hidden sm:block" />
-            <Mascot size="lg" animation="enter" priority className="sm:hidden" />
+          {/* Room above for the speech bubble so it never covers the buttons on phones */}
+          <div className="flex justify-center pt-16 md:pt-0">
+            <InteractiveMascot width="clamp(170px, 28vw, 240px)" priority className="kh-mascot-enter"
+              label={t('mascot.label')} greeting={t('mascot.greeting')}
+              messages={[t('mascot.tip1'), t('mascot.tip2'), t('mascot.tip3')]} />
           </div>
         </div>
       </section>

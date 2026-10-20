@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { useTasksT } from '../../lib/tasks/i18n';
 import type { TaskStatus } from '../../lib/tasks/types';
-import { MascotState } from '../brand/Mascot';
+import { MascotState, type MascotPose, type MascotSceneName } from '../brand/Mascot';
 
 const ICONS: Record<string, any> = {
   Sparkles, Truck, Package, Hammer, Flower2, Armchair, PaintRoller: Paintbrush, Paintbrush, Zap, Wrench, GraduationCap,
@@ -79,10 +79,12 @@ export function PageLoader() {
 }
 
 /** Empty list / section state with the mascot and an optional next step. */
-export function EmptyState({ title, text, action, size = 'sm' }: { title?: string; text: string; action?: React.ReactNode; size?: 'xs' | 'sm' | 'md' }) {
+export function EmptyState({ title, text, action, size = 'sm', pose, scene }: {
+  title?: string; text: string; action?: React.ReactNode; size?: 'xs' | 'sm' | 'md'; pose?: MascotPose; scene?: MascotSceneName;
+}) {
   return (
     <div className="kh-card px-6 py-10">
-      <MascotState variant="empty" title={title} description={text} action={action} size={size} />
+      <MascotState variant="empty" title={title} description={text} action={action} size={size} pose={pose} scene={scene} />
     </div>
   );
 }

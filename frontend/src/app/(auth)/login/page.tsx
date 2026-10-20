@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import KadeHubLogo from '../../../components/ui/KadeHubLogo';
 import { Input } from '../../../components/ui/Input';
 import { ArrowRight, Check } from 'lucide-react';
-import Mascot from '../../../components/brand/Mascot';
+import InteractiveMascot from '../../../components/brand/InteractiveMascot';
 import { useAuthHydrated, useAuthStore } from '../../../hooks/useAuth';
 import api from '../../../lib/api';
 import { homeAfterLogin, navigate, resolveHost, productForHost, PRODUCTS, type ProductDef } from '../../../lib/platform';
@@ -56,7 +56,10 @@ export default function LoginPage() {
         style={{ background: 'linear-gradient(160deg, #004D40 0%, #00796B 50%, #00A884 100%)' }}>
         <KadeHubLogo width={200} theme="white" />
         <div>
-          <Mascot size="lg" animation="enter" decorative priority />
+          <InteractiveMascot width={150} priority className="kh-mascot-enter"
+            messages={product
+              ? [`Welcome back to ${product.name}!`, 'Your KadeHub account works here too.']
+              : ['Welcome back!', 'One sign-in works for every KadeHub app.']} />
           <h2 className="mt-6 text-3xl font-extrabold leading-tight">
             {product ? product.name : <>One account,<br /><span style={{ color: '#FFB703' }}>every KadeHub app.</span></>}
           </h2>

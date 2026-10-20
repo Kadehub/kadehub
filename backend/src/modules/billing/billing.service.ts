@@ -13,7 +13,7 @@ import { InvoiceService } from './invoice.service';
 import { EmailService } from '../../common/email.service';
 import { getBankDetails, saveBankDetails, isOnepayConfigured } from '../../common/bank-details';
 import * as https from 'https';
-import { DEFAULT_PRODUCT } from '../../common/products';
+import { DEFAULT_PRODUCT, productAppUrl } from '../../common/products';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -223,11 +223,20 @@ export class BillingService {
   // ── Bank Transfer (pending until admin approves) ───────────────────────────
 
   async submitBankTransfer(tenantId: number, dto: BankTransferDto, slipUrl: string) {
-    const pending = await this.txRepo.findOne({
+    // One pending slip per product: a COD slip awaiting review must not block paying for POS
+    const targetProduct = dto.type === 'subscription' && dto.package_id
+      ? (await this.packageRepo.findOne({ where: { id: dto.package_id } }))?.product ?? DEFAULT_PRODUCT
+      : DEFAULT_PRODUCT;
+    const pendingTxs = await this.txRepo.find({
       where: { tenant_id: tenantId, gateway: 'bank_transfer', status: 'pending' },
     });
-    if (pending) {
-      throw new BadRequestException('You already have a bank slip pending review. Please wait for admin approval.');
+    for (const p of pendingTxs) {
+      const pendingProduct = p.metadata?.type === 'registration_fee'
+        ? DEFAULT_PRODUCT
+        : (await this.packageRepo.findOne({ where: { id: p.package_id } }))?.product ?? DEFAULT_PRODUCT;
+      if (pendingProduct === targetProduct) {
+        throw new BadRequestException('You already have a bank slip pending review. Please wait for admin approval.');
+      }
     }
 
     let pkg: Package | null = null;
@@ -573,7 +582,10 @@ export class BillingService {
       customer_last_name: 'Shop',
       customer_phone_number: '0000000000',
       customer_email: 'billing@kadehub.lk',
-      transaction_redirect_url: `${appUrl}/settings?tab=billing&status=success&ref=${ref}`,
+      // Back to the billing page of the product this package belongs to
+      transaction_redirect_url: pkg.product && pkg.product !== DEFAULT_PRODUCT
+        ? `${productAppUrl(pkg.product)}/billing?status=success&ref=${ref}`
+        : `${appUrl}/settings?tab=billing&status=success&ref=${ref}`,
       currency: 'LKR',
     };
 

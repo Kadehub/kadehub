@@ -2,6 +2,13 @@
 import { useEffect, useState } from 'react';
 import api from '../../../lib/api';
 import { Package, Check } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+const PRODUCTS = [
+  { value: 'pos', label: 'POS' },
+  { value: 'cod', label: 'COD' },
+  { value: 'tasks', label: 'Tasks' },
+];
 
 export default function PackagesPage() {
   const [packages, setPackages] = useState<any[]>([]);
@@ -11,11 +18,22 @@ export default function PackagesPage() {
     api.get('/super-admin/packages').then(({ data }) => { setPackages(data); setLoading(false); });
   }, []);
 
+  // A package only grants subscriptions within its product (pos / cod / tasks)
+  async function setProduct(pkg: any, product: string) {
+    try {
+      const { data } = await api.patch(`/super-admin/packages/${pkg.id}/product`, { product });
+      setPackages(list => list.map(p => (p.id === pkg.id ? { ...p, product: data.product } : p)));
+      toast.success(`${pkg.name} now belongs to ${product.toUpperCase()}`);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Could not update package');
+    }
+  }
+
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-xl font-bold text-ink-900">Subscription Packages</h2>
-        <p className="text-sm text-ink-400 mt-0.5">All available plans on the platform</p>
+        <p className="text-sm text-ink-400 mt-0.5">All available plans on the platform, grouped by product</p>
       </div>
 
       {loading ? (
@@ -55,6 +73,10 @@ export default function PackagesPage() {
               </div>
               <div className="mt-4 pt-4 border-t border-ink-100 flex items-center justify-between text-xs text-ink-400">
                 <span>{pkg.is_active ? '✓ Active' : '✗ Inactive'}</span>
+                <select value={pkg.product || 'pos'} onChange={e => setProduct(pkg, e.target.value)}
+                  aria-label="Product" className="px-2 py-1 rounded-lg border border-ink-200 bg-white text-xs font-semibold text-ink-700">
+                  {PRODUCTS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                </select>
                 {pkg.employee_limit && <span>Max {pkg.employee_limit} staff</span>}
               </div>
             </div>

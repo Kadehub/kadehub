@@ -4,7 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { LangProvider } from '../hooks/useLang';
 
 export const metadata: Metadata = {
-  title: 'KadeHub — Business apps for Sri Lankan businesses',
+  title: 'KadeHub — Business apps for growing businesses',
   description: 'One KadeHub account for POS, COD order management and a local task marketplace.',
   icons: {
     icon: [

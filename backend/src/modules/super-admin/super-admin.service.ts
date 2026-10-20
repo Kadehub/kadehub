@@ -29,6 +29,10 @@ export class BlockTenantDto {
   @IsOptional() @IsString() plan_note?: string;
 }
 
+export class SetPackageProductDto {
+  @IsEnum(['pos', 'cod', 'tasks']) product: string;
+}
+
 export class ChangePlanDto {
   @IsNumber() package_id: number;
   @IsEnum(['monthly', 'yearly']) billing_cycle: string;
@@ -273,13 +277,14 @@ export class SuperAdminService implements OnModuleInit {
       if (!result.affected) throw new BadRequestException('Coupon usage limit reached');
     }
 
-    await this.subRepo.delete({ tenant_id: tenantId });
+    // Replace only this package's product subscriptions (a COD plan must not wipe out POS)
+    await this.subRepo.delete({ tenant_id: tenantId, product: pkg.product });
     const expiresAt = new Date();
     if (dto.billing_cycle === 'yearly') expiresAt.setFullYear(expiresAt.getFullYear() + 1);
     else expiresAt.setMonth(expiresAt.getMonth() + 1);
 
     const subs = pkg.modules.map(m => this.subRepo.create({
-      tenant_id: tenantId, module_name: m.module_name, status: 'active',
+      tenant_id: tenantId, product: pkg.product, module_name: m.module_name, status: 'active',
       package_id: pkg.id, billing_cycle: dto.billing_cycle,
       started_at: new Date(), expires_at: expiresAt,
       payment_status: 'paid', payment_ref: `ADMIN-${Date.now()}`,
@@ -474,7 +479,15 @@ export class SuperAdminService implements OnModuleInit {
   // ── Packages ───────────────────────────────────────────────────────────────
 
   async getPackages() {
-    return this.packageRepo.find({ relations: ['modules'], order: { sort_order: 'ASC' } });
+    return this.packageRepo.find({ relations: ['modules'], order: { product: 'ASC', sort_order: 'ASC' } });
+  }
+
+  /** Which product (pos / cod / tasks) a package sells. */
+  async setPackageProduct(id: number, product: string) {
+    const pkg = await this.packageRepo.findOne({ where: { id } });
+    if (!pkg) throw new NotFoundException('Package not found');
+    pkg.product = product;
+    return this.packageRepo.save(pkg);
   }
 
   // ── Coupons ────────────────────────────────────────────────────────────────

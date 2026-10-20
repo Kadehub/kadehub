@@ -42,6 +42,7 @@ jobs:
           tags: nethun/dev:kadehub-fe
           build-args: |
             NEXT_PUBLIC_API_URL=https://api.kadehub.com/api
+            NEXT_PUBLIC_ROOT_DOMAIN=kadehub.com
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

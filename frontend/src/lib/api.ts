@@ -18,7 +18,9 @@ api.interceptors.response.use(
     const isAuthRoute = url.includes('/auth/');
     const isBillingProfile = url.includes('/billing/profile');
     const isAnnouncements = url.includes('/announcements');
-    if (err.response?.status === 401 && !isAuthRoute && !isBillingProfile && !isAnnouncements && typeof window !== 'undefined') {
+    // Background badge poll on public Tasks pages; an expired session there shouldn't force a login
+    const isUnreadPoll = url.includes('/tasks/me/notifications/unread-count');
+    if (err.response?.status === 401 && !isAuthRoute && !isBillingProfile && !isAnnouncements && !isUnreadPoll && typeof window !== 'undefined') {
       clearAuthSession();
       const dest = window.location.pathname.startsWith('/super-admin')
         ? '/super-admin/login'

@@ -29,3 +29,15 @@ export const RESERVED_SUBDOMAINS = new Set<string>([
   'accounts', 'auth', 'login', 'hub', 'static', 'cdn', 'docs', 'help', 'status', 'portfolio',
   ...PRODUCTS.map(p => p.subdomain),
 ]);
+
+/**
+ * Public base URL of a product's frontend, for links in emails and payment redirects.
+ * Local dev (NEXT_PUBLIC_APP_URL on localhost) has no subdomains, so products live under /<slug> there.
+ */
+export function productAppUrl(product: string): string {
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+  if (product === DEFAULT_PRODUCT) return appUrl;
+  if (/\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(appUrl)) return `${appUrl}/${product}`;
+  const sub = PRODUCTS.find(p => p.slug === product)?.subdomain ?? product;
+  return `https://${sub}.${process.env.CLOUDFLARE_BASE_DOMAIN || 'kadehub.com'}`;
+}

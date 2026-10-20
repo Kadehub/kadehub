@@ -197,7 +197,7 @@ export default function RegisterPage() {
 
         {step === 'done' && (
           <div className="w-full max-w-md kh-card p-10 text-center">
-            <Mascot size="lg" animation="celebrate" decorative priority className="mx-auto mb-4" />
+            <Mascot pose="celebrate" size="lg" animation="celebrate" decorative priority className="mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-ink-900 mb-2">You&apos;re all set!</h2>
             <p className="text-ink-400 mb-2">Your 14-day free trial is now active with full access to all modules.</p>
             <p className="text-sm text-ink-400 mb-2">

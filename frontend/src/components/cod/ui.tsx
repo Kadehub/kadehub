@@ -185,9 +185,10 @@ export function PageHeader({ title, subtitle, actions, leading }: { title: React
 
 export function Kpi({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone?: 'danger' }) {
   return (
-    <div className="kh-card p-4">
+    <div className="kh-card min-w-0 p-4">
       <p className="text-xs text-ink-500">{label}</p>
-      <p className={cn('mt-1 text-xl font-bold tracking-tight', tone === 'danger' ? 'text-red-600' : 'text-ink-900')}>{value}</p>
+      {/* Very large amounts step down a size and may wrap inside the card instead of spilling out */}
+      <p className={cn('mt-1 font-bold tracking-tight [overflow-wrap:anywhere]', value.length > 16 ? 'text-base' : 'text-xl', tone === 'danger' ? 'text-red-600' : 'text-ink-900')}>{value}</p>
       {hint && <p className="mt-1 text-2xs text-ink-400">{hint}</p>}
     </div>
   );

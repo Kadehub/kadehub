@@ -69,3 +69,19 @@ export function buildOrderMessage(d: InvoicePdfData, t: Translator): string {
   }
   return out.join("\n");
 }
+
+/**
+ * Phone format check (same rule as backend cod-orders-calc.ts isValidPhone):
+ * local 0XXXXXXXXX (10 digits) or XXXXXXXXX (9), 94XXXXXXXXX (11), or international +/00 with 10–15 digits.
+ * Only digits, spaces and + - ( ) . are allowed.
+ */
+export function isValidPhone(raw: string | null | undefined): boolean {
+  const s = (raw ?? "").trim();
+  if (!s || /[^\d\s()+\-.]/.test(s) || s.indexOf("+") > 0) return false;
+  const digits = s.replace(/\D/g, "");
+  if (s.startsWith("+")) return digits.length >= 10 && digits.length <= 15;
+  if (digits.startsWith("00")) return digits.length - 2 >= 10 && digits.length - 2 <= 15;
+  if (digits.startsWith("0")) return digits.length === 10;
+  if (digits.startsWith("94")) return digits.length === 11;
+  return digits.length === 9;
+}

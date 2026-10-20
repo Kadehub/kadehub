@@ -63,7 +63,7 @@ export default function TasksShell({ children }: { children: React.ReactNode }) 
             <span className="text-xs font-extrabold px-2 py-0.5 rounded-md text-white" style={{ background: '#F59E0B' }}>Tasks</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1 ml-4">
+          <nav className="hidden lg:flex items-center gap-1 ml-4">
             {navLink('/browse', t('nav.browse'), Search)}
             {signedIn && navLink('/my-tasks', t('nav.myTasks'), ClipboardList)}
             {signedIn && navLink('/messages', t('nav.messages'), MessageSquare)}
@@ -87,7 +87,7 @@ export default function TasksShell({ children }: { children: React.ReactNode }) 
                   </span>
                 )}
               </Link>
-              <div ref={menuRef} className="relative hidden md:block">
+              <div ref={menuRef} className="relative hidden lg:block">
                 <button onClick={() => setMenuOpen(o => !o)} className="flex items-center gap-1.5 p-1 rounded-xl hover:bg-ink-50">
                   <Avatar name={user?.name} size={32} />
                   <ChevronDown size={14} className="text-ink-400" />
@@ -128,20 +128,20 @@ export default function TasksShell({ children }: { children: React.ReactNode }) 
               </div>
             </>
           ) : (
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
               <a href="/login" className="px-3 py-2 rounded-xl text-sm font-semibold text-ink-600 hover:bg-ink-50">{t('nav.signIn')}</a>
               <Link href={p('/register')} className="px-3 py-2 rounded-xl text-sm font-bold border-2"
                 style={{ borderColor: '#F59E0B', color: '#D97706' }}>{t('nav.signUp')}</Link>
             </div>
           )}
 
-          <button className="md:hidden p-2 rounded-xl text-ink-600 hover:bg-ink-50" onClick={() => setMobileOpen(o => !o)} aria-label="Menu">
+          <button className="lg:hidden p-2 rounded-xl text-ink-600 hover:bg-ink-50" onClick={() => setMobileOpen(o => !o)} aria-label="Menu">
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
 
         {mobileOpen && (
-          <div className="md:hidden border-t border-ink-100 bg-white px-4 py-3 space-y-1">
+          <div className="lg:hidden border-t border-ink-100 bg-white px-4 py-3 space-y-1">
             <Link href={p('/post')} className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm kh-btn-amber">
               <Plus size={16} /> {t('nav.post')}
             </Link>

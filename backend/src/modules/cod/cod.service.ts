@@ -9,7 +9,7 @@ import { CodOrderItem } from '../../database/entities/cod-order-item.entity';
 import { CodCreditPayment } from '../../database/entities/cod-credit-payment.entity';
 import { CodAuditService } from './cod-audit.service';
 import {
-  computeOrderTotals, summariseCredit, dueBucket, deriveDueDate, nextInvoiceNumber, phoneKey, localDay, OrderRuleError,
+  computeOrderTotals, summariseCredit, dueBucket, deriveDueDate, nextInvoiceNumber, phoneKey, localDay, OrderRuleError, checkCustomerPhone,
 } from './cod-orders-calc';
 import { CodAccountService } from './cod-account.service';
 import {
@@ -174,6 +174,11 @@ export class CodService {
 
   /** Customer, payment and credit fields from the form; credit terms are cleared on non-credit orders. */
   private applyOrderFields(order: CodOrder, dto: SaveCodOrderDto) {
+    try {
+      checkCustomerPhone(dto.customer_phone, dto.payment_type ?? order.payment_type ?? 'cod');
+    } catch (e) {
+      throw this.ruleError(e);
+    }
     order.customer_name = dto.customer_name.trim();
     order.customer_phone = dto.customer_phone?.trim() ?? '';
     order.customer_email = dto.customer_email?.trim() || null;

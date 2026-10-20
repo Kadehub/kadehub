@@ -8,6 +8,8 @@ import {
 } from '../../database/entities/cod-order.entity';
 import { COD_PAYMENT_METHODS, CodPaymentMethod } from '../../database/entities/cod-credit-payment.entity';
 
+import { MAX_AMOUNT } from './cod-orders-calc';
+
 export const COD_BUSINESS_TYPES = [
   'fashion', 'electronics', 'beauty', 'food', 'grocery', 'home', 'kids', 'jewellery', 'health', 'books', 'auto', 'general',
 ] as const;
@@ -59,8 +61,9 @@ export class CodOrderLineDto {
   @IsOptional() @Type(() => Number) @IsInt() item_id?: number | null;
   /** Required for custom lines; ignored for catalogue lines (the item's name is snapshotted) */
   @IsOptional() @IsString() @MaxLength(255) custom_name?: string | null;
-  @Type(() => Number) @IsInt() @Min(1) @Max(100000) quantity: number;
-  @Type(() => Number) @IsNumber() @Min(0) @Max(100_000_000) unit_price: number;
+  // No arbitrary cap: the order rules reject only what the INT column can't hold (QUANTITY_TOO_LARGE)
+  @Type(() => Number) @IsInt() @Min(1) quantity: number;
+  @Type(() => Number) @IsNumber() @Min(0) @Max(MAX_AMOUNT, { message: 'AMOUNT_TOO_LARGE' }) unit_price: number;
 }
 
 /** Fields shared by create and edit. */
@@ -70,8 +73,8 @@ export class SaveCodOrderDto {
   @IsOptional() @IsString() @MaxLength(255) customer_email?: string | null;
   @IsOptional() @IsString() @MaxLength(300) customer_address?: string;
   @IsOptional() @IsString() @MaxLength(100) city?: string;
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(100_000_000) delivery_charge?: number;
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(100_000_000) discount?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(MAX_AMOUNT, { message: 'AMOUNT_TOO_LARGE' }) delivery_charge?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(MAX_AMOUNT, { message: 'AMOUNT_TOO_LARGE' }) discount?: number;
   @IsOptional() @IsString() @MaxLength(2000) notes?: string | null;
   @IsOptional() @IsIn(COD_PAYMENT_TYPES as unknown as string[]) payment_type?: CodPaymentType;
   @IsOptional() @IsIn(COD_CUSTOMER_TYPES as unknown as string[]) customer_type?: CodCustomerType;
@@ -88,7 +91,7 @@ export class CreateCodOrderDto extends SaveCodOrderDto {
   /** Status to create the order in (default pending). Delivered is applied after insert so stock moves. */
   @IsOptional() @IsIn(COD_ORDER_STATUSES as unknown as string[]) status?: CodOrderStatus;
   /** Credit orders: money received at sale, recorded as the first credit payment */
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(100_000_000) initial_payment?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(MAX_AMOUNT, { message: 'AMOUNT_TOO_LARGE' }) initial_payment?: number;
   @IsOptional() @IsIn(COD_PAYMENT_METHODS as unknown as string[]) initial_payment_method?: CodPaymentMethod;
   @IsOptional() @Type(() => Number) @IsInt() reordered_from_order_id?: number | null;
 }
@@ -100,7 +103,7 @@ export class CodTrackingDto {
 }
 
 export class AddCreditPaymentDto {
-  @Type(() => Number) @IsNumber() @Min(0.01) @Max(100_000_000) amount: number;
+  @Type(() => Number) @IsNumber() @Min(0.01) @Max(MAX_AMOUNT, { message: 'AMOUNT_TOO_LARGE' }) amount: number;
   @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) payment_date?: string;
   @IsOptional() @IsIn(COD_PAYMENT_METHODS as unknown as string[]) method?: CodPaymentMethod;
   @IsOptional() @IsString() @MaxLength(1000) notes?: string | null;

@@ -19,7 +19,9 @@ import {
 } from '../../lib/cod/types';
 import { useCod } from './CodContext';
 import { codHref } from './bits';
-import { Button, Dialog, Field, NativeSelect, SearchInput, TextArea, TextInput, btnClass, cn } from './ui';
+import { Button, Dialog, Field, NativeSelect, TextArea, TextInput, cn } from './ui';
+import { ItemPicker } from './ItemPicker';
+import { isValidPhone } from '../../lib/cod/order-share';
 
 /** Yes / No confirmation with the spec's exact wording for risky status changes. */
 export function ConfirmDialog({ open, title, message, confirmLabel, busy, onConfirm, onCancel, danger }: {
@@ -115,7 +117,7 @@ export function StatusStepper({ status }: { status: OrderStatus }) {
   );
 }
 
-interface Line { key: string; item_id: number | null; item_name: string; quantity: number; unit_price: number; stock?: number }
+interface Line { key: string; item_id: number | null; item_name: string; sku?: string; quantity: number; unit_price: number; stock?: number }
 let lineSeq = 0;
 const nextKey = () => `l${++lineSeq}`;
 const today = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
@@ -137,7 +139,8 @@ export function OrderForm({ items, mode = 'create', source, onSaved, trigger }: 
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
-  const [search, setSearch] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const [lines, setLines] = useState<Line[]>([]);
   const [customer, setCustomer] = useState({ customer_name: '', customer_phone: '', customer_address: '', city: '', notes: '', customer_email: '', po_number: '', tracking_number: '' });
   const [customerType, setCustomerType] = useState<CustomerType>('retail');
@@ -149,11 +152,11 @@ export function OrderForm({ items, mode = 'create', source, onSaved, trigger }: 
   const [more, setMore] = useState(false);
 
   const itemById = useMemo(() => new Map(items.map(i => [i.id, i])), [items]);
-  const results = useMemo(() => {
-    if (!search) return [];
-    const q = search.toLowerCase();
-    return items.filter(i => i.name.toLowerCase().includes(q) || i.sku.toLowerCase().includes(q)).slice(0, 8);
-  }, [items, search]);
+  const inOrder = useMemo(() => {
+    const m = new Map<number, number>();
+    for (const l of lines) if (l.item_id != null) m.set(l.item_id, (m.get(l.item_id) ?? 0) + l.quantity);
+    return m;
+  }, [lines]);
 
   function fill() {
     if (!source) return;
@@ -174,13 +177,13 @@ export function OrderForm({ items, mode = 'create', source, onSaved, trigger }: 
       const item = l.item_id != null ? itemById.get(l.item_id) : undefined;
       // Reorder uses today's prices; editing keeps what was charged
       const price = mode === 'reorder' && item ? Number(item.selling_price) : Number(l.unit_price);
-      return { key: nextKey(), item_id: item ? item.id : null, item_name: item ? item.name : l.item_name, quantity: l.quantity, unit_price: price, stock: item?.stock_quantity };
+      return { key: nextKey(), item_id: item ? item.id : null, item_name: item ? item.name : l.item_name, sku: item?.sku, quantity: l.quantity, unit_price: price, stock: item?.stock_quantity };
     }));
     setMore(mode === 'edit' && !!(source.customer_email || source.po_number || source.tracking_number || source.notes || source.customer_type === 'wholesale'));
   }
 
   function reset() {
-    setLines([]); setSearch(''); setDeliveryCharge(0); setDiscount(0); setError(undefined); setPaymentType('cod');
+    setLines([]); setPhoneTouched(false); setDeliveryCharge(0); setDiscount(0); setError(undefined); setPaymentType('cod');
     setCredit({ days: '', due: '', note: '', initial: '', method: 'cash' }); setSaveAs('pending'); setCustomerType('retail'); setMore(false);
     setCustomer({ customer_name: '', customer_phone: '', customer_address: '', city: '', notes: '', customer_email: '', po_number: '', tracking_number: '' });
   }
@@ -190,11 +193,16 @@ export function OrderForm({ items, mode = 'create', source, onSaved, trigger }: 
   function addItem(item: Item) {
     setLines(prev => prev.some(l => l.item_id === item.id)
       ? prev.map(l => (l.item_id === item.id ? { ...l, quantity: l.quantity + 1 } : l))
-      : [...prev, { key: nextKey(), item_id: item.id, item_name: item.name, quantity: 1, unit_price: Number(item.selling_price), stock: item.stock_quantity }]);
-    setSearch('');
+      : [...prev, { key: nextKey(), item_id: item.id, item_name: item.name, sku: item.sku, quantity: 1, unit_price: Number(item.selling_price), stock: item.stock_quantity }]);
   }
-  const addCustom = () => setLines(prev => [...prev, { key: nextKey(), item_id: null, item_name: search.trim(), quantity: 1, unit_price: 0 }]);
+  const addCustom = () => setLines(prev => [...prev, { key: nextKey(), item_id: null, item_name: '', quantity: 1, unit_price: 0 }]);
   const updateLine = (key: string, patch: Partial<Line>) => setLines(prev => prev.map(l => (l.key === key ? { ...l, ...patch } : l)));
+
+  // COD and credit orders must reach the customer, so the phone is required there; any phone given must be valid
+  const phoneRequired = paymentType === 'cod' || paymentType === 'credit';
+  const phoneError = !customer.customer_phone.trim()
+    ? (phoneRequired ? t('err.phoneRequired') : undefined)
+    : (isValidPhone(customer.customer_phone) ? undefined : t('err.phoneInvalid'));
 
   const subtotal = round2(lines.reduce((s, l) => s + (l.quantity > 0 ? l.quantity * l.unit_price : 0), 0));
   const total = round2(subtotal + deliveryCharge - discount);
@@ -202,6 +210,7 @@ export function OrderForm({ items, mode = 'create', source, onSaved, trigger }: 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!customer.customer_name.trim()) { setError(t('err.customerName')); return; }
+    if (phoneError) { setPhoneTouched(true); setError(phoneError); document.getElementById('customer_phone')?.focus(); return; }
     const valid = lines.filter(l => l.quantity > 0);
     if (!valid.length) { setError(t('orders.addAtLeastOne', { item: labels.singularLower })); return; }
     if (valid.some(l => l.item_id == null && !l.item_name.trim())) { setError(t('err.customLineName')); return; }
@@ -257,51 +266,67 @@ export function OrderForm({ items, mode = 'create', source, onSaved, trigger }: 
           {/* Two columns even on phones: phone + city share a row so the order fits on one screen */}
           <div className="grid grid-cols-2 gap-3">
             <Field label={t('orders.customerName')} htmlFor="customer_name" className="col-span-2 sm:col-span-1"><TextInput id="customer_name" required {...c('customer_name')} /></Field>
-            <Field label={t('common.phone')} htmlFor="customer_phone"><TextInput id="customer_phone" type="tel" inputMode="tel" {...c('customer_phone')} /></Field>
+            <Field label={t('common.phone')} htmlFor="customer_phone" hint={!phoneRequired && !(phoneTouched && phoneError) ? t('orders.phoneOptional') : undefined}>
+              <TextInput id="customer_phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="077 123 4567" required={phoneRequired}
+                aria-invalid={phoneTouched && !!phoneError} aria-describedby={phoneTouched && phoneError ? 'customer_phone_error' : undefined}
+                onBlur={() => setPhoneTouched(true)} {...c('customer_phone')}
+                className={phoneTouched && phoneError ? 'border-red-400 focus:border-red-500' : undefined} />
+              {phoneTouched && phoneError && <p id="customer_phone_error" role="alert" className="text-xs text-red-600">{phoneError}</p>}
+            </Field>
             <Field label={t('common.city')} htmlFor="city" className="sm:order-last"><TextInput id="city" {...c('city')} /></Field>
             <Field label={t('common.address')} htmlFor="customer_address" className="col-span-2 sm:col-span-1"><TextInput id="customer_address" {...c('customer_address')} /></Field>
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-medium text-ink-700">{labels.plural}</p>
-            <div className="relative">
-              <SearchInput value={search} onChange={setSearch} placeholder={t('orders.searchItems', { items: labels.pluralLower })}
-                trailing={<button type="button" onClick={addCustom} className={btnClass('outline', 'sm', 'shrink-0')}><Plus /> {t('orders.customLine')}</button>} />
-              {results.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-ink-200 bg-white shadow-lg">
-                  {results.map(i => (
-                    <button type="button" key={i.id} onClick={() => addItem(i)}
-                      className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm hover:bg-ink-50">
-                      <span>{i.name} <span className="text-ink-400">{t('orders.inStock', { count: i.stock_quantity })}</span></span>
-                      <span className="text-ink-500">{formatLKR(i.selling_price)}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            {lines.length > 0 && (
-              <div className="divide-y divide-ink-100 rounded-xl border border-ink-200">
-                {lines.map(l => (
-                  <div key={l.key} className="flex flex-wrap items-center gap-2 p-2">
-                    {l.item_id == null ? (
-                      <TextInput aria-label={t('orders.customLineName')} placeholder={t('orders.customLineName')} value={l.item_name}
-                        onChange={e => updateLine(l.key, { item_name: e.target.value })} className="min-w-[8rem] flex-1" />
-                    ) : (
-                      <span className="min-w-[8rem] flex-1 truncate text-sm">
-                        {l.item_name}
-                        {l.stock != null && l.quantity > l.stock && <span className="ml-1 text-2xs font-semibold text-amber-700">{t('orders.lowStockWarn', { count: l.stock })}</span>}
-                      </span>
-                    )}
-                    <TextInput type="number" min={1} inputMode="numeric" aria-label={t('common.quantity')} value={l.quantity}
-                      onChange={e => updateLine(l.key, { quantity: Number(e.target.value) })} className="w-16" />
-                    <TextInput type="number" step="0.01" min={0} inputMode="decimal" aria-label={t('common.unitPrice')} value={l.unit_price}
-                      onChange={e => updateLine(l.key, { unit_price: Number(e.target.value) })} className="w-24" />
-                    <span className="w-24 text-right text-sm">{formatLKR(l.quantity * l.unit_price)}</span>
-                    <Button variant="ghost" size="icon" aria-label={t('orders.removeLine')}
-                      onClick={() => setLines(prev => prev.filter(x => x.key !== l.key))}><Trash2 /></Button>
-                  </div>
-                ))}
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-medium text-ink-700">{labels.plural}</p>
+              <div className="flex items-center gap-1.5">
+                <Button variant="ghost" size="sm" onClick={addCustom}><Plus /> {t('orders.customItem')}</Button>
+                <Button variant="outline" size="sm" onClick={() => setPickerOpen(true)}><Plus /> {t('orders.addItem')}</Button>
               </div>
+            </div>
+            {lines.length === 0 ? (
+              <button type="button" onClick={() => setPickerOpen(true)}
+                className="w-full rounded-xl border border-dashed border-ink-300 px-4 py-5 text-center text-sm text-ink-500 hover:bg-ink-50">
+                {t('orders.noLinesYet')}
+              </button>
+            ) : (
+              <ul className="space-y-2">
+                {lines.map(l => (
+                  <li key={l.key} className="flex flex-wrap items-center gap-2 rounded-xl border border-ink-200 bg-white p-2.5 sm:flex-nowrap sm:gap-3 sm:p-3">
+                    <div className="w-full min-w-0 sm:w-auto sm:flex-1 sm:min-w-[9rem]">
+                      {l.item_id == null ? (
+                        <TextInput aria-label={t('orders.customLineName')} placeholder={t('orders.customItemPlaceholder')} value={l.item_name}
+                          onChange={e => updateLine(l.key, { item_name: e.target.value })} />
+                      ) : (
+                        <>
+                          <p className="truncate text-sm font-semibold text-ink-900">{l.item_name}</p>
+                          <p className="truncate text-xs text-ink-500">
+                            {l.sku}
+                            {l.stock != null && l.quantity > l.stock && <span className="ml-1.5 font-semibold text-amber-700">· {t('orders.lowStockWarn', { count: l.stock })}</span>}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    {/* qty × price · total · remove: one line (under the name on phones). Wrappers fix the widths
+                        because TextInput is full-width by design. */}
+                    <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
+                      <div className="w-16 shrink-0">
+                        <TextInput type="number" min={1} inputMode="numeric" aria-label={t('common.quantity')} value={l.quantity}
+                          onChange={e => updateLine(l.key, { quantity: Number(e.target.value) })} className="text-center" />
+                      </div>
+                      <span className="text-ink-400" aria-hidden>×</span>
+                      <div className="w-28 shrink-0">
+                        <TextInput type="number" step="0.01" min={0} inputMode="decimal" aria-label={t('common.unitPrice')} value={l.unit_price}
+                          onChange={e => updateLine(l.key, { unit_price: Number(e.target.value) })} className="text-right" />
+                      </div>
+                      <span className="min-w-0 flex-1 text-right text-sm font-semibold text-ink-900 [overflow-wrap:anywhere]">{formatLKR(l.quantity * l.unit_price)}</span>
+                      <Button variant="ghost" size="icon" aria-label={t('orders.removeLine')} className="shrink-0"
+                        onClick={() => setLines(prev => prev.filter(x => x.key !== l.key))}><Trash2 /></Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
 
@@ -398,6 +423,7 @@ export function OrderForm({ items, mode = 'create', source, onSaved, trigger }: 
           </div>
         </form>
       </Dialog>
+      <ItemPicker open={pickerOpen} onClose={() => setPickerOpen(false)} items={items} inOrder={inOrder} lineCount={lines.length} onAdd={addItem} />
     </>
   );
 }

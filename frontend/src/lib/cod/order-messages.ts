@@ -58,7 +58,9 @@ export function orderError(err: unknown, t: Translator, me?: CodMe | null): stri
   const res = (err as { response?: { status?: number; data?: { code?: string; message?: unknown; item?: string; available?: number; outstanding?: number } } })?.response;
   const data = res?.data;
   if (res?.status === 403) return t("err.noPermission");
-  const code = data?.code ?? (typeof data?.message === "string" ? data.message : undefined);
+  // Rule errors carry a code; DTO checks return their coded message as a string or a list
+  const msg = Array.isArray(data?.message) ? data?.message[0] : data?.message;
+  const code = data?.code ?? (typeof msg === "string" ? msg : undefined);
   switch (code) {
     case "INSUFFICIENT_STOCK": return t("err.insufficientStock", { item: data?.item ?? "", available: data?.available ?? 0 });
     case "PAYMENT_TOO_LARGE": return t("err.paymentTooLarge", { outstanding: formatLKR(data?.outstanding ?? 0) });
@@ -72,6 +74,9 @@ export function orderError(err: unknown, t: Translator, me?: CodMe | null): stri
     case "AMOUNT_TOO_LARGE": return t("err.amountTooLarge");
     case "ITEM_NOT_FOUND": return t("err.itemNotFound");
     case "NOTHING_OUTSTANDING": return t("err.nothingOutstanding");
+    case "INVALID_PHONE": return t("err.phoneInvalid");
+    case "QUANTITY_TOO_LARGE": return t("err.quantityTooLarge");
+    case "PHONE_REQUIRED": return t("err.phoneRequired");
   }
   return apiError(err, t, me);
 }

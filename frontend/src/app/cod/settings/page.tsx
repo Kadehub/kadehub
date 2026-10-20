@@ -10,6 +10,7 @@ import { useT } from '../../../lib/cod/i18n/client';
 import { BRAND_SWATCHES, normalizeHex, readableTextColor } from '../../../lib/cod/brand';
 import { BUSINESS_TYPES, businessTypeLabel } from '../../../lib/cod/business-types';
 import { apiError } from '../../../lib/cod/session';
+import { isValidPhone } from '../../../lib/cod/order-share';
 
 // cod.kadehub.com/settings — business profile, branding, costing, password (reachable even when the plan lapsed)
 export default function CodSettingsPage() {
@@ -60,6 +61,7 @@ function BusinessForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) { setError(t('err.businessName')); return; }
+    if (form.phone?.trim() && !isValidPhone(form.phone)) { setError(t('err.phoneInvalid')); return; }
     setSaving(true);
     setError(undefined);
     try {

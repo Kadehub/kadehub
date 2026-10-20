@@ -113,7 +113,7 @@ export default function CodCreditPage() {
                       <tr key={c.key}>
                         <td className={tbl.td}>
                           <Link href={codHref(`/credit/${encodeURIComponent(c.key)}`)} className="font-semibold text-[color:var(--cod-primary)] hover:underline">{c.name}</Link>
-                          <span className="ml-2 text-xs text-ink-400">{t('credit.invoicesCount', { count: c.open_invoices, total: c.invoices })}</span>
+                          <span className="block text-xs text-ink-400">{t('credit.invoicesCount', { count: c.open_invoices, total: c.invoices })}</span>
                         </td>
                         <td className={`${tbl.td} text-ink-500`}>{c.phone || '—'}</td>
                         <td className={`${tbl.td} ${tbl.right}`}>{formatLKR(c.billed)}</td>

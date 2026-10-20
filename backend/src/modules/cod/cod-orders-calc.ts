@@ -3,7 +3,10 @@
  */
 import { round2 } from './cod-analytics';
 
-export const MAX_AMOUNT = 100_000_000;
+/** Largest value a money column (decimal 14,2) can hold. */
+export const MAX_AMOUNT = 999_999_999_999.99;
+/** Largest quantity an INT column can hold. */
+export const MAX_QUANTITY = 2_147_483_647;
 
 /** Error codes the API returns (the frontend translates them). */
 export class OrderRuleError extends Error {
@@ -25,11 +28,14 @@ export function computeOrderTotals(lines: LineInput[], deliveryCharge = 0, disco
     .filter(l => l.quantity > 0);
   for (const l of kept) {
     if (l.unit_price < 0) throw new OrderRuleError('NEGATIVE_AMOUNT');
+    if (l.quantity > MAX_QUANTITY) throw new OrderRuleError('QUANTITY_TOO_LARGE');
     if (l.item_id == null && !(l.custom_name ?? '').trim()) throw new OrderRuleError('CUSTOM_LINE_NAME');
   }
   if (!kept.length) throw new OrderRuleError('NO_LINES');
   const priced = kept.map(l => ({ ...l, line_total: round2(l.quantity * l.unit_price) }));
+  if (priced.some(l => l.line_total > MAX_AMOUNT)) throw new OrderRuleError('AMOUNT_TOO_LARGE');
   const subtotal = round2(priced.reduce((s, l) => s + l.line_total, 0));
+  if (subtotal > MAX_AMOUNT) throw new OrderRuleError('AMOUNT_TOO_LARGE');
   const total = round2(subtotal + delivery - disc);
   if (total < 0) throw new OrderRuleError('DISCOUNT_TOO_LARGE');
   if (total > MAX_AMOUNT) throw new OrderRuleError('AMOUNT_TOO_LARGE');
@@ -91,4 +97,30 @@ export function nextInvoiceNumber(year: number, lastInvoice: string | null | und
 export function phoneKey(phone: string | null | undefined) {
   const digits = (phone ?? '').replace(/\D/g, '');
   return digits.length >= 9 ? digits.slice(-9) : '';
+}
+
+/**
+ * Phone format check, shared rule with frontend/src/lib/cod/order-share.ts (isValidPhone):
+ * local 0XXXXXXXXX (10 digits) or XXXXXXXXX (9), 94XXXXXXXXX (11), or international +/00 with 10–15 digits.
+ * Only digits, spaces and + - ( ) . are allowed.
+ */
+export function isValidPhone(raw: string | null | undefined): boolean {
+  const s = (raw ?? '').trim();
+  if (!s || /[^\d\s()+\-.]/.test(s) || (s.indexOf('+') > 0)) return false;
+  const digits = s.replace(/\D/g, '');
+  if (s.startsWith('+')) return digits.length >= 10 && digits.length <= 15;
+  if (digits.startsWith('00')) return digits.length - 2 >= 10 && digits.length - 2 <= 15;
+  if (digits.startsWith('0')) return digits.length === 10;
+  if (digits.startsWith('94')) return digits.length === 11;
+  return digits.length === 9;
+}
+
+/** Cash-on-delivery and credit orders need a reachable customer; pay-now (walk-in) may skip the phone. */
+export function checkCustomerPhone(phone: string | null | undefined, paymentType: string) {
+  const p = (phone ?? '').trim();
+  if (!p) {
+    if (paymentType === 'cod' || paymentType === 'credit') throw new OrderRuleError('PHONE_REQUIRED');
+    return;
+  }
+  if (!isValidPhone(p)) throw new OrderRuleError('INVALID_PHONE');
 }

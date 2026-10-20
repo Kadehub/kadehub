@@ -12,6 +12,9 @@ interface Props {
 }
 
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+/** Open dialogs, newest last: Escape closes only the top one when dialogs are stacked (e.g. item picker over an order). */
+const openStack: symbol[] = [];
+
 const FIELDS = 'input:not([disabled]):not([readonly]):not([type=hidden]):not([type=file]),select:not([disabled]),textarea:not([disabled]):not([readonly])';
 
 /**
@@ -32,7 +35,10 @@ export default function Modal({ open, onClose, title, children, width = 'max-w-l
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
+    const me = Symbol('modal');
+    openStack.push(me);
     const handler = (e: KeyboardEvent) => {
+      if (openStack[openStack.length - 1] !== me) return;
       if (e.key === 'Escape') { onCloseRef.current(); return; }
       if (e.key !== 'Tab' || !panelRef.current) return;
       const focusable = panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE);
@@ -62,6 +68,7 @@ export default function Modal({ open, onClose, title, children, width = 'max-w-l
 
     return () => {
       clearTimeout(t);
+      openStack.splice(openStack.indexOf(me), 1);
       document.removeEventListener('keydown', handler);
       document.body.style.overflow = overflow;
       previous?.focus?.({ preventScroll: true });
@@ -75,7 +82,7 @@ export default function Modal({ open, onClose, title, children, width = 'max-w-l
       role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div className="absolute inset-0 bg-ink-900/40 backdrop-blur-sm" onClick={() => onCloseRef.current()} />
       <div ref={panelRef} tabIndex={-1}
-        className={`relative w-full ${width} h-[100dvh] sm:h-auto sm:max-h-[90vh] flex flex-col text-left bg-white sm:rounded-2xl shadow-modal animate-slide-up outline-none`}>
+        className={`relative w-full min-w-0 ${width} h-[100dvh] sm:h-auto sm:max-h-[90vh] flex flex-col text-left bg-white sm:rounded-2xl shadow-modal animate-slide-up outline-none`}>
         <div className="flex-shrink-0 flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 border-b border-ink-100">
           <h2 id="modal-title" className="text-base font-semibold text-ink-800 truncate">{title}</h2>
           <button type="button" onClick={() => onCloseRef.current()} aria-label="Close dialog"

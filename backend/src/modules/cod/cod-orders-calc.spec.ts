@@ -69,3 +69,33 @@ describe('phoneKey', () => {
   });
   it('short numbers have no key', () => expect(phoneKey('12345')).toBe(''));
 });
+
+describe('isValidPhone / checkCustomerPhone', () => {
+  const { isValidPhone, checkCustomerPhone } = require('./cod-orders-calc');
+  it.each([
+    ['0771234567', true], ['077 123 4567', true], ['077-123-4567', true], ['(011) 234 5678', true],
+    ['771234567', true], ['94771234567', true], ['+94 77 123 4567', true], ['+44 20 7946 0958', true], ['0094771234567', true],
+    ['077123456', false], ['07712345678', false], ['12345', false], ['abc0771234567', false], ['077+1234567', false],
+    ['+12345', false], ['', false], ['9477123456', false],
+  ])('%s → %s', (input, ok) => {
+    expect(isValidPhone(input)).toBe(ok);
+  });
+  it('requires a phone for COD and credit, not for pay-now', () => {
+    expect(() => checkCustomerPhone('', 'cod')).toThrow('PHONE_REQUIRED');
+    expect(() => checkCustomerPhone('  ', 'credit')).toThrow('PHONE_REQUIRED');
+    expect(() => checkCustomerPhone('', 'pay_now')).not.toThrow();
+    expect(() => checkCustomerPhone('0771', 'pay_now')).toThrow('INVALID_PHONE');
+    expect(() => checkCustomerPhone('0771234567', 'cod')).not.toThrow();
+  });
+});
+
+describe('order limits are the storage limits', () => {
+  const { computeOrderTotals } = require('./cod-orders-calc');
+  it('accepts quantities above 100,000', () => {
+    expect(computeOrderTotals([{ custom_name: 'Screws', quantity: 250000, unit_price: 2 }]).total_amount).toBe(500000);
+  });
+  it('rejects what the columns cannot hold, with codes', () => {
+    expect(() => computeOrderTotals([{ custom_name: 'X', quantity: 3_000_000_000, unit_price: 1 }])).toThrow('QUANTITY_TOO_LARGE');
+    expect(() => computeOrderTotals([{ custom_name: 'X', quantity: 1_000_000_000, unit_price: 20_000 }])).toThrow('AMOUNT_TOO_LARGE');
+  });
+});

@@ -16,6 +16,7 @@ import api from '../../../lib/api';
 import { useT } from '../../../lib/cod/i18n/client';
 import { BUSINESS_TYPES, businessTypeBlurb, businessTypeLabel, getBusinessType, type BusinessTypeKey } from '../../../lib/cod/business-types';
 import { apiError, type CodMe } from '../../../lib/cod/session';
+import { isValidPhone } from '../../../lib/cod/order-share';
 
 const TYPE_ICONS: Record<BusinessTypeKey, LucideIcon> = {
   fashion: Shirt, electronics: Smartphone, beauty: Sparkles, food: Cake, grocery: ShoppingBasket, home: Home,
@@ -129,6 +130,9 @@ function Wizard({ hasSession, defaultName, onDone }: { hasSession: boolean; defa
   }
 
   function goNext() {
+    // The browser shows our message on the phone field itself when the number isn't valid
+    const phone = formRef.current?.querySelector<HTMLInputElement>(`[data-step="${step}"] #phone`);
+    phone?.setCustomValidity(isValidPhone(values.phone) ? '' : t('err.phoneInvalid'));
     const inputs = formRef.current?.querySelectorAll<HTMLInputElement>(`[data-step="${step}"] input:not([type=hidden])`) ?? [];
     for (const el of Array.from(inputs)) if (!el.reportValidity()) return;
     setStep(s => Math.min(s + 1, last));
@@ -137,6 +141,7 @@ function Wizard({ hasSession, defaultName, onDone }: { hasSession: boolean; defa
   async function submit() {
     if (!values.business_name.trim()) { setError({ text: t('err.businessName') }); setStep(1); return; }
     if (!values.phone.trim()) { setError({ text: t('err.phone') }); setStep(1); return; }
+    if (!isValidPhone(values.phone)) { setError({ text: t('err.phoneInvalid') }); setStep(1); return; }
     setPending(true);
     setError(undefined);
     try {

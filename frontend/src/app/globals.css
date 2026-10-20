@@ -391,3 +391,16 @@ input:focus, select:focus, textarea:focus {
   .kh-modal-body :is(input:not([type=checkbox]):not([type=radio]):not([type=file]), select) { height: 2.5rem; }
   .kh-modal-body textarea { min-height: 0; }
 }
+
+/* Layout guards. In the components layer so an element's own utilities (min-w-*, absolute, sticky) still win. */
+@layer components {
+  /* Cards never grow wider than their grid/flex slot, and over-long words (huge amounts, long names) wrap inside */
+  .kh-card { min-width: 0; overflow-wrap: break-word; }
+  /* Grid cells default to "at least as wide as their content", so one wide table or long amount pushed the whole page
+     wider than the phone (the browser then zooms out and controls overlap). Let cells fit their column instead;
+     wide content scrolls (tables sit in overflow-x-auto wrappers) or wraps. */
+  .grid > * { min-width: 0; }
+  /* Absolutely positioned children (e.g. sr-only labels in table action cells) must stay inside the scroll box,
+     otherwise they escape it and stretch the page sideways. */
+  .overflow-x-auto, .overflow-auto { position: relative; }
+}

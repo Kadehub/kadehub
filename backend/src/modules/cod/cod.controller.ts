@@ -25,6 +25,18 @@ const imageUpload = FileInterceptor('file', {
   },
 });
 
+/** Public COD endpoints for the cod.kadehub.com landing page (no sign-in). */
+@Controller('cod/public')
+export class CodPublicController {
+  constructor(private account: CodAccountService) {}
+
+  /** Plans with prices, limits and feature bullets — the same data /cod/plans returns. */
+  @Get('plans')
+  plans() {
+    return this.account.plans();
+  }
+}
+
 /**
  * Account-level COD endpoints. No ProductGuard: they must keep working after the trial or plan
  * has lapsed (the billing and settings pages stay reachable, like CODPlatform's subscription gate).

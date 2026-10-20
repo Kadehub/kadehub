@@ -56,6 +56,8 @@ function CodGate({ children }: { children: React.ReactNode }) {
   const [me, setMe] = useState<CodMe | null>(null);
   const [failed, setFailed] = useState(false);
   const isRegister = path === '/register';
+  // cod.kadehub.com/ is the public landing page; the app itself starts at /dashboard
+  const isLanding = path === '/';
 
   const load = useCallback(async () => {
     setFailed(false);
@@ -68,10 +70,10 @@ function CodGate({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!hydrated || isRegister) return;
+    if (!hydrated || isRegister || isLanding) return;
     if (!token) { window.location.href = '/login'; return; }
     load();
-  }, [hydrated, token, isRegister, load]);
+  }, [hydrated, token, isRegister, isLanding, load]);
 
   // Route gates: no COD yet → set-up wizard; lapsed plan → billing
   const needsSetup = !!me && (!me.enabled || !me.business);
@@ -83,7 +85,7 @@ function CodGate({ children }: { children: React.ReactNode }) {
 
   const labels = useMemo(() => itemLabelsFor(me?.business?.business_type, t), [me?.business?.business_type, t]);
 
-  if (isRegister) {
+  if (isRegister || isLanding) {
     return <><BrandStyle color={COD_BLUE} />{children}</>;
   }
 
@@ -117,7 +119,7 @@ function CodGate({ children }: { children: React.ReactNode }) {
 
 function navItems(t: ReturnType<typeof useT>, itemsLabel: string) {
   return [
-    { href: '/', label: t('nav.dashboard'), icon: LayoutDashboard },
+    { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { href: '/items', label: itemsLabel, icon: Package },
     { href: '/orders', label: t('nav.orders'), icon: Receipt },
     { href: '/catalog', label: t('nav.catalog'), icon: BookImage },
@@ -132,7 +134,7 @@ function Shell({ me, itemsLabel, path, children }: { me: CodMe & { business: Bus
   const t = useT();
   const logout = useAuthStore(s => s.logout);
   const nav = navItems(t, itemsLabel);
-  const isActive = (href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`));
+  const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
   const sub = me.subscription!;
   const trialDaysLeft = sub.status === 'trialing' ? daysRemaining(sub.trial_ends_at) : null;
   const signOut = () => { logout(); window.location.href = '/login'; };
@@ -142,7 +144,7 @@ function Shell({ me, itemsLabel, path, children }: { me: CodMe & { business: Bus
     <div className="flex min-h-screen bg-ink-50">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-ink-200 bg-white md:flex">
         <div className="flex h-14 items-center gap-2 border-b border-ink-100 px-4">
-          <Link href={codHref('/')} className="flex min-w-0 items-center gap-2">
+          <Link href={codHref('/dashboard')} className="flex min-w-0 items-center gap-2">
             {b.logo_url
               // eslint-disable-next-line @next/next/no-img-element
               ? <img src={b.logo_url} alt="" className="h-7 w-7 shrink-0 rounded object-contain" />

@@ -31,17 +31,17 @@ export const PRODUCTS: ProductDef[] = [
   {
     slug: 'pos', name: 'KadeHub POS', subdomain: 'pos', status: 'live', homePath: '/dashboard', color: '#00A884',
     tagline: 'Point of sale, inventory and CRM for local shops',
-    features: ['Fast checkout with CASH, CARD, LANKAQR and credit', 'Stock, batches and expiry alerts', 'Loyalty, suppliers, expenses and reports'],
+    features: ['Fast checkout with cash, card, QR and credit', 'Stock, batches and expiry alerts', 'Loyalty, suppliers, expenses and reports'],
   },
   {
-    slug: 'cod', name: 'KadeHub COD', subdomain: 'cod', status: 'live', homePath: '/', color: '#2563EB',
+    slug: 'cod', name: 'KadeHub COD', subdomain: 'cod', status: 'live', homePath: '/dashboard', color: '#2563EB',
     tagline: 'Cash-on-delivery orders, landed costs and invoices',
     features: ['Order pipeline from pending to delivered', 'Landed cost and profit per item', 'Invoices, catalogs and WhatsApp sharing'],
   },
   {
     slug: 'tasks', name: 'KadeHub Tasks', subdomain: 'tasks', status: 'live', homePath: '/', color: '#F59E0B',
     tagline: 'Post a task, get offers from local taskers',
-    features: ['Post any job with a budget', 'Compare offers and pick a tasker', 'Secure payment and reviews'],
+    features: ['Post any job with a budget', 'Compare offers and pick a tasker', 'Ratings and reviews you can trust'],
   },
 ];
 

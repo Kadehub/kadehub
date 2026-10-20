@@ -1,167 +1,114 @@
-'use client';
+import type { Metadata } from 'next';
+import {
+  Truck, Calculator, PackageCheck, FileText, Share2, BarChart3, BookImage, Languages, Palette, Wallet, Search,
+  Layers, UserPlus, PackagePlus, ClipboardList, TrendingUp, ShoppingBag, Plane, Shirt, Sparkles,
+} from 'lucide-react';
+import {
+  LandingHeader, LandingHero, LandingStats, LandingFeatures, LandingShowcase, LandingSteps, LandingAudiences,
+  LandingFaq, LandingCta, LandingFooter,
+} from '../../components/platform/ProductLanding';
+import { CodMock, LandedCostMock, ShareMock } from '../../components/platform/ProductMocks';
+import CodPricing from '../../components/cod/CodPricing';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { MascotState } from '../../components/brand/Mascot';
-import InteractiveMascot from '../../components/brand/InteractiveMascot';
-import { useCod } from '../../components/cod/CodContext';
-import { PremiumLock, codHref } from '../../components/cod/bits';
-import { Badge, Button, Card, Kpi, PageHeader, tbl } from '../../components/cod/ui';
-import api from '../../lib/api';
-import { useT } from '../../lib/cod/i18n/client';
-import { formatDate, formatLKR, formatLKRCompact } from '../../lib/cod/format';
-import { monthLabel } from '../../lib/cod/dates';
-import { STATUS_STYLE } from '../../lib/cod/order-status';
-import type { DashboardModel } from '../../lib/cod/dashboard';
-import type { OrderStatus } from '../../lib/cod/types';
+export const metadata: Metadata = {
+  title: { absolute: 'KadeHub COD — Cash-on-delivery orders, costs and invoices' },
+  description: 'Run your cash-on-delivery business: track landed costs, move orders from pending to delivered, share invoices on WhatsApp and see your real profit.',
+};
 
-// cod.kadehub.com/ — KPIs for this month, revenue vs expenses (Premium), status mix, recent orders, low stock
-export default function CodDashboardPage() {
-  const t = useT();
-  const { me, labels } = useCod();
-  const [data, setData] = useState<{ premium: boolean; model: DashboardModel } | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  const load = () => {
-    setFailed(false);
-    api.get('/cod/dashboard').then(r => setData(r.data)).catch(() => setFailed(true));
-  };
-  useEffect(load, []);
-
-  if (failed) {
-    return <MascotState variant="error" title={t('app.loadErrorTitle')} description={t('app.loadErrorBody')}
-      action={<Button onClick={load}>{t('common.retry')}</Button>} />;
-  }
-  if (!data) return <MascotState variant="loading" size="sm" title={t('app.loading')} />;
-
-  const { model, premium } = data;
-  const donut = model.ordersByStatus.filter(s => s.count > 0).map(s => ({ ...s, name: t(`status.${s.status as OrderStatus}`) }));
-  // The backend already sends sample numbers here for accounts without Premium
-  const monthly = model.monthly.map(m => ({ ...m, label: monthLabel(m.key, t.locale) }));
-
+// cod.kadehub.com/ — public landing page. The app itself lives at /dashboard (CodRoot skips its sign-in gate here).
+export default function CodLandingPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader title={t('nav.dashboard')} subtitle={t('dash.subtitle', { business: me.business.name })}
-        leading={<InteractiveMascot width={52} bubbleSide="right" label={t('mascot.label')}
-          messages={[t('mascot.tip1'), t('mascot.tip2'), t('mascot.tip3')]} />} />
+    <div className="min-h-screen flex flex-col bg-white">
+      <LandingHeader slug="cod"
+        links={[{ label: 'Features', href: '#features' }, { label: 'Pricing', href: '#pricing' }, { label: 'FAQ', href: '#faq' }]}
+        signIn={{ label: 'Sign in', href: '/login' }}
+        cta={{ label: 'Start free', href: '/register' }} />
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
-        <Kpi label={t('common.revenue')} value={formatLKRCompact(model.revenue)} />
-        <Kpi label={t('common.expenses')} value={formatLKRCompact(model.expensesTotal)} />
-        <Kpi label={t('common.netProfit')} value={formatLKRCompact(model.netProfit)}
-          hint={model.netProfit >= 0 ? t('dash.profitable') : t('dash.loss')} tone={model.netProfit < 0 ? 'danger' : undefined} />
-        <Kpi label={t('dash.codPipeline')} value={formatLKRCompact(model.codPipelineValue)}
-          hint={t('dash.pipelineHint', { count: model.codPipelineCount })} />
-        <Kpi label={t('dash.inventoryValue')} value={formatLKRCompact(model.inventoryValue)} />
-        <Kpi label={t('dash.lowStock')} value={String(model.lowStockCount)}
-          hint={model.lowStockCount > 0 ? t('dash.needsRestock') : t('dash.allGood')} />
-      </div>
+      <main className="flex-1">
+        <LandingHero slug="cod"
+          title="Every cash-on-delivery order,"
+          highlight="under control."
+          subtitle="Know what each item really costs you, move orders from pending to delivered, and send invoices to customers in a tap."
+          primary={{ label: 'Start 14-day free trial', href: '/register' }}
+          secondary={{ label: 'Sign in', href: '/login' }}
+          points={['No card needed to start', 'Invoices in English, Sinhala or Tamil', 'Works on your phone', 'Set up in under 5 minutes']}
+          preview={<CodMock />} />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card title={t('dash.chartRevExp')} className="lg:col-span-2" bodyClassName="h-72">
-          <PremiumLock locked={!premium} message={t('premium.unlockChart')} className="h-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthly}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="label" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={v => formatLKRCompact(v)} width={64} />
-                <Tooltip formatter={(v: number) => formatLKR(v)} />
-                <Bar dataKey="revenue" name={t('common.revenue')} fill="var(--cod-primary)" radius={4} />
-                <Bar dataKey="expenses" name={t('common.expenses')} fill="#ef4444" radius={4} />
-              </BarChart>
-            </ResponsiveContainer>
-          </PremiumLock>
-        </Card>
+        <LandingStats slug="cod" items={[
+          { value: '6', label: 'order stages' },
+          { value: '14', label: 'day free trial' },
+          { value: '3', label: 'invoice languages' },
+          { value: '1', label: 'tap to share' },
+        ]} />
 
-        <Card title={t('dash.ordersByStatus')} bodyClassName="h-72">
-          {donut.length === 0 ? (
-            <p className="flex h-full items-center justify-center text-sm text-ink-400">{t('dash.noOrdersMonth')}</p>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={donut} dataKey="count" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={2}>
-                  {donut.map(d => <Cell key={d.status} fill={STATUS_STYLE[d.status as OrderStatus].color} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </Card>
-      </div>
+        <LandingFeatures slug="cod" eyebrow="Features" title="Everything a COD business runs on"
+          subtitle="Built around how cash-on-delivery sellers actually work: buy, list, take orders, deliver, collect."
+          items={[
+            { icon: Truck,        title: 'Order pipeline', text: 'Pending, confirmed, ongoing, delivered, returned and cancelled, with status cards and totals.' },
+            { icon: Calculator,   title: 'Landed cost calculator', text: 'Buying price in any currency, exchange rate, shipping, customs and other costs per item.' },
+            { icon: PackageCheck, title: 'Stock that follows orders', text: 'Stock goes down when an order is delivered and comes back if it is returned.' },
+            { icon: FileText,     title: 'Printable invoices', text: 'Numbered invoices with your logo and brand colour, ready to print or save as PDF.' },
+            { icon: Share2,       title: 'WhatsApp sharing', text: 'Send order details and the invoice PDF straight to your customer.' },
+            { icon: BookImage,    title: 'Catalog generator', text: 'Turn your items into a neat catalog and share it as PDF or images.' },
+            { icon: BarChart3,    title: 'Reports and profit', text: 'Revenue, cost of goods, expenses and net profit for any date range.' },
+            { icon: Wallet,       title: 'Expense tracking', text: 'Log rent, ads, delivery and other costs by category.' },
+            { icon: Search,       title: 'Find anything fast', text: 'Search orders by invoice, customer or phone, and filter by date.' },
+          ]} />
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card title={t('dash.recentOrders')}>
-          {model.recentOrders.length === 0 ? (
-            <p className="text-sm text-ink-400">{t('dash.noOrders')}</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className={tbl.table}>
-                <thead><tr>
-                  <th className={tbl.th}>{t('common.invoice')}</th>
-                  <th className={tbl.th}>{t('common.customer')}</th>
-                  <th className={tbl.th}>{t('common.status')}</th>
-                  <th className={`${tbl.th} ${tbl.right}`}>{t('common.total')}</th>
-                </tr></thead>
-                <tbody>
-                  {model.recentOrders.map(o => (
-                    <tr key={o.id}>
-                      <td className={tbl.td}><Link href={codHref(`/orders/${o.id}`)} className="font-medium underline underline-offset-4">{o.invoice_number}</Link></td>
-                      <td className={tbl.td}>{o.customer_name}</td>
-                      <td className={tbl.td}><span className={`rounded-full px-2 py-0.5 text-2xs font-semibold ${STATUS_STYLE[o.status].badge}`}>{t(`status.${o.status}`)}</span></td>
-                      <td className={`${tbl.td} ${tbl.right}`}>{formatLKR(o.total_amount)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
+        <LandingShowcase slug="cod" rows={[
+          {
+            eyebrow: 'Know your numbers',
+            title: 'See the real cost of every item',
+            text: 'Add the buying price, exchange rate, shipping and customs once. KadeHub COD works out the landed cost, your profit per unit and your margin.',
+            bullets: ['Buy in USD, CNY or LKR with your own exchange rate', 'Profit and margin shown next to every item', 'Turn off import fields if you buy locally'],
+            visual: <LandedCostMock />,
+          },
+          {
+            eyebrow: 'Keep customers in the loop',
+            title: 'Share orders and invoices on WhatsApp',
+            text: 'One tap opens a WhatsApp chat with the full order details, or shares the invoice PDF through any app on your phone.',
+            bullets: ['Order message written for you', 'Invoice PDF with your logo and footer', 'Sinhala and Tamil names print correctly'],
+            visual: <ShareMock />,
+          },
+        ]} />
 
-        <Card title={t('dash.lowStock')}>
-          {model.lowStockItems.length === 0 ? (
-            <p className="text-sm text-ink-400">{t('dash.nothingLow')}</p>
-          ) : (
-            <table className={tbl.table}>
-              <thead><tr>
-                <th className={tbl.th}>{labels.singular}</th>
-                <th className={`${tbl.th} ${tbl.right}`}>{t('common.stock')}</th>
-              </tr></thead>
-              <tbody>
-                {model.lowStockItems.map(i => (
-                  <tr key={i.id}>
-                    <td className={tbl.td}><Link href={codHref('/items')} className="underline underline-offset-4">{i.name}</Link></td>
-                    <td className={`${tbl.td} ${tbl.right}`}><Badge tone="red">{i.stock_quantity}</Badge></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </Card>
-      </div>
+        <LandingSteps slug="cod" eyebrow="How it works" title="From first item to first delivery" steps={[
+          { icon: UserPlus,      title: 'Create your business', text: 'Pick your business type and brand colour. Your trial starts right away.' },
+          { icon: PackagePlus,   title: 'Add your items', text: 'Enter costs once and see profit per item instantly.' },
+          { icon: ClipboardList, title: 'Take orders', text: 'Pick items, add the customer and the invoice number is created for you.' },
+          { icon: TrendingUp,    title: 'Deliver and grow', text: 'Mark orders delivered, collect cash and watch your profit in reports.' },
+        ]} />
 
-      {model.topItems.length > 0 && (
-        <Card title={t('dash.topItems', { items: labels.pluralLower })}>
-          <table className={tbl.table}>
-            <thead><tr>
-              <th className={tbl.th}>{labels.singular}</th>
-              <th className={`${tbl.th} ${tbl.right}`}>{t('dash.qtySold')}</th>
-              <th className={`${tbl.th} ${tbl.right}`}>{t('common.revenue')}</th>
-            </tr></thead>
-            <tbody>
-              {model.topItems.map(i => (
-                <tr key={i.name}>
-                  <td className={tbl.td}>{i.name}</td>
-                  <td className={`${tbl.td} ${tbl.right}`}>{i.qty}</td>
-                  <td className={`${tbl.td} ${tbl.right}`}>{formatLKR(i.revenue)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
-      )}
+        <LandingAudiences slug="cod" eyebrow="Made for" title="Sellers who deliver to the door" items={[
+          { icon: ShoppingBag, title: 'Social-media shops', text: 'Sell on Facebook, Instagram or TikTok and deliver cash on delivery.' },
+          { icon: Plane,       title: 'Importers', text: 'Buy abroad, add shipping and customs, and price with confidence.' },
+          { icon: Shirt,       title: 'Fashion and beauty', text: 'Business-type presets rename sections and suggest categories for you.' },
+          { icon: Sparkles,    title: 'Growing brands', text: 'Your logo and colour on invoices, catalogs and across the app.' },
+        ]} />
 
-      <p className="text-xs text-ink-400">{t('dash.lastUpdated', { date: formatDate(new Date(), t.locale) })}</p>
+        <CodPricing />
+
+        <LandingFeatures slug="cod" id="extras" eyebrow="Also included" title="Small things that save time" items={[
+          { icon: Languages, title: 'Three languages', text: 'Use the app in English, Sinhala or Tamil. Invoices and catalogs follow your choice.' },
+          { icon: Palette,   title: 'Your brand', text: 'Logo, brand colour, tagline and invoice footer, applied everywhere.' },
+          { icon: Layers,    title: 'Bulk updates', text: 'Select many orders and change their status at once (Premium).' },
+        ]} />
+
+        <LandingFaq slug="cod" eyebrow="FAQ" title="Questions, answered" items={[
+          { q: 'Is there a free trial?', a: 'Yes. Every new business gets a 14-day free trial. No card is needed to start.' },
+          { q: 'What happens when the trial ends?', a: 'Choose a plan from the billing page. Your items, orders and settings stay exactly as you left them.' },
+          { q: 'How do I pay?', a: 'By bank transfer (upload your slip from the billing page) or by online card payment.' },
+          { q: 'Does stock update automatically?', a: 'Yes. Stock is reduced when an order is marked delivered and restored if the order is returned or cancelled after delivery.' },
+          { q: 'Can I use it with KadeHub POS?', a: 'Yes. The same KadeHub account works for both. Turn COD on from your app launcher.' },
+          { q: 'Which languages are supported?', a: 'English, Sinhala and Tamil, including printed invoices and catalogs.' },
+        ]} />
+
+        <LandingCta slug="cod" title="Ready to run your COD business properly?"
+          text="Start your 14-day free trial. It takes less than five minutes to set up."
+          action={{ label: 'Start free trial', href: '/register' }} pose="celebrate" />
+      </main>
+
+      <LandingFooter slug="cod" blurb="Cash-on-delivery orders, landed costs, invoices and reports for sellers who deliver to the door." />
     </div>
   );
 }

@@ -9,7 +9,7 @@ import { CodItem } from '../../database/entities/cod-item.entity';
 import { CodExpense } from '../../database/entities/cod-expense.entity';
 import { CodOrder } from '../../database/entities/cod-order.entity';
 import { CodOrderItem } from '../../database/entities/cod-order-item.entity';
-import { CodAccountController, CodController } from './cod.controller';
+import { CodPublicController, CodAccountController, CodController } from './cod.controller';
 import { CodAccountService } from './cod-account.service';
 import { CodService } from './cod.service';
 
@@ -18,7 +18,7 @@ import { CodService } from './cod.service';
   imports: [TypeOrmModule.forFeature([
     Subscription, Package, User, Tenant, CodBusiness, CodItem, CodExpense, CodOrder, CodOrderItem,
   ])],
-  controllers: [CodAccountController, CodController],
+  controllers: [CodPublicController, CodAccountController, CodController],
   providers: [CodAccountService, CodService],
 })
 export class CodModule {}

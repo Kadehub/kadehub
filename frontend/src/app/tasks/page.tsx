@@ -2,11 +2,18 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, ArrowRight, PenLine, MessageSquare, CheckCircle2, Briefcase } from 'lucide-react';
+import {
+  Search, ArrowRight, Briefcase, ListChecks, Users, MessageCircle, Lock, Star, Bell, Globe, Flag, PenLine,
+  Inbox, UserCheck, CheckCircle2, Home, Store, Laptop, Hammer,
+} from 'lucide-react';
 import InteractiveMascot from '../../components/brand/InteractiveMascot';
 import TaskCard from '../../components/tasks/TaskCard';
 import { CategoryIcon, EmptyState } from '../../components/tasks/ui';
 import { productPath } from '../../lib/platform';
+import {
+  LandingFeatures, LandingShowcase, LandingSteps, LandingAudiences, LandingFaq,
+} from '../../components/platform/ProductLanding';
+import { TasksMock, QaMock, ReviewMock } from '../../components/platform/ProductMocks';
 import { useTasksT } from '../../lib/tasks/i18n';
 import type { Category, Paged, TaskCard as TaskCardData } from '../../lib/tasks/types';
 import api from '../../lib/api';
@@ -30,12 +37,6 @@ export default function TasksHomePage() {
     e.preventDefault();
     router.push(p(`/browse${q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ''}`));
   };
-
-  const steps = [
-    { icon: PenLine, title: t('home.step1'), desc: t('home.step1d') },
-    { icon: MessageSquare, title: t('home.step2'), desc: t('home.step2d') },
-    { icon: CheckCircle2, title: t('home.step3'), desc: t('home.step3d') },
-  ];
 
   return (
     <div>
@@ -104,24 +105,47 @@ export default function TasksHomePage() {
         )}
       </section>
 
-      {/* How it works */}
-      <section className="bg-white border-y border-ink-100">
-        <div className="max-w-6xl mx-auto px-4 py-12">
-          <h2 className="text-xl sm:text-2xl font-extrabold text-ink-900 text-center">{t('home.how')}</h2>
-          <div className="mt-8 grid gap-5 sm:grid-cols-3">
-            {steps.map(({ icon: Icon, title, desc }, i) => (
-              <div key={title} className="rounded-2xl border border-ink-100 p-5">
-                <div className="flex items-center gap-3">
-                  <span className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-light text-amber-dark"><Icon size={19} /></span>
-                  <span className="text-xs font-bold text-ink-400">0{i + 1}</span>
-                </div>
-                <h3 className="mt-4 font-bold text-ink-900">{title}</h3>
-                <p className="mt-1 text-sm text-ink-500">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Landing sections: what Tasks offers, how it works, who it's for, FAQ */}
+      <LandingFeatures slug="tasks" eyebrow={t('land.eyebrowFeatures')} title={t('land.featTitle')} subtitle={t('land.featSub')} items={[
+        { icon: ListChecks,    title: t('land.f1t'), text: t('land.f1d') },
+        { icon: Users,         title: t('land.f2t'), text: t('land.f2d') },
+        { icon: MessageCircle, title: t('land.f3t'), text: t('land.f3d') },
+        { icon: Lock,          title: t('land.f6t'), text: t('land.f6d') },
+        { icon: Star,          title: t('land.f5t'), text: t('land.f5d') },
+        { icon: MessageCircle, title: t('land.f4t'), text: t('land.f4d') },
+        { icon: Bell,          title: t('land.f7t'), text: t('land.f7d') },
+        { icon: Globe,         title: t('land.f8t'), text: t('land.f8d') },
+        { icon: Flag,          title: t('land.f9t'), text: t('land.f9d') },
+      ]} />
+
+      <LandingShowcase slug="tasks" rows={[
+        { eyebrow: t('land.s1e'), title: t('land.s1t'), text: t('land.s1d'), bullets: [t('land.s1b1'), t('land.s1b2'), t('land.s1b3')], visual: <TasksMock /> },
+        { eyebrow: t('land.s2e'), title: t('land.s2t'), text: t('land.s2d'), bullets: [t('land.s2b1'), t('land.s2b2'), t('land.s2b3')], visual: <QaMock /> },
+        { eyebrow: t('land.s3e'), title: t('land.s3t'), text: t('land.s3d'), bullets: [t('land.s3b1'), t('land.s3b2'), t('land.s3b3')], visual: <ReviewMock /> },
+      ]} />
+
+      <LandingSteps slug="tasks" eyebrow={t('land.eyebrowHow')} title={t('land.howTitle')} steps={[
+        { icon: PenLine,      title: t('land.st1t'), text: t('land.st1d') },
+        { icon: Inbox,        title: t('land.st2t'), text: t('land.st2d') },
+        { icon: UserCheck,    title: t('land.st3t'), text: t('land.st3d') },
+        { icon: CheckCircle2, title: t('land.st4t'), text: t('land.st4d') },
+      ]} />
+
+      <LandingAudiences slug="tasks" eyebrow={t('land.eyebrowFor')} title={t('land.forTitle')} items={[
+        { icon: Home,   title: t('land.a1t'), text: t('land.a1d') },
+        { icon: Store,  title: t('land.a2t'), text: t('land.a2d') },
+        { icon: Laptop, title: t('land.a3t'), text: t('land.a3d') },
+        { icon: Hammer, title: t('land.a4t'), text: t('land.a4d') },
+      ]} />
+
+      <LandingFaq slug="tasks" eyebrow={t('land.eyebrowFaq')} title={t('land.faqTitle')} items={[
+        { q: t('land.q1'), a: t('land.a1') },
+        { q: t('land.q2'), a: t('land.a2') },
+        { q: t('land.q3'), a: t('land.a3') },
+        { q: t('land.q4'), a: t('land.a4') },
+        { q: t('land.q5'), a: t('land.a5') },
+        { q: t('land.q6'), a: t('land.a6') },
+      ]} />
 
       {/* Earn */}
       <section className="max-w-6xl mx-auto px-4 py-12">

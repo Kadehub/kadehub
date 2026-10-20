@@ -42,7 +42,7 @@ export default function CodRegisterPage() {
     api.get<CodMe>('/cod/me')
       .then(({ data }) => {
         setMe(data);
-        if (data.enabled && data.business) router.replace(codHref('/'));
+        if (data.enabled && data.business) router.replace(codHref('/dashboard'));
         else setMode(data.enabled ? 'setup' : 'enable');
       })
       .catch(() => setMode('new'));
@@ -65,7 +65,7 @@ export default function CodRegisterPage() {
         {mode === 'done' && (
           <div className="kh-card p-6">
             <MascotState variant="success" size="lg" title={t('reg.successTitle')} description={t('reg.successBody')}
-              action={<a href={codHref('/')} className={btnClass('primary')}>{t('reg.openDashboard')} <ArrowRight /></a>} />
+              action={<a href={codHref('/dashboard')} className={btnClass('primary')}>{t('reg.openDashboard')} <ArrowRight /></a>} />
           </div>
         )}
       </div>

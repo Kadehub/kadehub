@@ -1,5 +1,6 @@
 import { ArrowRight, Check } from 'lucide-react';
 import type { ProductDef } from '../../lib/platform';
+import ProductIcon from './ProductIcon';
 
 const STATUS_LABEL: Record<ProductDef['status'], { text: string; cls: string }> = {
   live:        { text: 'Live',        cls: 'kh-badge-teal' },
@@ -18,12 +19,9 @@ interface Props {
 export default function ProductCard({ product, href, cta, badge }: Props) {
   const status = badge ?? STATUS_LABEL[product.status];
   return (
-    <div className="kh-card p-6 flex flex-col">
+    <div className="group flex-1 kh-card p-6 flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
       <div className="flex items-start justify-between gap-3">
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white text-lg font-extrabold flex-shrink-0"
-          style={{ background: product.color }}>
-          {product.name.replace('KadeHub ', '')[0]}
-        </div>
+        <ProductIcon slug={product.slug} color={product.color} size={52} />
         <span className={`text-2xs font-semibold px-2 py-1 rounded-full ${status.cls}`}>{status.text}</span>
       </div>
       <h3 className="mt-4 text-lg font-bold text-ink-900">{product.name}</h3>

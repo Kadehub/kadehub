@@ -1,6 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { PRODUCTS, productUrl, hubUrl } from '../../lib/platform';
+import ProductIcon from '../../components/platform/ProductIcon';
+import Reveal from '../../components/platform/Reveal';
+import { PosMock } from '../../components/platform/ProductMocks';
 
 const WHATSAPP_URL = 'https://wa.me/94702470064';
 
@@ -132,88 +135,44 @@ function Navbar() {
   );
 }
 
+// Compact banner: this page is the POS subdomain's landing, the platform story lives on the hub
 function Hero() {
+  const points = ['14-day free trial', 'No payment required', 'Keeps selling offline', 'English and Sinhala'];
   return (
-    <section style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'linear-gradient(135deg, #0a4f40 0%, #0d6e5a 40%, #0f8a6e 70%, #1aab87 100%)',
-      position: 'relative', overflow: 'hidden', padding: '120px 24px 80px',
-    }}>
-      <div style={{ position: 'absolute', inset: 0, opacity: 0.06 }}>
-        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="white" strokeWidth="1"/>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)"/>
-        </svg>
-      </div>
-      <div style={{ position: 'absolute', top: '10%', right: '8%', width: 320, height: 320, borderRadius: '50%', background: 'rgba(245,166,35,0.12)', filter: 'blur(60px)' }}/>
-      <div style={{ position: 'absolute', bottom: '15%', left: '5%', width: 240, height: 240, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', filter: 'blur(50px)' }}/>
-
-      <div style={{ maxWidth: 1200, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative', zIndex: 1 }}>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 28,
-          background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.2)', borderRadius: 100,
-          padding: '8px 18px', color: '#fff', fontSize: 13, fontWeight: 600, fontFamily: 'Poppins,sans-serif',
-        }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f5a623', display: 'inline-block', boxShadow: '0 0 8px #f5a623' }}/>
-          Built for Sri Lankan Retailers
-        </div>
-
-        <h1 style={{
-          fontSize: 'clamp(2.6rem, 6vw, 4.2rem)', fontWeight: 800, color: '#fff',
-          lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: 24,
-          fontFamily: 'Poppins,sans-serif', maxWidth: 800,
-        }}>
-          Smart Retail,{' '}
-          <span style={{ color: '#f5a623' }}>Simplified.</span>
-        </h1>
-
-        <p style={{
-          fontSize: 'clamp(1rem, 2vw, 1.2rem)', color: 'rgba(255,255,255,0.82)',
-          maxWidth: 640, lineHeight: 1.7, marginBottom: 12,
-          fontFamily: 'Poppins,sans-serif', fontWeight: 400,
-        }}>
-          POS, inventory, loyalty, LANKAQR payments, and analytics — in one platform built for grocery stores, pharmacies, and retail shops in Sri Lanka.
-        </p>
-        <p style={{
-          fontSize: 14, color: 'rgba(255,255,255,0.65)', maxWidth: 520, marginBottom: 40,
-          fontFamily: 'Poppins,sans-serif', fontWeight: 500,
-        }}>
-          14-day free trial · No payment required · Full access to all modules
-        </p>
-
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <a href="/register" style={{
-            padding: '16px 36px', borderRadius: 12, fontWeight: 700, fontSize: 16,
-            background: '#f5a623', color: '#0a2e25',
-            textDecoration: 'none', boxShadow: '0 4px 20px rgba(245,166,35,0.45)',
-            transition: 'all 0.2s', fontFamily: 'Poppins,sans-serif',
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-          }}>
-            Start Free Trial
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+    <section style={{ background: 'linear-gradient(135deg, #0a4f40 0%, #0d6e5a 45%, #14a085 100%)', padding: '104px 24px 56px' }}>
+      <div className="max-w-6xl mx-auto grid gap-10 lg:grid-cols-[1.1fr_1fr] items-center">
+        <div className="group text-center lg:text-left">
+          <a href={hubUrl('/')} className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 p-1 pr-3 text-xs font-semibold text-white/90 hover:bg-white/15">
+            <ProductIcon slug="pos" color="#00A884" size={26} />
+            Part of KadeHub <span aria-hidden>→</span>
           </a>
-          <a href="/login" style={{
-            padding: '16px 36px', borderRadius: 12, fontWeight: 700, fontSize: 16,
-            background: 'rgba(255,255,255,0.1)', color: '#fff',
-            border: '2px solid rgba(255,255,255,0.35)',
-            textDecoration: 'none', transition: 'all 0.2s', fontFamily: 'Poppins,sans-serif',
-            backdropFilter: 'blur(8px)',
-          }}>Sign In to POS</a>
+          <h1 className="mt-5 text-4xl sm:text-5xl font-extrabold text-white leading-tight tracking-tight">
+            Smart retail, <span style={{ color: '#f5a623' }}>simplified.</span>
+          </h1>
+          <p className="mt-4 text-base sm:text-lg text-white/80 max-w-xl mx-auto lg:mx-0">
+            POS, inventory, loyalty, QR payments and reports in one place, built for grocery stores, pharmacies and retail shops.
+          </p>
+          <div className="mt-7 flex flex-wrap gap-3 justify-center lg:justify-start">
+            <a href="/register" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold shadow-md"
+              style={{ background: '#f5a623', color: '#0a2e25' }}>
+              Start free trial <span aria-hidden>→</span>
+            </a>
+            <a href="/login" className="inline-flex items-center px-6 py-3 rounded-xl text-sm font-bold text-white border-2 border-white/40 hover:bg-white/10">
+              Sign in to POS
+            </a>
+          </div>
+          <ul className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 max-w-xl mx-auto lg:mx-0 text-left">
+            {points.map(p => (
+              <li key={p} className="flex items-center gap-2 text-sm text-white/85">
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: 'rgba(245,166,35,.2)', color: '#f5a623' }}>✓</span>
+                {p}
+              </li>
+            ))}
+          </ul>
         </div>
-
-        <div style={{ display: 'flex', gap: 40, marginTop: 72, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {[['Offline POS', 'Works without internet'], ['LANKAQR', 'Local payments ready'], ['Sinhala + EN', 'Bilingual interface']].map(([val, label]) => (
-            <div key={label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#f5a623', fontFamily: 'Poppins,sans-serif', lineHeight: 1 }}>{val}</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 6, fontFamily: 'Poppins,sans-serif', fontWeight: 500 }}>{label}</div>
-            </div>
-          ))}
-        </div>
+        <Reveal delay={120} className="hidden sm:block">
+          <PosMock />
+        </Reveal>
       </div>
     </section>
   );

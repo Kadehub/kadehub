@@ -12,13 +12,18 @@ import { CodOrderItem } from '../../database/entities/cod-order-item.entity';
 import { CodPublicController, CodAccountController, CodController } from './cod.controller';
 import { CodAccountService } from './cod-account.service';
 import { CodService } from './cod.service';
+import { CodExpensesController } from './cod-expenses.controller';
+import { CodExpensesService } from './cod-expenses.service';
+import { CodAuditService } from './cod-audit.service';
+import { CodCapabilityGuard } from './cod-capabilities';
+import { AuditLog } from '../../database/entities/audit-log.entity';
 
 /** KadeHub COD (cod.kadehub.com) — cash-on-delivery business manager, ported from CODPlatform. */
 @Module({
   imports: [TypeOrmModule.forFeature([
-    Subscription, Package, User, Tenant, CodBusiness, CodItem, CodExpense, CodOrder, CodOrderItem,
+    Subscription, Package, User, Tenant, CodBusiness, CodItem, CodExpense, CodOrder, CodOrderItem, AuditLog,
   ])],
-  controllers: [CodPublicController, CodAccountController, CodController],
-  providers: [CodAccountService, CodService],
+  controllers: [CodPublicController, CodAccountController, CodController, CodExpensesController],
+  providers: [CodAccountService, CodService, CodExpensesService, CodAuditService, CodCapabilityGuard],
 })
 export class CodModule {}

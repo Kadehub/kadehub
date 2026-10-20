@@ -61,6 +61,7 @@ export const en = {
   "nav.orders": "Orders (COD)",
   "nav.catalog": "Catalog",
   "nav.expenses": "Expenses",
+  "nav.credit": "Credit",
   "nav.reports": "Reports",
   "nav.billing": "Billing",
   "nav.settings": "Settings",
@@ -584,6 +585,10 @@ export const en = {
   "items.emptyTitle": "No {items} yet",
   "orders.emptyTitle": "No orders yet",
   "exp.emptyTitle": "No expenses here",
+
+  // ---- orders & credit (v2) ----
+  // ---- expenses & personal finance (v2) ----
+  // ---- financial summary (v2) ----
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard, Package, Receipt, Wallet, BarChart3, CreditCard, Settings, BookImage, LogOut,
+  LayoutDashboard, Package, Receipt, Wallet, BarChart3, CreditCard, Settings, BookImage, LogOut, Banknote,
 } from 'lucide-react';
 import { useAuthHydrated, useAuthStore } from '../../hooks/useAuth';
 import api from '../../lib/api';
@@ -17,6 +17,7 @@ import type { Business } from '../../lib/cod/types';
 import { MascotState } from '../brand/Mascot';
 import ProductSwitcher from '../platform/ProductSwitcher';
 import { CodContextProvider } from './CodContext';
+import { useCodCan, type CodCapability } from '../../lib/cod/capabilities';
 import { LanguageSwitcher, codHref } from './bits';
 import { Badge, Button, cn } from './ui';
 
@@ -118,15 +119,17 @@ function CodGate({ children }: { children: React.ReactNode }) {
   );
 }
 
-function navItems(t: ReturnType<typeof useT>, itemsLabel: string) {
+/** Menu entries; `cap` hides an entry from roles without that capability (lib/cod/capabilities). */
+function navItems(t: ReturnType<typeof useT>, itemsLabel: string): { href: string; label: string; icon: typeof LayoutDashboard; cap?: CodCapability }[] {
   return [
-    { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
+    { href: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard, cap: 'reports' },
     { href: '/items', label: itemsLabel, icon: Package },
     { href: '/orders', label: t('nav.orders'), icon: Receipt },
+    { href: '/credit', label: t('nav.credit'), icon: Banknote, cap: 'credit' },
     { href: '/catalog', label: t('nav.catalog'), icon: BookImage },
-    { href: '/expenses', label: t('nav.expenses'), icon: Wallet },
-    { href: '/reports', label: t('nav.reports'), icon: BarChart3 },
-    { href: '/billing', label: t('nav.billing'), icon: CreditCard },
+    { href: '/expenses', label: t('nav.expenses'), icon: Wallet, cap: 'expenses' },
+    { href: '/reports', label: t('nav.reports'), icon: BarChart3, cap: 'reports' },
+    { href: '/billing', label: t('nav.billing'), icon: CreditCard, cap: 'personal_finance' },
     { href: '/settings', label: t('nav.settings'), icon: Settings },
   ];
 }
@@ -134,7 +137,8 @@ function navItems(t: ReturnType<typeof useT>, itemsLabel: string) {
 function Shell({ me, itemsLabel, path, children }: { me: CodMe & { business: Business }; itemsLabel: string; path: string; children: React.ReactNode }) {
   const t = useT();
   const logout = useAuthStore(s => s.logout);
-  const nav = navItems(t, itemsLabel);
+  const can = useCodCan();
+  const nav = navItems(t, itemsLabel).filter(n => !n.cap || can(n.cap));
   const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
   const sub = me.subscription!;
   const trialDaysLeft = sub.status === 'trialing' ? daysRemaining(sub.trial_ends_at) : null;

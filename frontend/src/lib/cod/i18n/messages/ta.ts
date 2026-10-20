@@ -59,6 +59,7 @@ export const ta: Record<MessageKey, string> = {
   "nav.orders": "ஆர்டர்கள் (COD)",
   "nav.catalog": "கேட்டலாக்",
   "nav.expenses": "செலவுகள்",
+  "nav.credit": "கடன்",
   "nav.reports": "அறிக்கைகள்",
   "nav.billing": "பில்லிங்",
   "nav.settings": "அமைப்புகள்",
@@ -581,4 +582,7 @@ export const ta: Record<MessageKey, string> = {
   "items.emptyTitle": "இன்னும் {items} இல்லை",
   "orders.emptyTitle": "இன்னும் ஆர்டர்கள் இல்லை",
   "exp.emptyTitle": "இங்கே செலவுகள் இல்லை",
+  // ---- orders & credit (v2) ----
+  // ---- expenses & personal finance (v2) ----
+  // ---- financial summary (v2) ----
 };

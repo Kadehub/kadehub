@@ -12,7 +12,7 @@ import { CodService } from './cod.service';
 import { CodAccountService } from './cod-account.service';
 import { isRangeKey } from './cod-analytics';
 import {
-  SaveCodItemDto, SaveCodExpenseDto, CreateCodOrderDto, UpdateCodOrderStatusDto, BulkCodOrderStatusDto,
+  SaveCodItemDto, CreateCodOrderDto, UpdateCodOrderStatusDto, BulkCodOrderStatusDto,
   UpdateCodBusinessDto, ChangePasswordDto,
 } from './cod.dto';
 
@@ -128,27 +128,6 @@ export class CodController {
   @Delete('items/:id')
   deleteItem(@CurrentUser() u: any, @Param('id', ParseIntPipe) id: number) {
     return this.cod.deleteItem(u.tenant_id, id);
-  }
-
-  // ── expenses ──
-  @Get('expenses')
-  expenses(@CurrentUser() u: any) {
-    return this.cod.listExpenses(u.tenant_id);
-  }
-
-  @Post('expenses')
-  createExpense(@CurrentUser() u: any, @Body() dto: SaveCodExpenseDto) {
-    return this.cod.createExpense(u.tenant_id, dto);
-  }
-
-  @Patch('expenses/:id')
-  updateExpense(@CurrentUser() u: any, @Param('id', ParseIntPipe) id: number, @Body() dto: SaveCodExpenseDto) {
-    return this.cod.updateExpense(u.tenant_id, id, dto);
-  }
-
-  @Delete('expenses/:id')
-  deleteExpense(@CurrentUser() u: any, @Param('id', ParseIntPipe) id: number) {
-    return this.cod.deleteExpense(u.tenant_id, id);
   }
 
   // ── orders ──

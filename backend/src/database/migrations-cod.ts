@@ -2,6 +2,8 @@ import type { DataSource } from 'typeorm';
 import type { Migration } from './migrations';
 import { tableExists } from './migration-utils';
 import { COD_PLANS } from '../modules/cod/cod-plans';
+import { COD_ORDER_MIGRATIONS } from './migrations-cod-orders';
+import { COD_EXPENSE_MIGRATIONS } from './migrations-cod-expenses';
 
 /** Column spec: name, Postgres type, MySQL type (constraints included). */
 type Col = [string, string, string];
@@ -130,4 +132,7 @@ export const COD_MIGRATIONS: Migration[] = [
       }
     },
   },
+  // Orders + credit (ids 110-139) and expenses (ids 140-169) live in their own files
+  ...COD_ORDER_MIGRATIONS,
+  ...COD_EXPENSE_MIGRATIONS,
 ];

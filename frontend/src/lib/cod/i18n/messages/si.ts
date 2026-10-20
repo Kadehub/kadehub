@@ -60,6 +60,7 @@ export const si: Record<MessageKey, string> = {
   "nav.orders": "Orders (COD)",
   "nav.catalog": "Catalog",
   "nav.expenses": "Expenses",
+  "nav.credit": "Credit",
   "nav.reports": "Reports",
   "nav.billing": "Billing",
   "nav.settings": "Settings",
@@ -582,4 +583,7 @@ export const si: Record<MessageKey, string> = {
   "items.emptyTitle": "තවම {items} නැත",
   "orders.emptyTitle": "තවම orders නැත",
   "exp.emptyTitle": "මෙහි expenses නැත",
+  // ---- orders & credit (v2) ----
+  // ---- expenses & personal finance (v2) ----
+  // ---- financial summary (v2) ----
 };

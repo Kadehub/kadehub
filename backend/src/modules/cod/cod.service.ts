@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException, BadRequestException }
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, In, Not, Repository } from 'typeorm';
 import { CodItem } from '../../database/entities/cod-item.entity';
+import { CodBusiness } from '../../database/entities/cod-business.entity';
 import { CodExpense } from '../../database/entities/cod-expense.entity';
 import { CodOrder, CodOrderStatus } from '../../database/entities/cod-order.entity';
 import { CodOrderItem } from '../../database/entities/cod-order-item.entity';
@@ -124,6 +125,12 @@ export class CodService {
 
   /** INV-YYYY-NNNN, next number for this tenant and (Colombo) year. */
   private async nextInvoiceNumber(manager: EntityManager, tenantId: number) {
+    // Serialise numbering per tenant: lock the tenant's single cod_business row (SELECT … FOR UPDATE, works on
+    // MySQL and Postgres) so concurrent creates wait instead of reading the same "latest" number.
+    await manager.getRepository(CodBusiness).createQueryBuilder('b')
+      .setLock('pessimistic_write')
+      .where('b.tenant_id = :tenantId', { tenantId })
+      .getOne();
     const yr = colomboYear();
     const last = await manager.getRepository(CodOrder)
       .createQueryBuilder('o')
@@ -365,11 +372,16 @@ export class CodService {
       throw new BadRequestException({ statusCode: 400, code: 'PREMIUM_REQUIRED', message: 'PREMIUM_REQUIRED' });
     }
     const unique = Array.from(new Set(ids)).slice(0, 2000);
-    const orders = unique.length
-      ? await this.orderRepo.find({ where: { tenant_id: tenantId, id: In(unique), status: Not(status) }, select: ['id', 'invoice_number'] })
+    const found = unique.length
+      ? await this.orderRepo.find({ where: { tenant_id: tenantId, id: In(unique) }, select: ['id', 'invoice_number', 'status'] })
       : [];
+    const orders = found.filter(o => o.status !== status);
+    const unchanged = found.length - orders.length;
     let updated = 0;
-    const failed: { id: number; invoice_number: string; reason: string; item?: string }[] = [];
+    const failed: { id: number; invoice_number: string | null; reason: string; item?: string }[] = [];
+    // Ids that aren't this tenant's orders are reported, not silently dropped
+    const foundIds = new Set(found.map(o => o.id));
+    for (const id of unique) if (!foundIds.has(id)) failed.push({ id, invoice_number: null, reason: 'NOT_FOUND' });
     for (const o of orders) {
       try {
         await this.updateOrderStatus(actor, o.id, status);
@@ -379,7 +391,7 @@ export class CodService {
         failed.push({ id: o.id, invoice_number: o.invoice_number, reason: res?.code ?? 'ERROR', item: res?.item });
       }
     }
-    return { updated, failed };
+    return { updated, unchanged, failed };
   }
 
   /** Deleting a delivered order puts its stock back, so inventory stays consistent; payments go with it. */

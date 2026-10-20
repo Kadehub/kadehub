@@ -9,6 +9,7 @@ import { useCod } from '../../../components/cod/CodContext';
 import { PremiumLock, codHref } from '../../../components/cod/bits';
 import { Badge, Button, Card, Kpi, PageHeader, tbl } from '../../../components/cod/ui';
 import api from '../../../lib/api';
+import CashTab from '../../../components/cod/cash-tab';
 import { useRouter } from 'next/navigation';
 import { useCodCan } from '../../../lib/cod/capabilities';
 import { useT } from '../../../lib/cod/i18n/client';
@@ -18,8 +19,43 @@ import { STATUS_STYLE } from '../../../lib/cod/order-status';
 import type { DashboardModel } from '../../../lib/cod/dashboard';
 import type { OrderStatus } from '../../../lib/cod/types';
 
-// cod.kadehub.com/dashboard — KPIs for this month, revenue vs expenses (Premium), status mix, recent orders, low stock
+type DashTab = 'overview' | 'cash';
+
+/** Dashboard tabs: Overview for everyone with `reports`; "Personal & Cash" only with `personal_finance` (?tab=cash). */
 export default function CodDashboardPage() {
+  const t = useT();
+  const can = useCodCan();
+  const [tab, setTab] = useState<DashTab>('overview');
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('tab') === 'cash') setTab('cash');
+  }, []);
+  const pick = (next: DashTab) => {
+    setTab(next);
+    const url = new URL(window.location.href);
+    if (next === 'cash') url.searchParams.set('tab', 'cash'); else url.searchParams.delete('tab');
+    window.history.replaceState(null, '', url);
+  };
+  const showCash = can('personal_finance');
+
+  return (
+    <div className="space-y-5">
+      {showCash && (
+        <div className="inline-flex rounded-xl border border-ink-200 bg-white p-1" role="tablist">
+          {(['overview', 'cash'] as const).map(k => (
+            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => pick(k)}
+              className={`min-h-[36px] rounded-lg px-4 text-sm font-semibold transition-colors ${tab === k ? 'bg-[color:var(--cod-primary)] text-[color:var(--cod-primary-fg)]' : 'text-ink-600 hover:bg-ink-50'}`}>
+              {k === 'overview' ? t('fin.tabOverview') : t('fin.tabCash')}
+            </button>
+          ))}
+        </div>
+      )}
+      {showCash && tab === 'cash' ? <CashTab /> : <OverviewDashboard />}
+    </div>
+  );
+}
+
+// cod.kadehub.com/dashboard — KPIs for this month, revenue vs expenses (Premium), status mix, recent orders, low stock
+function OverviewDashboard() {
   const t = useT();
   const { me, labels } = useCod();
   const [data, setData] = useState<{ premium: boolean; model: DashboardModel } | null>(null);

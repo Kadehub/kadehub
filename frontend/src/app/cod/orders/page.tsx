@@ -25,7 +25,7 @@ import { ORDER_STATUSES, PAYMENT_TYPES, type Item, type Order, type OrderStatus,
 const RANGE_KEYS: (RangeKey | 'custom')[] = ['all', 'today', 'yesterday', 'this_month', 'last_month', 'last_3_months', 'this_year', 'custom'];
 const isPayment = (v: string | null): v is PaymentType => !!v && (PAYMENT_TYPES as string[]).includes(v);
 
-type BulkResult = { updated: number; failed: { id: number; invoice_number: string; reason: string; item?: string }[] };
+type BulkResult = { updated: number; unchanged?: number; failed: { id: number; invoice_number: string | null; reason: string; item?: string }[] };
 
 // cod.kadehub.com/orders — orders with status chips, search, date range, payment filter and (Premium) bulk status change
 export default function CodOrdersPage() {
@@ -131,7 +131,7 @@ export default function CodOrdersPage() {
     try {
       const { data } = await api.post<BulkResult>('/cod/orders/bulk-status', { ids: plan.toChange.map(o => o.id), status: confirming });
       if (data.failed.length) {
-        const reasons = data.failed.slice(0, 4).map(f => `${f.invoice_number}: ${f.reason === 'INSUFFICIENT_STOCK' ? t('bulk.reasonStock', { item: f.item ?? '' }) : f.reason}`).join(' · ');
+        const reasons = data.failed.slice(0, 4).map(f => `${f.invoice_number ?? `#${f.id}`}: ${f.reason === 'INSUFFICIENT_STOCK' ? t('bulk.reasonStock', { item: f.item ?? '' }) : f.reason}`).join(' · ');
         toast(t('bulk.partial', { updated: data.updated, failed: data.failed.length, reasons }), { icon: '⚠️', duration: 9000 });
       } else {
         toast.success(t('bulk.done', { count: data.updated }));

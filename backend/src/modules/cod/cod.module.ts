@@ -14,6 +14,7 @@ import { CodPublicController, CodAccountController, CodController } from './cod.
 import { CodAccountService } from './cod-account.service';
 import { CodService } from './cod.service';
 import { CodExpensesController } from './cod-expenses.controller';
+import { CodFinanceController, CodFinanceService } from './cod-finance.controller';
 import { CodExpensesService } from './cod-expenses.service';
 import { CodAuditService } from './cod-audit.service';
 import { CodCapabilityGuard } from './cod-capabilities';
@@ -27,9 +28,9 @@ import { CodPersonalSettings } from '../../database/entities/cod-personal-settin
     Subscription, Package, User, Tenant, CodBusiness, CodItem, CodExpense, CodOrder, CodOrderItem, AuditLog,
     CodPersonalExpense, CodPersonalSettings, CodCreditPayment,
   ])],
-  controllers: [CodPublicController, CodAccountController, CodController, CodExpensesController],
+  controllers: [CodPublicController, CodAccountController, CodController, CodExpensesController, CodFinanceController],
   // CodExpensesService is exported for the financial summary (listExpenses / listPersonal with a date range)
   exports: [CodExpensesService],
-  providers: [CodAccountService, CodService, CodExpensesService, CodAuditService, CodCapabilityGuard],
+  providers: [CodAccountService, CodService, CodExpensesService, CodAuditService, CodCapabilityGuard, CodFinanceService],
 })
 export class CodModule {}

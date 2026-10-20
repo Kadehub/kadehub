@@ -85,7 +85,7 @@ export default function BusinessExpenses({ rows, onAdd, onEdit, onChanged }: {
               <button key={c} type="button" onClick={() => onAdd(c)} aria-label={`${t('xp.addBusiness')}: ${categoryLabel(t, 'business', c)}`}
                 className="flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 hover:bg-ink-50">
                 <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: `${color}1f`, color }}><Icon size={18} /></span>
-                <span className="text-[11px] font-semibold leading-tight text-ink-600 line-clamp-1">{categoryLabel(t, 'business', c)}</span>
+                <span className="text-[11px] font-semibold leading-tight text-ink-600 line-clamp-2 text-center break-words">{categoryLabel(t, 'business', c)}</span>
               </button>
             );
           })}

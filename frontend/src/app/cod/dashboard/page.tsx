@@ -9,6 +9,8 @@ import { useCod } from '../../../components/cod/CodContext';
 import { PremiumLock, codHref } from '../../../components/cod/bits';
 import { Badge, Button, Card, Kpi, PageHeader, tbl } from '../../../components/cod/ui';
 import api from '../../../lib/api';
+import { useRouter } from 'next/navigation';
+import { useCodCan } from '../../../lib/cod/capabilities';
 import { useT } from '../../../lib/cod/i18n/client';
 import { formatDate, formatLKR, formatLKRCompact } from '../../../lib/cod/format';
 import { monthLabel } from '../../../lib/cod/dates';
@@ -23,11 +25,20 @@ export default function CodDashboardPage() {
   const [data, setData] = useState<{ premium: boolean; model: DashboardModel } | null>(null);
   const [failed, setFailed] = useState(false);
 
+  const router = useRouter();
+  // Staff without the `reports` capability (cashiers) land on orders instead of a forbidden dashboard
+  const canReports = useCodCan()('reports');
+
   const load = () => {
     setFailed(false);
     api.get('/cod/dashboard').then(r => setData(r.data)).catch(() => setFailed(true));
   };
-  useEffect(load, []);
+  useEffect(() => {
+    if (!canReports) { router.replace(codHref('/orders')); return; }
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canReports]);
+  if (!canReports) return <MascotState variant="loading" size="sm" title={t('app.loading')} />;
 
   if (failed) {
     return <MascotState variant="error" title={t('app.loadErrorTitle')} description={t('app.loadErrorBody')}

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard, Package, Receipt, Wallet, BarChart3, CreditCard, Settings, BookImage, LogOut, Banknote,
+  LayoutDashboard, Package, Receipt, Wallet, BarChart3, CreditCard, Settings, BookImage, LogOut, Banknote, MoreHorizontal,
 } from 'lucide-react';
 import { useAuthHydrated, useAuthStore } from '../../hooks/useAuth';
 import api from '../../lib/api';
@@ -192,15 +192,6 @@ function Shell({ me, itemsLabel, path, children }: { me: CodMe & { business: Bus
               </Button>
             </div>
           </div>
-          <nav className="flex gap-1 overflow-x-auto border-t border-ink-100 px-2 py-1.5 md:hidden">
-            {nav.map(({ href, label }) => (
-              <Link key={href} href={codHref(href)}
-                className={cn('shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium',
-                  isActive(href) ? 'bg-[color:var(--cod-primary)] text-[color:var(--cod-primary-fg)]' : 'text-ink-500 hover:bg-ink-100')}>
-                {label}
-              </Link>
-            ))}
-          </nav>
         </header>
 
         {trialDaysLeft !== null && trialDaysLeft <= 5 && (
@@ -209,8 +200,73 @@ function Shell({ me, itemsLabel, path, children }: { me: CodMe & { business: Bus
             <Link href={codHref('/billing')} className="font-semibold underline underline-offset-4">{t('app.viewPlans')}</Link>
           </div>
         )}
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        {/* Bottom padding on phones keeps content clear of the bottom nav and the safe area */}
+        <main className="flex-1 p-4 pb-[calc(5rem+env(safe-area-inset-bottom))] md:p-6">{children}</main>
       </div>
+
+      <MobileNav nav={nav} isActive={isActive} moreLabel={t('xp.navMore')} />
     </div>
+  );
+}
+
+/** Main destinations shown in the phone bottom nav, in priority order; everything else goes under "More". */
+const BOTTOM_NAV_ORDER = ['/dashboard', '/orders', '/expenses', '/credit', '/items'];
+
+function MobileNav({ nav, isActive, moreLabel }: {
+  nav: ReturnType<typeof navItems>; isActive: (href: string) => boolean; moreLabel: string;
+}) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const path = useCodPath();
+  useEffect(() => setMoreOpen(false), [path]);
+  const primary = BOTTOM_NAV_ORDER.map(h => nav.find(n => n.href === h)).filter(Boolean).slice(0, 4) as typeof nav;
+  const rest = nav.filter(n => !primary.includes(n));
+  const moreActive = rest.some(n => isActive(n.href));
+
+  return (
+    <>
+      {moreOpen && (
+        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setMoreOpen(false)} aria-hidden>
+          <div className="absolute inset-0 bg-ink-900/30" />
+        </div>
+      )}
+      {moreOpen && (
+        <div className="fixed inset-x-0 z-50 mx-2 rounded-2xl border border-ink-200 bg-white p-2 shadow-lg md:hidden"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 4.25rem)' }}>
+          <ul className="grid grid-cols-3 gap-1">
+            {rest.map(({ href, label, icon: Icon }) => (
+              <li key={href}>
+                <Link href={codHref(href)} className={cn('flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-center text-xs font-semibold',
+                  isActive(href) ? 'bg-ink-100 text-ink-900' : 'text-ink-600 hover:bg-ink-50')}>
+                  <Icon size={19} /> {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 backdrop-blur md:hidden"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <ul className="grid h-16" style={{ gridTemplateColumns: `repeat(${primary.length + (rest.length ? 1 : 0)}, minmax(0, 1fr))` }}>
+          {primary.map(({ href, label, icon: Icon }) => (
+            <li key={href}>
+              <Link href={codHref(href)} aria-current={isActive(href) ? 'page' : undefined}
+                className={cn('flex h-full flex-col items-center justify-center gap-0.5 text-[11px] font-semibold',
+                  isActive(href) ? 'text-[color:var(--cod-primary)]' : 'text-ink-500')}>
+                <Icon size={20} /> <span className="max-w-full truncate px-1">{label}</span>
+              </Link>
+            </li>
+          ))}
+          {rest.length > 0 && (
+            <li>
+              <button type="button" onClick={() => setMoreOpen(o => !o)} aria-expanded={moreOpen}
+                className={cn('flex h-full w-full flex-col items-center justify-center gap-0.5 text-[11px] font-semibold',
+                  moreActive || moreOpen ? 'text-[color:var(--cod-primary)]' : 'text-ink-500')}>
+                <MoreHorizontal size={20} /> {moreLabel}
+              </button>
+            </li>
+          )}
+        </ul>
+      </nav>
+    </>
   );
 }

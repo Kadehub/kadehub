@@ -123,7 +123,82 @@ export interface Order {
   total_amount: number;
   notes: string | null;
   stock_deducted: boolean;
+  payment_type: PaymentType;
+  customer_type: CustomerType;
+  customer_email: string | null;
+  po_number: string | null;
+  tracking_number: string | null;
+  confirmation_sent_at: string | null;
+  created_by: number | null;
+  reordered_from_order_id: number | null;
+  credit_period_days: number | null;
+  payment_due_date: string | null;
+  credit_note: string | null;
+  returned_at: string | null;
   created_at: string;
   updated_at: string;
+  /** Sum of credit payments (list endpoint) */
+  paid?: number;
   order_items?: OrderItem[];
+}
+
+export type PaymentType = "cod" | "pay_now" | "credit";
+export const PAYMENT_TYPES: PaymentType[] = ["cod", "pay_now", "credit"];
+export type CustomerType = "retail" | "wholesale";
+export type PaymentMethod = "cash" | "bank" | "card" | "cheque" | "other";
+export const PAYMENT_METHODS: PaymentMethod[] = ["cash", "bank", "card", "cheque", "other"];
+export type CreditStatus = "paid" | "partial" | "unpaid";
+export type DueBucket = "overdue" | "due" | "upcoming" | "none";
+
+export interface CreditPayment {
+  id: number;
+  order_id: number;
+  amount: number;
+  payment_date: string;
+  method: PaymentMethod;
+  notes: string | null;
+  created_at: string;
+}
+
+/** GET /api/cod/orders/:id */
+export interface OrderDetail extends Order {
+  order_items: OrderItem[];
+  payments: CreditPayment[];
+  credit: { total: number; paid: number; outstanding: number; status: CreditStatus; bucket: DueBucket };
+  trust: { delivered: number; returned: number } | null;
+  /** Set on create when the order couldn't be marked delivered for lack of stock */
+  warning?: string;
+}
+
+/** One credit invoice row (GET /api/cod/credit/customers/:key). */
+export interface CreditInvoice {
+  order_id: number;
+  invoice_number: string;
+  customer_name: string;
+  customer_phone: string;
+  status: OrderStatus;
+  created_at: string;
+  payment_due_date: string | null;
+  total: number;
+  paid: number;
+  outstanding: number;
+  credit_status: CreditStatus;
+  bucket: DueBucket;
+  customer_key: string;
+}
+
+/** One customer on the credit page (GET /api/cod/credit). */
+export interface CreditCustomer {
+  key: string;
+  name: string;
+  phone: string;
+  invoices: number;
+  open_invoices: number;
+  billed: number;
+  collected: number;
+  outstanding: number;
+  overdue: number;
+  next_due: string | null;
+  bucket: DueBucket;
+  open: { order_id: number; invoice_number: string; outstanding: number; payment_due_date: string | null }[];
 }

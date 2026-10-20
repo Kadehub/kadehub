@@ -1,9 +1,12 @@
 import { Type } from 'class-transformer';
 import {
-  IsString, IsOptional, IsNumber, IsInt, Min, MaxLength, MinLength, IsBoolean, IsIn, IsArray,
+  IsString, IsOptional, IsNumber, IsInt, Min, Max, MaxLength, MinLength, IsBoolean, IsIn, IsArray,
   ValidateNested, ArrayMaxSize, Matches, IsNotEmpty,
 } from 'class-validator';
-import { COD_ORDER_STATUSES, CodOrderStatus } from '../../database/entities/cod-order.entity';
+import {
+  COD_ORDER_STATUSES, CodOrderStatus, COD_PAYMENT_TYPES, CodPaymentType, COD_CUSTOMER_TYPES, CodCustomerType,
+} from '../../database/entities/cod-order.entity';
+import { COD_PAYMENT_METHODS, CodPaymentMethod } from '../../database/entities/cod-credit-payment.entity';
 
 export const COD_BUSINESS_TYPES = [
   'fashion', 'electronics', 'beauty', 'food', 'grocery', 'home', 'kids', 'jewellery', 'health', 'books', 'auto', 'general',
@@ -52,20 +55,60 @@ export class SaveCodExpenseDto {
 }
 
 export class CodOrderLineDto {
-  @Type(() => Number) @IsInt() item_id: number;
-  @Type(() => Number) @IsInt() @Min(1) quantity: number;
-  @Type(() => Number) @IsNumber() @Min(0) unit_price: number;
+  /** Catalogue item; omit / null for a custom (off-catalogue) line */
+  @IsOptional() @Type(() => Number) @IsInt() item_id?: number | null;
+  /** Required for custom lines; ignored for catalogue lines (the item's name is snapshotted) */
+  @IsOptional() @IsString() @MaxLength(255) custom_name?: string | null;
+  @Type(() => Number) @IsInt() @Min(1) @Max(100000) quantity: number;
+  @Type(() => Number) @IsNumber() @Min(0) @Max(100_000_000) unit_price: number;
 }
 
-export class CreateCodOrderDto {
+/** Fields shared by create and edit. */
+export class SaveCodOrderDto {
   @IsString() @IsNotEmpty() @MaxLength(255) customer_name: string;
   @IsOptional() @IsString() @MaxLength(40) customer_phone?: string;
+  @IsOptional() @IsString() @MaxLength(255) customer_email?: string | null;
   @IsOptional() @IsString() @MaxLength(300) customer_address?: string;
   @IsOptional() @IsString() @MaxLength(100) city?: string;
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) delivery_charge?: number;
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) discount?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(100_000_000) delivery_charge?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(100_000_000) discount?: number;
   @IsOptional() @IsString() @MaxLength(2000) notes?: string | null;
+  @IsOptional() @IsIn(COD_PAYMENT_TYPES as unknown as string[]) payment_type?: CodPaymentType;
+  @IsOptional() @IsIn(COD_CUSTOMER_TYPES as unknown as string[]) customer_type?: CodCustomerType;
+  @IsOptional() @IsString() @MaxLength(100) po_number?: string | null;
+  @IsOptional() @IsString() @MaxLength(100) tracking_number?: string | null;
+  // Credit terms (only kept when payment_type = credit)
+  @IsOptional() @Type(() => Number) @IsInt() @Min(0) @Max(3650) credit_period_days?: number | null;
+  @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) payment_due_date?: string | null;
+  @IsOptional() @IsString() @MaxLength(1000) credit_note?: string | null;
   @IsArray() @ArrayMaxSize(200) @ValidateNested({ each: true }) @Type(() => CodOrderLineDto) lines: CodOrderLineDto[];
+}
+
+export class CreateCodOrderDto extends SaveCodOrderDto {
+  /** Status to create the order in (default pending). Delivered is applied after insert so stock moves. */
+  @IsOptional() @IsIn(COD_ORDER_STATUSES as unknown as string[]) status?: CodOrderStatus;
+  /** Credit orders: money received at sale, recorded as the first credit payment */
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(100_000_000) initial_payment?: number;
+  @IsOptional() @IsIn(COD_PAYMENT_METHODS as unknown as string[]) initial_payment_method?: CodPaymentMethod;
+  @IsOptional() @Type(() => Number) @IsInt() reordered_from_order_id?: number | null;
+}
+
+export class UpdateCodOrderDto extends SaveCodOrderDto {}
+
+export class CodTrackingDto {
+  @IsOptional() @IsString() @MaxLength(100) tracking_number?: string | null;
+}
+
+export class AddCreditPaymentDto {
+  @Type(() => Number) @IsNumber() @Min(0.01) @Max(100_000_000) amount: number;
+  @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) payment_date?: string;
+  @IsOptional() @IsIn(COD_PAYMENT_METHODS as unknown as string[]) method?: CodPaymentMethod;
+  @IsOptional() @IsString() @MaxLength(1000) notes?: string | null;
+}
+
+export class SettleCreditDto {
+  @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) payment_date?: string;
+  @IsOptional() @IsIn(COD_PAYMENT_METHODS as unknown as string[]) method?: CodPaymentMethod;
 }
 
 export class UpdateCodOrderStatusDto {

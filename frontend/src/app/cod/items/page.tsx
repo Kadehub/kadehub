@@ -14,11 +14,14 @@ import { marginPercent } from '../../../lib/cod/calc';
 import { formatLKR, formatPercent } from '../../../lib/cod/format';
 import { apiError } from '../../../lib/cod/session';
 import type { Item } from '../../../lib/cod/types';
+import { useCodCan } from '../../../lib/cod/capabilities';
 
 // cod.kadehub.com/items — stock list with landed cost, margin and low-stock flags
 export default function CodItemsPage() {
   const t = useT();
   const { me, labels, refresh } = useCod();
+  // Staff without `costs` see stock and prices only; items carry landed cost, so editing needs it too
+  const showCosts = useCodCan()('costs');
   const [items, setItems] = useState<Item[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [search, setSearch] = useState('');
@@ -56,7 +59,7 @@ export default function CodItemsPage() {
     }
   }
 
-  const addButton = <ItemForm categorySuggestions={suggestions} onSaved={load} />;
+  const addButton = showCosts ? <ItemForm categorySuggestions={suggestions} onSaved={load} /> : null;
 
   return (
     <div className="space-y-4">
@@ -85,15 +88,15 @@ export default function CodItemsPage() {
                 <thead><tr>
                   <th className={tbl.th}>{labels.singular}</th>
                   <th className={tbl.th}>{t('common.category')}</th>
-                  <th className={`${tbl.th} ${tbl.right}`}>{importsGoods ? t('items.landedCost') : t('items.cost')}</th>
+                  {showCosts && <th className={`${tbl.th} ${tbl.right}`}>{importsGoods ? t('items.landedCost') : t('items.cost')}</th>}
                   <th className={`${tbl.th} ${tbl.right}`}>{t('items.sellingPrice')}</th>
-                  <th className={`${tbl.th} ${tbl.right}`}>{t('items.margin')}</th>
+                  {showCosts && <th className={`${tbl.th} ${tbl.right}`}>{t('items.margin')}</th>}
                   <th className={`${tbl.th} ${tbl.right}`}>{t('common.stock')}</th>
                   <th className={tbl.th} />
                 </tr></thead>
                 <tbody>
                   {filtered.map(i => {
-                    const margin = marginPercent(i.selling_price, i.landed_cost);
+                    const margin = showCosts ? marginPercent(i.selling_price, i.landed_cost) : 0;
                     return (
                       <tr key={i.id}>
                         <td className={tbl.td}>
@@ -109,19 +112,21 @@ export default function CodItemsPage() {
                           </div>
                         </td>
                         <td className={tbl.td}>{i.category}</td>
-                        <td className={`${tbl.td} ${tbl.right}`}>{formatLKR(i.landed_cost)}</td>
+                        {showCosts && <td className={`${tbl.td} ${tbl.right}`}>{formatLKR(i.landed_cost)}</td>}
                         <td className={`${tbl.td} ${tbl.right}`}>{formatLKR(i.selling_price)}</td>
-                        <td className={`${tbl.td} ${tbl.right} ${margin < 0 ? 'text-red-600' : ''}`}>{formatPercent(margin)}</td>
+                        {showCosts && <td className={`${tbl.td} ${tbl.right} ${margin < 0 ? 'text-red-600' : ''}`}>{formatPercent(margin)}</td>}
                         <td className={`${tbl.td} ${tbl.right}`}>
                           <Badge tone={i.stock_quantity <= i.low_stock_threshold ? 'red' : 'gray'}>{i.stock_quantity}</Badge>
                         </td>
                         <td className={tbl.td}>
-                          <div className="flex justify-end gap-1">
-                            <ItemForm item={i} categorySuggestions={suggestions} onSaved={load} />
-                            <Button variant="ghost" size="icon" aria-label={t('items.delete', { item: labels.singularLower })} onClick={() => onDelete(i.id, i.name)}>
-                              <Trash2 />
-                            </Button>
-                          </div>
+                          {showCosts && (
+                            <div className="flex justify-end gap-1">
+                              <ItemForm item={i} categorySuggestions={suggestions} onSaved={load} />
+                              <Button variant="ghost" size="icon" aria-label={t('items.delete', { item: labels.singularLower })} onClick={() => onDelete(i.id, i.name)}>
+                                <Trash2 />
+                              </Button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     );

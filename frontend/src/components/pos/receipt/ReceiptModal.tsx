@@ -111,7 +111,7 @@ export default function ReceiptModal({ data, onClose }: Props) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-ink-100 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#E0F2F1' }}>
-              <FileText size={18} style={{ color: '#00A884' }} />
+              <FileText size={18} style={{ color: '#00796B' }} />
             </div>
             <div>
               <h2 className="font-bold text-ink-900">Sale #{data.id} — Bills & Receipts</h2>
@@ -133,7 +133,7 @@ export default function ReceiptModal({ data, onClose }: Props) {
               title="Customer Receipt"
               subtitle="Give to buyer"
               icon={ShoppingBag}
-              color="#00A884"
+              color="#00796B"
               onPrint={() => print(buyerRef, 'Customer Receipt')}
               onDownload={() => download(buyerRef, `receipt-buyer-${data.id}`)}>
               <BuyerReceipt ref={buyerRef} data={data} company={company} subtotal={subtotal} dateStr={dateStr} timeStr={timeStr} />
@@ -144,7 +144,7 @@ export default function ReceiptModal({ data, onClose }: Props) {
               title="Seller Copy"
               subtitle="Keep for records"
               icon={Store}
-              color="#FF7A00"
+              color="#C2410C"
               onPrint={() => print(sellerRef, 'Seller Copy')}
               onDownload={() => download(sellerRef, `receipt-seller-${data.id}`)}>
               <SellerReceipt ref={sellerRef} data={data} company={company} subtotal={subtotal} dateStr={dateStr} timeStr={timeStr} />
@@ -223,7 +223,7 @@ function ReceiptPanel({ title, subtitle, icon: Icon, color, onPrint, onDownload,
 const S = {
   page:      { fontFamily: "'Poppins', sans-serif", padding: '20px', maxWidth: '320px', margin: '0 auto', color: '#0F172A', fontSize: '12px' },
   logo:      { textAlign: 'center' as const, marginBottom: '12px' },
-  shopName:  { fontSize: '16px', fontWeight: '700', color: '#00A884', textAlign: 'center' as const },
+  shopName:  { fontSize: '16px', fontWeight: '700', color: '#00796B', textAlign: 'center' as const },
   address:   { fontSize: '10px', color: '#64748B', textAlign: 'center' as const, marginTop: '2px' },
   divider:   { borderTop: '1px dashed #CBD5E1', margin: '10px 0' },
   dividerSolid: { borderTop: '2px solid #0F172A', margin: '10px 0' },
@@ -233,9 +233,9 @@ const S = {
   itemName:  { fontWeight: '600', fontSize: '11px', marginBottom: '2px' },
   itemSub:   { color: '#64748B', fontSize: '10px' },
   total:     { display: 'flex', justifyContent: 'space-between', fontWeight: '700', fontSize: '14px', marginTop: '8px' },
-  totalAmt:  { color: '#00A884', fontSize: '16px', fontWeight: '800' },
+  totalAmt:  { color: '#00796B', fontSize: '16px', fontWeight: '800' },
   badge:     { display: 'inline-block', padding: '2px 8px', borderRadius: '99px', fontSize: '10px', fontWeight: '700', background: '#E0F2F1', color: '#00796B' },
-  footer:    { textAlign: 'center' as const, fontSize: '10px', color: '#94A3B8', marginTop: '16px' },
+  footer:    { textAlign: 'center' as const, fontSize: '10px', color: '#5E6E82', marginTop: '16px' },
   title:     { fontSize: '13px', fontWeight: '700', textAlign: 'center' as const, marginBottom: '8px', textTransform: 'uppercase' as const, letterSpacing: '1px' },
 };
 
@@ -283,7 +283,7 @@ const BuyerReceipt = forwardRef<HTMLDivElement, { data: ReceiptData; company: an
 
       {/* Totals */}
       <div style={S.row}><span style={S.label}>Subtotal</span><span style={S.value}>{LKR(subtotal)}</span></div>
-      {data.discount > 0 && <div style={S.row}><span style={S.label}>Discount</span><span style={{ ...S.value, color: '#FF6B6B' }}>-{LKR(data.discount)}</span></div>}
+      {data.discount > 0 && <div style={S.row}><span style={S.label}>Discount</span><span style={{ ...S.value, color: '#C92A2A' }}>-{LKR(data.discount)}</span></div>}
       <div style={S.total}><span>TOTAL</span><span style={S.totalAmt}>{LKR(data.total_amount)}</span></div>
 
       <div style={{ ...S.row, marginTop: '8px' }}>
@@ -294,7 +294,7 @@ const BuyerReceipt = forwardRef<HTMLDivElement, { data: ReceiptData; company: an
       {data.customer?.loyalty_points !== undefined && (
         <div style={{ ...S.row, marginTop: '4px' }}>
           <span style={S.label}>Loyalty Points</span>
-          <span style={{ ...S.value, color: '#FF7A00' }}>★ {data.customer.loyalty_points}</span>
+          <span style={{ ...S.value, color: '#C2410C' }}>★ {data.customer.loyalty_points}</span>
         </div>
       )}
 
@@ -318,7 +318,7 @@ const SellerReceipt = forwardRef<HTMLDivElement, { data: ReceiptData; company: a
       </div>
 
       <div style={S.dividerSolid} />
-      <div style={{ ...S.title, color: '#FF7A00' }}>Seller Copy — Internal Record</div>
+      <div style={{ ...S.title, color: '#C2410C' }}>Seller Copy — Internal Record</div>
 
       <div style={{ marginBottom: '8px' }}>
         <div style={S.row}><span style={S.label}>Sale ID</span><span style={S.value}>#{data.id}</span></div>
@@ -346,11 +346,11 @@ const SellerReceipt = forwardRef<HTMLDivElement, { data: ReceiptData; company: a
       <div style={S.divider} />
 
       <div style={S.row}><span style={S.label}>Subtotal</span><span style={S.value}>{LKR(subtotal)}</span></div>
-      {data.discount > 0 && <div style={S.row}><span style={S.label}>Discount Applied</span><span style={{ ...S.value, color: '#FF6B6B' }}>-{LKR(data.discount)}</span></div>}
+      {data.discount > 0 && <div style={S.row}><span style={S.label}>Discount Applied</span><span style={{ ...S.value, color: '#C92A2A' }}>-{LKR(data.discount)}</span></div>}
       <div style={S.total}><span>NET TOTAL</span><span style={S.totalAmt}>{LKR(data.total_amount)}</span></div>
 
       <div style={S.divider} />
-      <div style={{ ...S.footer, color: '#94A3B8' }}>
+      <div style={{ ...S.footer, color: '#5E6E82' }}>
         <div>SELLER COPY — NOT FOR CUSTOMER</div>
         <div>KadeHub POS System</div>
       </div>
@@ -425,7 +425,7 @@ const PurchaseOrder = forwardRef<HTMLDivElement, { data: ReceiptData; company: a
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
         {['Prepared By', 'Approved By', 'Supplier Sign'].map(label => (
           <div key={label} style={{ textAlign: 'center' as const, flex: 1 }}>
-            <div style={{ borderTop: '1px solid #CBD5E1', paddingTop: '4px', fontSize: '9px', color: '#94A3B8' }}>{label}</div>
+            <div style={{ borderTop: '1px solid #CBD5E1', paddingTop: '4px', fontSize: '9px', color: '#5E6E82' }}>{label}</div>
           </div>
         ))}
       </div>

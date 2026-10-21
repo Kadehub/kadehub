@@ -83,7 +83,7 @@ export default function BatchesPage() {
           ] as const).map(({ key, label }) => (
             <button key={key} onClick={() => setTab(key)}
               className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-              style={{ background: tab === key ? (key === 'expired' ? '#FF6B6B' : '#009688') : 'transparent', color: tab === key ? 'white' : '#64748B' }}>
+              style={{ background: tab === key ? (key === 'expired' ? '#C92A2A' : '#00796B') : 'transparent', color: tab === key ? 'white' : '#64748B' }}>
               {label}
             </button>
           ))}
@@ -118,7 +118,7 @@ export default function BatchesPage() {
                       <td data-label={t('batches.expiryDate')} className="px-5 py-3.5 text-ink-700 text-xs font-medium">{b.b_expiry_date || b.expiry_date || '—'}</td>
                       <td data-label={t('batches.status')} className="px-5 py-3.5">{expStatus && <Badge variant={expStatus as any} dot>{expLabel}</Badge>}</td>
                       <td className="px-5 py-3.5">
-                        <button onClick={() => remove(b.b_id || b.id)} aria-label="Delete batch" className="text-ink-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
+                        <button onClick={() => remove(b.b_id || b.id)} aria-label="Delete batch" className="text-ink-400 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
                       </td>
                     </tr>
                   );

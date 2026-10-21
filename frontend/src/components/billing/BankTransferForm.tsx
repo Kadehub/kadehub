@@ -112,14 +112,14 @@ export default function BankTransferForm({
                   {r.value}
                   <button type="button" onClick={() => copy(r.label, r.value)}
                     className="p-1 rounded hover:bg-white/70 text-ink-400" title="Copy">
-                    {copied === r.label ? <Check size={12} style={{ color: '#00A884' }} /> : <Copy size={12} />}
+                    {copied === r.label ? <Check size={12} style={{ color: '#00796B' }} /> : <Copy size={12} />}
                   </button>
                 </span>
               </div>
             ))}
             <div className="flex items-center justify-between gap-3 text-sm pt-2 border-t border-teal-200">
               <span className="text-ink-500">Amount to transfer</span>
-              <span className="font-extrabold" style={{ color: '#00A884' }}>{fmt(amount, currency)}</span>
+              <span className="font-extrabold" style={{ color: '#00796B' }}>{fmt(amount, currency)}</span>
             </div>
           </div>
         )}

@@ -53,12 +53,12 @@ export default function ProductGrid({ products }: Props) {
       <div className="flex gap-2">
         {scanMode ? (
           <div className="relative flex-1">
-            <ScanLine size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#00A884' }} />
+            <ScanLine size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#00796B' }} />
             <input
               ref={barcodeRef}
               autoFocus
               className="w-full pl-9 pr-3 py-2.5 border-2 rounded-xl bg-white text-sm"
-              style={{ borderColor: '#00A884' }}
+              style={{ borderColor: '#00796B' }}
               placeholder="Scan barcode or type & press Enter…"
               value={barcodeInput}
               onChange={(e) => setBarcodeInput(e.target.value)}
@@ -81,9 +81,9 @@ export default function ProductGrid({ products }: Props) {
           onClick={() => { setScanMode(s => !s); setBarcodeInput(''); setSearch(''); setTimeout(() => barcodeRef.current?.focus(), 50); }}
           className="flex-shrink-0 px-3 py-2 rounded-xl border text-xs font-semibold transition-all"
           style={{
-            background: scanMode ? '#00A884' : 'white',
+            background: scanMode ? '#00796B' : 'white',
             color: scanMode ? 'white' : '#475569',
-            borderColor: scanMode ? '#00A884' : '#E2E8F0',
+            borderColor: scanMode ? '#00796B' : '#E2E8F0',
           }}
           title="Toggle barcode scanner mode">
           <ScanLine size={16} />
@@ -96,9 +96,9 @@ export default function ProductGrid({ products }: Props) {
           <button key={c} onClick={() => setCategory(c)}
             className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-all"
             style={{
-              background: category === c ? '#00A884' : 'white',
+              background: category === c ? '#00796B' : 'white',
               color: category === c ? 'white' : '#475569',
-              border: `1px solid ${category === c ? '#00A884' : '#E2E8F0'}`,
+              border: `1px solid ${category === c ? '#00796B' : '#E2E8F0'}`,
             }}>
             {c}
           </button>
@@ -125,15 +125,15 @@ export default function ProductGrid({ products }: Props) {
               <ProductImage imageUrl={p.image_url} category={p.category} name={p.name} size={56} className="mb-2 rounded-lg" />
 
               <p className="font-semibold text-sm text-ink-800 leading-tight line-clamp-2">{p.name}</p>
-              <p className="text-sm font-bold mt-1" style={{ color: '#FF7A00' }}>{LKR(p.price)}</p>
+              <p className="text-sm font-bold mt-1" style={{ color: '#C2410C' }}>{LKR(p.price)}</p>
 
               <div className="flex items-center justify-between mt-1.5">
-                <span className="text-xs" style={{ color: out ? '#ef4444' : low ? '#d97706' : '#94a3b8' }}>
+                <span className="text-xs" style={{ color: out ? '#ef4444' : low ? '#d97706' : '#5E6E82' }}>
                   {out ? 'Out of stock' : `${qty} left`}
                 </span>
                 {low && !out && (
                   <span className="text-2xs px-1.5 py-0.5 rounded-full font-semibold"
-                    style={{ background: '#fef3c7', color: '#d97706' }}>Low</span>
+                    style={{ background: '#fef3c7', color: '#B45309' }}>Low</span>
                 )}
               </div>
             </button>

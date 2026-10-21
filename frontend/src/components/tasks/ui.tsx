@@ -40,7 +40,7 @@ export function Stars({ value, size = 14, onChange }: { value: number; size?: nu
       {[1, 2, 3, 4, 5].map(i => (
         <button key={i} type="button" disabled={!onChange} onClick={() => onChange?.(i)}
           className={onChange ? 'cursor-pointer' : 'cursor-default'} aria-label={`${i} star`}>
-          <Star size={size} className={i <= Math.round(value) ? 'fill-amber-dark text-amber-dark' : 'text-ink-300'} />
+          <Star size={size} className={i <= Math.round(value) ? 'fill-amber text-amber' : 'text-ink-300'} />
         </button>
       ))}
     </span>
@@ -52,7 +52,7 @@ export function RatingLine({ avg, count }: { avg: number; count: number }) {
   if (!count) return <span className="text-xs text-ink-400">{t('user.noReviews')}</span>;
   return (
     <span className="inline-flex items-center gap-1 text-xs text-ink-600">
-      <Star size={13} className="fill-amber-dark text-amber-dark" />
+      <Star size={13} className="fill-amber text-amber" />
       <b>{Number(avg).toFixed(1)}</b> <span className="text-ink-400">({count})</span>
     </span>
   );

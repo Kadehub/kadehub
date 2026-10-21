@@ -65,10 +65,10 @@ export default function DashboardPage() {
               </div>
             ))
           : [
-              { label: "Today's Sales",       value: +data?.total_sales || 0,                    icon: ShoppingCart, color: '#009688', bg: '#E0F2F1', href: '/pos' },
-              { label: "Today's Revenue",     value: LKR(+data?.revenue || 0),                   icon: TrendingUp,   color: '#F59E0B', bg: '#FFF8E1', href: '/reports' },
+              { label: "Today's Sales",       value: +data?.total_sales || 0,                    icon: ShoppingCart, color: '#00796B', bg: '#E0F2F1', href: '/pos' },
+              { label: "Today's Revenue",     value: LKR(+data?.revenue || 0),                   icon: TrendingUp,   color: '#B45309', bg: '#FFF8E1', href: '/reports' },
               { label: 'Outstanding Credit',  value: LKR(+creditSummary?.total_outstanding || 0), icon: CreditCard,   color: '#6366F1', bg: '#EEF2FF', href: '/credit' },
-              { label: 'Low / Out of Stock',  value: `${+data?.low_stock || 0} / ${+data?.out_of_stock || 0}`, icon: AlertTriangle, color: '#FF6B6B', bg: '#FFF0F0', href: '/inventory' },
+              { label: 'Low / Out of Stock',  value: `${+data?.low_stock || 0} / ${+data?.out_of_stock || 0}`, icon: AlertTriangle, color: '#C92A2A', bg: '#FFF0F0', href: '/inventory' },
             ].map(({ label, value, icon: Icon, color, bg, href }) => (
               <Link key={label} href={href} className="kh-card p-5 hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between">
@@ -89,9 +89,9 @@ export default function DashboardPage() {
         <h3 className="text-sm font-semibold text-ink-600 mb-3">Quick Actions</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: 'New Sale',      href: '/pos',      color: '#00A884', border: '#00A884' },
+            { label: 'New Sale',      href: '/pos',      color: '#00796B', border: '#00796B' },
             { label: 'Add Product',   href: '/products', color: '#2563EB', border: '#2563EB' },
-            { label: 'View Reports',  href: '/reports',  color: '#F59E0B', border: '#F59E0B' },
+            { label: 'View Reports',  href: '/reports',  color: '#B45309', border: '#F59E0B' },
             { label: 'Manage Staff',  href: '/staff',    color: '#6366F1', border: '#6366F1' },
           ].map(({ label, href, color, border }) => (
             <Link key={label} href={href}
@@ -109,10 +109,10 @@ export default function DashboardPage() {
         <div className="kh-card p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Package size={16} style={{ color: '#F59E0B' }} />
+              <Package size={16} style={{ color: '#B45309' }} />
               <h3 className="text-sm font-semibold text-ink-800">Low Stock Alert</h3>
             </div>
-            <Link href="/inventory" className="text-xs font-semibold" style={{ color: '#00A884' }}>View all →</Link>
+            <Link href="/inventory" className="text-xs font-semibold" style={{ color: '#00796B' }}>View all →</Link>
           </div>
           <div className="space-y-2">
             {lowStock.map((p: any, i: number) => (
@@ -121,7 +121,7 @@ export default function DashboardPage() {
                 <span className="font-bold px-2 py-0.5 rounded-full text-xs"
                   style={{
                     background: +(p.i_quantity ?? p.quantity) <= 0 ? '#FFF0F0' : '#FFF8E1',
-                    color:      +(p.i_quantity ?? p.quantity) <= 0 ? '#E53E3E' : '#D97706',
+                    color:      +(p.i_quantity ?? p.quantity) <= 0 ? '#C92A2A' : '#D97706',
                   }}>
                   {+(p.i_quantity ?? p.quantity) <= 0 ? 'Out of stock' : `${p.i_quantity ?? p.quantity} left`}
                 </span>

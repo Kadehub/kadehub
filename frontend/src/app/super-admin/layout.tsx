@@ -8,7 +8,7 @@ import KadeHubLogo from '../../components/ui/KadeHubLogo';
 import {
   LayoutDashboard, Store, CreditCard, Package,
   LogOut, ChevronRight, ShieldCheck, BarChart2, Settings,
-  Tag, Megaphone, Activity, Banknote, FileText, ClipboardList, DollarSign, Menu, Briefcase,
+  Tag, Megaphone, Activity, Banknote, FileText, ClipboardList, DollarSign, Menu, Briefcase, Users, Truck, History,
 } from 'lucide-react';
 
 const NAV = [
@@ -23,6 +23,8 @@ const NAV = [
     group: 'Management',
     items: [
       { href: '/super-admin/shops', label: 'All Shops', icon: Store },
+      { href: '/super-admin/users', label: 'People', icon: Users },
+      { href: '/super-admin/cod', label: 'COD Directory', icon: Truck },
       { href: '/super-admin/payments', label: 'Payment Slips', icon: Banknote },
       { href: '/super-admin/invoices', label: 'Invoices', icon: FileText },
       { href: '/super-admin/quotations', label: 'Quotations', icon: ClipboardList },
@@ -42,6 +44,7 @@ const NAV = [
   {
     group: 'System',
     items: [
+      { href: '/super-admin/activity', label: 'Activity Log', icon: History },
       { href: '/super-admin/api-monitor', label: 'API Monitor', icon: Activity },
       { href: '/super-admin/settings', label: 'Settings', icon: Settings },
     ],
@@ -98,12 +101,12 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
           style={{ background: '#E0F2F1', borderColor: '#B2DFDB' }}>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg,#00796B,#00A884)' }}>
+              style={{ background: 'linear-gradient(135deg,#00796B,#00796B)' }}>
               <ShieldCheck size={16} />
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold truncate" style={{ color: '#0F172A' }}>{user?.name}</p>
-              <p className="text-2xs font-semibold" style={{ color: '#00A884' }}>SUPER ADMIN</p>
+              <p className="text-2xs font-semibold" style={{ color: '#00796B' }}>SUPER ADMIN</p>
             </div>
           </div>
         </div>
@@ -123,7 +126,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
                         active ? 'text-white' : 'text-ink-600 hover:bg-ink-50 hover:text-ink-900'
                       }`}
-                      style={active ? { background: 'linear-gradient(135deg,#00796B,#00A884)' } : {}}>
+                      style={active ? { background: 'linear-gradient(135deg,#00796B,#00796B)' } : {}}>
                       <Icon size={17} style={active ? { color: 'white' } : {}} className={active ? '' : 'text-ink-400 group-hover:text-ink-600'} />
                       <span className="flex-1">{label}</span>
                       {href === '/super-admin/payments' && pendingSlips > 0 && (

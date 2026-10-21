@@ -53,7 +53,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left brand panel */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] flex-shrink-0 p-10 text-white"
-        style={{ background: 'linear-gradient(160deg, #004D40 0%, #00796B 50%, #00A884 100%)' }}>
+        style={{ background: 'linear-gradient(160deg, #004D40 0%, #00796B 50%, #00796B 100%)' }}>
         <a href="/" aria-label="Home" className="self-start"><KadeHubLogo width={200} theme="white" /></a>
         <div>
           <InteractiveMascot width={150} priority className="kh-mascot-enter"
@@ -118,9 +118,9 @@ export default function LoginPage() {
                 </div>
                 <a href="/register"
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all border-2"
-                  style={{ borderColor: '#00A884', color: '#00A884' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#00A884'; (e.currentTarget as HTMLElement).style.color = 'white'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#00A884'; }}>
+                  style={{ borderColor: '#00796B', color: '#00796B' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#00796B'; (e.currentTarget as HTMLElement).style.color = 'white'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#00796B'; }}>
                   {product ? 'Sign up' : 'Register Shop'} <ArrowRight size={14} />
                 </a>
               </div>

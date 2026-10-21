@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import api from '../../lib/api';
 import { Store, ShieldBan, TrendingUp, CreditCard, ArrowUpRight, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { Stat, fmtLKR } from '../../components/super-admin/bits';
 
 interface Stats {
   totalShops: number;
@@ -16,16 +17,18 @@ interface Stats {
 export default function SuperAdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cod, setCod] = useState<any>(null);
 
   useEffect(() => {
     api.get('/super-admin/stats').then(({ data }) => { setStats(data); setLoading(false); });
+    api.get('/super-admin/cod/stats').then(({ data }) => setCod(data)).catch(() => {});
   }, []);
 
   const statCards = stats ? [
     { label: 'Total Shops',    value: stats.totalShops,                          icon: Store,      color: '#2563EB', bg: '#EFF6FF' },
     { label: 'Active Shops',   value: stats.activeShops,                         icon: TrendingUp, color: '#00796B', bg: '#E0F2F1' },
-    { label: 'Blocked Shops',  value: stats.blockedShops,                        icon: ShieldBan,  color: '#E53E3E', bg: '#FFF0F0' },
-    { label: 'Total Revenue',  value: `LKR ${stats.totalRevenue.toLocaleString()}`, icon: CreditCard, color: '#F59E0B', bg: '#FFF8E1' },
+    { label: 'Blocked Shops',  value: stats.blockedShops,                        icon: ShieldBan,  color: '#C92A2A', bg: '#FFF0F0' },
+    { label: 'Total Revenue',  value: `LKR ${stats.totalRevenue.toLocaleString()}`, icon: CreditCard, color: '#B45309', bg: '#FFF8E1' },
   ] : [];
 
   return (
@@ -53,6 +56,22 @@ export default function SuperAdminDashboard() {
           ))
         }
       </div>
+
+      {/* COD at a glance */}
+      {cod && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-bold uppercase tracking-wide text-ink-500">KadeHub COD</h3>
+            <Link href="/super-admin/cod" className="text-xs font-semibold text-teal-700 hover:underline">Open COD directory →</Link>
+          </div>
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+            <Stat label="Businesses" value={cod.businesses.toLocaleString()} hint={`${cod.paid} paid · ${cod.trial} on trial`} />
+            <Stat label="Orders (30 days)" value={cod.orders_30d.toLocaleString()} hint={fmtLKR(cod.order_value_30d)} />
+            <Stat label="Orders (all time)" value={cod.orders.toLocaleString()} hint={fmtLKR(cod.order_value)} />
+            <Stat label="On trial" value={cod.trial.toLocaleString()} hint="Not paying yet" />
+          </div>
+        </div>
+      )}
 
       {/* Quick links */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

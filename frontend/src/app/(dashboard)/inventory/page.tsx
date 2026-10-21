@@ -95,9 +95,9 @@ export default function InventoryPage() {
       {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: t('inventory.totalSkus'),   value: products.length, color: '#009688', bg: '#E0F2F1', icon: Boxes },
-          { label: t('inventory.lowStock'),    value: lowCount,         color: '#F59E0B', bg: '#FFF8E1', icon: Boxes },
-          { label: t('inventory.outOfStock'), value: outCount,         color: '#FF6B6B', bg: '#FFF0F0', icon: Boxes },
+          { label: t('inventory.totalSkus'),   value: products.length, color: '#00796B', bg: '#E0F2F1', icon: Boxes },
+          { label: t('inventory.lowStock'),    value: lowCount,         color: '#B45309', bg: '#FFF8E1', icon: Boxes },
+          { label: t('inventory.outOfStock'), value: outCount,         color: '#C92A2A', bg: '#FFF0F0', icon: Boxes },
         ].map(({ label, value, color, bg, icon: Icon }) => (
           <div key={label} className="kh-card p-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: bg }}>
@@ -132,7 +132,7 @@ export default function InventoryPage() {
             {(['all', 'low', 'out'] as Filter[]).map((f) => (
               <button key={f} onClick={() => setFilter(f)}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
-                style={{ background: filter === f ? '#009688' : '#F1F5F9', color: filter === f ? 'white' : '#475569' }}>
+                style={{ background: filter === f ? '#00796B' : '#F1F5F9', color: filter === f ? 'white' : '#475569' }}>
                 {f === 'all' ? `${t('inventory.status')} (${products.length})` : f === 'low' ? `${t('inventory.lowStock')} (${lowCount})` : `${t('inventory.outOfStock')} (${outCount})`}
               </button>
             ))}
@@ -182,12 +182,12 @@ export default function InventoryPage() {
                       </div>
                     </td>
                     <td data-label={t('inventory.category')} className="px-5 py-3.5">
-                      {p.category ? <Badge variant="gray">{p.category}</Badge> : <span className="text-ink-300">—</span>}
+                      {p.category ? <Badge variant="gray">{p.category}</Badge> : <span className="text-ink-400">—</span>}
                     </td>
-                    <td data-label={t('inventory.price')} className="px-5 py-3.5 text-right font-bold" style={{ color: '#FFB703' }}>{LKR(p.price)}</td>
+                    <td data-label={t('inventory.price')} className="px-5 py-3.5 text-right font-bold" style={{ color: '#B45309' }}>{LKR(p.price)}</td>
                     <td data-label={t('inventory.cost')} className="px-5 py-3.5 text-right text-ink-400">{LKR(p.cost)}</td>
                     <td data-label={t('inventory.stock')} className="px-5 py-3.5 text-center">
-                      <span className="text-lg font-extrabold" style={{ color: qty <= 0 ? '#FF6B6B' : qty <= reorder ? '#F59E0B' : '#009688' }}>{qty}</span>
+                      <span className="text-lg font-extrabold" style={{ color: qty <= 0 ? '#C92A2A' : qty <= reorder ? '#F59E0B' : '#00796B' }}>{qty}</span>
                     </td>
                     <td data-label={t('inventory.reorderAt')} className="px-5 py-3.5 text-center text-ink-400">{reorder}</td>
                     <td data-label={t('inventory.status')} className="px-5 py-3.5 text-center"><Badge variant={variant} dot>{label}</Badge></td>

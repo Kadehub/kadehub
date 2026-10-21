@@ -49,7 +49,7 @@ export default function SuperAdminLoginPage() {
         <div className="kh-card p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
-              style={{ background: 'linear-gradient(135deg,#00796B,#00A884)' }}>
+              style={{ background: 'linear-gradient(135deg,#00796B,#00796B)' }}>
               <ShieldCheck size={20} />
             </div>
             <div>

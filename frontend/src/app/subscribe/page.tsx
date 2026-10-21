@@ -61,7 +61,7 @@ export default function SubscribePage() {
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#F1F5F9' }}>
         <div className="w-full max-w-md bg-white rounded-2xl p-8 text-center shadow-sm">
           <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#FFF8E1' }}>
-            <Clock size={26} style={{ color: '#F59E0B' }} />
+            <Clock size={26} style={{ color: '#B45309' }} />
           </div>
           <h2 className="text-xl font-bold text-ink-900 mb-2">Payment under review</h2>
           <p className="text-sm text-ink-500 mb-4">
@@ -73,9 +73,9 @@ export default function SubscribePage() {
             </p>
           )}
           <div className="flex items-center justify-center gap-5">
-            <a href={hubUrl('/apps')} className="text-sm font-semibold" style={{ color: '#00A884' }}>Your apps</a>
+            <a href={hubUrl('/apps')} className="text-sm font-semibold" style={{ color: '#00796B' }}>Your apps</a>
             <button onClick={() => { logout(); window.location.href = '/login'; }}
-              className="text-sm font-semibold" style={{ color: '#00A884' }}>
+              className="text-sm font-semibold" style={{ color: '#00796B' }}>
               Sign out
             </button>
           </div>
@@ -99,7 +99,7 @@ export default function SubscribePage() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg,#0a4f40,#0d6e5a)' }}>
         <div className="group w-full max-w-md bg-white rounded-2xl p-8 text-center shadow-sm">
-          <div className="flex justify-center"><ProductIcon slug="pos" color="#00A884" size={56} /></div>
+          <div className="flex justify-center"><ProductIcon slug="pos" color="#00796B" size={56} /></div>
           <h2 className="mt-4 text-xl font-bold text-ink-900">Start using KadeHub POS</h2>
           <p className="mt-2 text-sm text-ink-500">
             Your KadeHub account doesn’t use POS yet. Start a 14-day free trial with every module unlocked. No payment needed.
@@ -108,7 +108,7 @@ export default function SubscribePage() {
             className="kh-btn-primary mt-6 w-full py-3 rounded-xl font-bold inline-flex items-center justify-center gap-2 disabled:opacity-60">
             {starting ? 'Starting…' : <>Start free trial <ArrowRight size={16} /></>}
           </button>
-          <a href={hubUrl('/apps')} className="mt-4 inline-block text-sm font-semibold" style={{ color: '#00A884' }}>Back to your apps</a>
+          <a href={hubUrl('/apps')} className="mt-4 inline-block text-sm font-semibold" style={{ color: '#00796B' }}>Back to your apps</a>
         </div>
       </div>
     );
@@ -133,7 +133,7 @@ export default function SubscribePage() {
             Try again
           </button>
           <button onClick={() => { logout(); window.location.href = '/login'; }}
-            className="mt-4 text-sm font-semibold" style={{ color: '#00A884' }}>
+            className="mt-4 text-sm font-semibold" style={{ color: '#00796B' }}>
             Sign out
           </button>
         </div>
@@ -194,7 +194,7 @@ export default function SubscribePage() {
               <h3 className="font-bold text-ink-900 text-lg mb-1">{pkg.name}</h3>
               <p className="text-xs text-ink-400 mb-3">{pkg.description}</p>
               <div className="mb-3">
-                <span className="text-3xl font-extrabold" style={{ color: '#00A884' }}>{fmt(pkgPrice, currency)}</span>
+                <span className="text-3xl font-extrabold" style={{ color: '#00796B' }}>{fmt(pkgPrice, currency)}</span>
                 <span className="text-ink-400 text-sm ml-1">/{billing === 'yearly' ? 'yr' : 'mo'}</span>
               </div>
               {registrationFeeDue > 0 && (
@@ -204,7 +204,7 @@ export default function SubscribePage() {
                   </div>
                   <div className="flex justify-between text-ink-600">
                     <span>One-time registration fee</span>
-                    <span style={{ color: '#00A884' }}>{fmt(registrationFeeDue, currency)}</span>
+                    <span style={{ color: '#00796B' }}>{fmt(registrationFeeDue, currency)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-ink-800 border-t border-yellow-200 pt-1">
                     <span>First payment</span><span>{fmt(pkgPrice + registrationFeeDue, currency)}</span>
@@ -214,7 +214,7 @@ export default function SubscribePage() {
               <div className="flex-1 space-y-1.5 mb-5">
                 {pkg.modules?.slice(0, 6).map((m: any, i: number) => (
                   <div key={i} className="flex items-center gap-2 text-xs text-ink-600">
-                    <Check size={12} style={{ color: '#00A884' }} />
+                    <Check size={12} style={{ color: '#00796B' }} />
                     <span className="capitalize">{m.module_name}</span>
                   </div>
                 ))}
@@ -222,7 +222,7 @@ export default function SubscribePage() {
               </div>
               <button onClick={() => setSelectedPkg(pkg)}
                 className="w-full py-2.5 rounded-xl text-sm font-bold transition-all"
-                style={{ background: pkg.is_popular ? '#00A884' : 'white', color: pkg.is_popular ? 'white' : '#00A884', border: '2px solid #00A884' }}>
+                style={{ background: pkg.is_popular ? '#00796B' : 'white', color: pkg.is_popular ? 'white' : '#00796B', border: '2px solid #00796B' }}>
                 Select {pkg.name}
               </button>
             </div>
@@ -275,12 +275,12 @@ export default function SubscribePage() {
               {registrationFeeDue > 0 && (
                 <div className="flex justify-between text-xs">
                   <span className="text-ink-500">Registration fee (one-time)</span>
-                  <span className="font-semibold" style={{ color: '#00A884' }}>{fmt(registrationFeeDue, currency)}</span>
+                  <span className="font-semibold" style={{ color: '#00796B' }}>{fmt(registrationFeeDue, currency)}</span>
                 </div>
               )}
               <div className="flex justify-between font-bold text-sm border-t border-ink-100 pt-2">
                 <span>Total</span>
-                <span style={{ color: '#00A884' }}>{fmt(total, currency)}</span>
+                <span style={{ color: '#00796B' }}>{fmt(total, currency)}</span>
               </div>
               <p className="text-xs text-ink-400">Subsequent: {fmt(price, currency)}/{billing === 'yearly' ? 'yr' : 'mo'}</p>
             </div>

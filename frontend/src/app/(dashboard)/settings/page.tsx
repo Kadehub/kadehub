@@ -146,7 +146,7 @@ export default function SettingsPage() {
         ].map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key as any)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all flex-1 sm:flex-none justify-center"
-            style={{ background: tab === key ? '#00A884' : 'transparent', color: tab === key ? 'white' : '#64748B' }}>
+            style={{ background: tab === key ? '#00796B' : 'transparent', color: tab === key ? 'white' : '#64748B' }}>
             <Icon size={15} />{label}
           </button>
         ))}
@@ -164,7 +164,7 @@ export default function SettingsPage() {
               }
               <button onClick={() => logoRef.current?.click()}
                 className="absolute -bottom-2 -right-2 w-7 h-7 rounded-full bg-white border border-ink-200 flex items-center justify-center hover:bg-ink-50 shadow-sm">
-                <Camera size={13} style={{ color: '#00A884' }} />
+                <Camera size={13} style={{ color: '#00796B' }} />
               </button>
               <input ref={logoRef} type="file" accept="image/*" className="hidden"
                 onChange={e => { const f = e.target.files?.[0]; if (f) { setLogoPreview(URL.createObjectURL(f)); uploadLogo(f); } }} />
@@ -186,7 +186,7 @@ export default function SettingsPage() {
             <Input label="Website" placeholder="www.yourshop.lk" value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} />
             <Input label="Tax / VAT Number" placeholder="VAT123456789" value={form.tax_number} onChange={e => setForm(f => ({ ...f, tax_number: e.target.value }))} />
             <div className="col-span-2 flex justify-between items-center pt-2">
-              <button type="button" onClick={() => setTab('billing')} className="text-sm font-semibold" style={{ color: '#00A884' }}>
+              <button type="button" onClick={() => setTab('billing')} className="text-sm font-semibold" style={{ color: '#00796B' }}>
                 Upgrade Plan →
               </button>
               <Button type="submit" loading={saving}>Save Changes</Button>
@@ -215,7 +215,7 @@ export default function SettingsPage() {
                 <div className="md:col-span-3 space-y-4">
                   {pendingTx || slipSubmitted ? (
                     <div className="rounded-xl p-5 text-center" style={{ background: '#FFF8E1', border: '1px solid #FDE68A' }}>
-                      <Clock size={22} className="mx-auto mb-2" style={{ color: '#F59E0B' }} />
+                      <Clock size={22} className="mx-auto mb-2" style={{ color: '#B45309' }} />
                       <p className="font-bold text-ink-800">Slip submitted — awaiting approval</p>
                       <p className="text-xs text-ink-500 mt-1">Admin will verify the transfer and activate your plan.</p>
                     </div>
@@ -250,8 +250,8 @@ export default function SettingsPage() {
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-ink-500">Registration fee</span>
                         <span className="flex items-center gap-1.5">
-                          <span className="line-through text-ink-300">{LKR(regFee * 2)}</span>
-                          <span className="font-bold" style={{ color: '#FF6B6B' }}>{LKR(regFee)}</span>
+                          <span className="line-through text-ink-400">{LKR(regFee * 2)}</span>
+                          <span className="font-bold" style={{ color: '#C92A2A' }}>{LKR(regFee)}</span>
                         </span>
                       </div>
                       <div className="flex justify-between text-xs text-green-600 font-semibold mb-3">
@@ -262,12 +262,12 @@ export default function SettingsPage() {
                   )}
                   <div className="border-t border-ink-200 pt-3 mb-3 flex justify-between font-bold">
                     <span>Total</span>
-                    <span style={{ color: '#00A884' }}>{LKR(!activeSub ? price + regFee : price)}</span>
+                    <span style={{ color: '#00796B' }}>{LKR(!activeSub ? price + regFee : price)}</span>
                   </div>
                   <p className="text-xs font-semibold text-ink-500 mb-2">Included modules:</p>
                   {selectedPkg.modules?.map((m: any) => (
                     <div key={m.module_name} className="flex items-center gap-2 text-xs text-ink-600 mb-1">
-                      <Check size={11} style={{ color: '#00A884' }} /> {m.module_name}
+                      <Check size={11} style={{ color: '#00796B' }} /> {m.module_name}
                     </div>
                   ))}
                 </div>
@@ -277,7 +277,7 @@ export default function SettingsPage() {
             <>
               {(pendingTx || slipSubmitted) && (
                 <div className="flex items-start gap-3 p-4 rounded-xl border" style={{ background: '#FFF8E1', borderColor: '#FDE68A' }}>
-                  <Clock size={16} style={{ color: '#F59E0B' }} className="mt-0.5 flex-shrink-0" />
+                  <Clock size={16} style={{ color: '#B45309' }} className="mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-semibold text-ink-800">Bank slip pending review</p>
                     <p className="text-xs text-ink-500 mt-0.5">Your plan will activate after an admin verifies the transfer.</p>
@@ -290,7 +290,7 @@ export default function SettingsPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#E0F2F1' }}>
-                        <Package size={18} style={{ color: '#00A884' }} />
+                        <Package size={18} style={{ color: '#00796B' }} />
                       </div>
                       <div>
                         <p className="font-semibold text-ink-800">{currentPkg ? `${currentPkg.name} Plan` : 'Free Plan'}</p>
@@ -302,7 +302,7 @@ export default function SettingsPage() {
                         </p>
                       </div>
                     </div>
-                    <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: '#E0F2F1', color: '#00A884' }}>Active</span>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: '#E0F2F1', color: '#00796B' }}>Active</span>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <div>
@@ -321,7 +321,7 @@ export default function SettingsPage() {
                             <div className="h-2 rounded-full transition-all"
                               style={{
                                 width: currentPkg.employee_limit ? `${Math.min(100, (userCount / currentPkg.employee_limit) * 100)}%` : '10%',
-                                background: currentPkg.employee_limit && userCount >= currentPkg.employee_limit ? '#FF6B6B' : '#00A884',
+                                background: currentPkg.employee_limit && userCount >= currentPkg.employee_limit ? '#C92A2A' : '#00796B',
                               }} />
                           </div>
                           <span className="text-xs font-semibold text-ink-700 whitespace-nowrap">
@@ -356,7 +356,7 @@ export default function SettingsPage() {
                     {(['monthly', 'yearly'] as const).map(b => (
                       <button key={b} onClick={() => setBilling(b)}
                         className="px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
-                        style={{ background: billing === b ? '#00A884' : 'transparent', color: billing === b ? 'white' : '#64748B' }}>
+                        style={{ background: billing === b ? '#00796B' : 'transparent', color: billing === b ? 'white' : '#64748B' }}>
                         {b === 'yearly' ? 'Yearly — Save 17%' : 'Monthly'}
                       </button>
                     ))}
@@ -368,10 +368,10 @@ export default function SettingsPage() {
                     const isCurrent = pkg.id === activeSub?.package_id;
                     return (
                       <div key={pkg.id} className="rounded-xl p-5 flex flex-col relative transition-all hover:shadow-md"
-                        style={{ border: isCurrent ? '2px solid #00A884' : pkg.is_popular ? '2px solid #00A884' : '1px solid #E2E8F0', background: isCurrent ? '#F0FDF9' : 'white' }}>
+                        style={{ border: isCurrent ? '2px solid #00796B' : pkg.is_popular ? '2px solid #00796B' : '1px solid #E2E8F0', background: isCurrent ? '#F0FDF9' : 'white' }}>
                         {isCurrent && (
                           <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1"
-                            style={{ background: '#00A884' }}>
+                            style={{ background: '#00796B' }}>
                             <Check size={10} fill="white" /> Current Plan
                           </div>
                         )}
@@ -383,7 +383,7 @@ export default function SettingsPage() {
                         )}
                         <p className="font-bold text-ink-900">{pkg.name}</p>
                         <p className="text-xs text-ink-400 mt-0.5 mb-3">{pkg.description}</p>
-                        <p className="text-2xl font-extrabold mb-1" style={{ color: '#00A884' }}>
+                        <p className="text-2xl font-extrabold mb-1" style={{ color: '#00796B' }}>
                           {LKR(pkgPrice)}
                           <span className="text-xs font-normal text-ink-400 ml-1">/{billing === 'yearly' ? 'yr' : 'mo'}</span>
                         </p>
@@ -395,23 +395,23 @@ export default function SettingsPage() {
                         <div className="flex-1 space-y-1 mb-4 mt-2">
                           <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: '#00796B' }}>
                             <Check size={11} style={{ color: '#00796B' }} /> Basic Report
-                            <span className="px-1.5 py-0.5 rounded-full text-white font-bold" style={{ background: '#00A884', fontSize: '9px' }}>FREE</span>
+                            <span className="px-1.5 py-0.5 rounded-full text-white font-bold" style={{ background: '#00796B', fontSize: '9px' }}>FREE</span>
                           </div>
                           {pkg.modules?.map((m: any) => (
                             <div key={m.module_name} className="flex items-center gap-2 text-xs text-ink-600">
-                              <Check size={11} style={{ color: '#00A884' }} /> {m.module_name}
+                              <Check size={11} style={{ color: '#00796B' }} /> {m.module_name}
                             </div>
                           ))}
                         </div>
                         {isCurrent ? (
                           <div className="w-full py-2 rounded-xl text-sm font-bold text-center"
-                            style={{ background: '#E0F2F1', color: '#00A884', border: '2px solid #00A884' }}>
+                            style={{ background: '#E0F2F1', color: '#00796B', border: '2px solid #00796B' }}>
                             ✓ Active Plan
                           </div>
                         ) : (
                           <button onClick={() => setSelectedPkg(pkg)}
                             className="w-full py-2 rounded-xl text-sm font-bold transition-all"
-                            style={{ background: pkg.is_popular ? '#00A884' : 'white', color: pkg.is_popular ? 'white' : '#00A884', border: '2px solid #00A884' }}>
+                            style={{ background: pkg.is_popular ? '#00796B' : 'white', color: pkg.is_popular ? 'white' : '#00796B', border: '2px solid #00796B' }}>
                             Select {pkg.name}
                           </button>
                         )}
@@ -427,7 +427,7 @@ export default function SettingsPage() {
                   <h3 className="font-semibold text-ink-800">Invoices</h3>
                 </div>
                 {invoices.length === 0 ? (
-                  <p className="text-center text-ink-300 text-sm py-8">No invoices yet</p>
+                  <p className="text-center text-ink-400 text-sm py-8">No invoices yet</p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="mob-cards w-full text-sm">
@@ -486,7 +486,7 @@ export default function SettingsPage() {
                   <h3 className="font-semibold text-ink-800">Payment History</h3>
                 </div>
                 {transactions.length === 0 ? (
-                  <p className="text-center text-ink-300 text-sm py-10">No transactions yet</p>
+                  <p className="text-center text-ink-400 text-sm py-10">No transactions yet</p>
                 ) : (
                   <div className="overflow-x-auto">
                   <table className="mob-cards w-full text-sm">
@@ -504,12 +504,12 @@ export default function SettingsPage() {
                           <td data-label="Plan" className="px-5 py-3 font-medium text-ink-700">{tx.package?.name}</td>
                           <td data-label="Billing" className="px-5 py-3 text-ink-500 capitalize">{tx.billing_cycle}</td>
                           <td data-label="Gateway" className="px-5 py-3 text-ink-500 capitalize">{tx.gateway}</td>
-                          <td data-label="Amount" className="px-5 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(tx.amount)}</td>
+                          <td data-label="Amount" className="px-5 py-3 text-right font-bold" style={{ color: '#C2410C' }}>{LKR(tx.amount)}</td>
                           <td data-label="Status" className="px-5 py-3">
                             <span className="px-2 py-0.5 rounded-full text-xs font-semibold"
                               style={{
                                 background: tx.status === 'completed' ? '#E0F2F1' : tx.status === 'pending' ? '#FFF8E1' : '#FFF0F0',
-                                color: tx.status === 'completed' ? '#00796B' : tx.status === 'pending' ? '#B45309' : '#E53E3E',
+                                color: tx.status === 'completed' ? '#00796B' : tx.status === 'pending' ? '#B45309' : '#C92A2A',
                               }}>
                               {tx.status === 'pending' ? 'pending review' : tx.status}
                             </span>

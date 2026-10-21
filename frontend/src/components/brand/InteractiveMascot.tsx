@@ -2,6 +2,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { MASCOT_SRC } from './Mascot';
 
+const MASCOT_SMALL_SRC = '/mascot/capybara-300.webp';
+
 const CHEER_SRC = '/mascot/capybara-happy.webp';
 const CHEER_MS = 1600;
 
@@ -43,6 +45,8 @@ export default function InteractiveMascot({
   const cheerTimer = useRef<ReturnType<typeof setTimeout>>();
   const [bubble, setBubble] = useState<string | null>(null);
   const [hearts, setHearts] = useState<Heart[]>([]);
+  const [cheerReady, setCheerReady] = useState(false);
+  const warmUp = () => setCheerReady(true);
 
   const reducedMotion = () =>
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -148,30 +152,37 @@ export default function InteractiveMascot({
   };
 
   return (
+    <span className={`relative inline-block flex-shrink-0 ${className}`} style={{ width }}>
     <button
       ref={rootRef}
       type="button"
-      onClick={onPress}
+      onClick={() => { warmUp(); onPress(); }}
+      onPointerEnter={warmUp}
+      onFocus={warmUp}
       aria-label={label}
-      className={`kh-imascot relative inline-block flex-shrink-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 ${className}`}
-      style={{ width }}
+      className="kh-imascot relative block w-full rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2"
     >
       <div className="kh-imascot-lift">
         <div ref={followRef} className="kh-imascot-follow">
           <div ref={hopRef} className="kh-imascot-hop" onAnimationEnd={e => e.currentTarget.classList.remove('is-hopping')}>
             <img
               src={MASCOT_SRC}
+              srcSet={`${MASCOT_SMALL_SRC} 300w, ${MASCOT_SRC} 465w`}
+              sizes={typeof width === 'number' ? `${width}px` : width}
               width={465}
               height={489}
               alt={alt}
               loading={priority ? 'eager' : 'lazy'}
+              {...(priority ? { fetchPriority: 'high' as const } : {})}
               decoding="async"
               draggable={false}
               className="kh-imascot-main block w-full h-auto select-none pointer-events-none"
             />
-            {/* Preloaded (lazy would delay the first press); same box, aligned to the bottom */}
-            <img src={CHEER_SRC} alt="" aria-hidden width={284} height={368} decoding="async" draggable={false}
-              className="kh-imascot-alt select-none" />
+            {/* Fetched on first hover/focus/tap rather than with the page; same box, aligned to the bottom */}
+            {cheerReady && (
+              <img src={CHEER_SRC} alt="" aria-hidden width={284} height={368} decoding="async" draggable={false}
+                className="kh-imascot-alt select-none" />
+            )}
             <span className="kh-mascot-lid kh-mascot-lid-l" aria-hidden />
             <span className="kh-mascot-lid kh-mascot-lid-r" aria-hidden />
             <span className="kh-mascot-steam" style={{ left: '47%' }} aria-hidden />
@@ -186,10 +197,10 @@ export default function InteractiveMascot({
           <path fill="#E0645A" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 2.9 4.5 6.6 4.5c2.1 0 3.5 1.1 4.4 2.4.9-1.3 2.3-2.4 4.4-2.4 3.7 0 5.7 3.9 4.2 7.3C19.5 16.4 12 21 12 21z" />
         </svg>
       ))}
-
+    </button>
       <span className={`kh-mascot-bubble kh-mascot-bubble-${bubbleSide} ${bubble ? 'is-visible' : ''}`} role="status" aria-live="polite">
         {bubble}
       </span>
-    </button>
+    </span>
   );
 }

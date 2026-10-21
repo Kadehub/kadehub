@@ -22,7 +22,7 @@ export default function DateRangePicker(props: Props) {
           <button key={p.key} onClick={() => setPreset(p.key)}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
             style={{
-              background: preset === p.key ? '#00A884' : 'transparent',
+              background: preset === p.key ? '#00796B' : 'transparent',
               color: preset === p.key ? 'white' : '#64748B',
             }}>
             {p.label}

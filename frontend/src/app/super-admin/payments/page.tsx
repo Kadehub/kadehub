@@ -73,7 +73,7 @@ export default function PaymentSlipsPage() {
           ] as [Filter, string][]).map(([key, label]) => (
             <button key={label} onClick={() => setFilter(key)}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-              style={{ background: filter === key ? '#00A884' : 'transparent', color: filter === key ? 'white' : '#64748B' }}>
+              style={{ background: filter === key ? '#00796B' : 'transparent', color: filter === key ? 'white' : '#64748B' }}>
               {label}
             </button>
           ))}
@@ -84,7 +84,7 @@ export default function PaymentSlipsPage() {
         <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="kh-card h-28 animate-pulse bg-ink-100" />)}</div>
       ) : rows.length === 0 ? (
         <div className="kh-card p-10 text-center">
-          <Banknote size={28} className="mx-auto mb-2 text-ink-300" />
+          <Banknote size={28} className="mx-auto mb-2 text-ink-400" />
           <p className="text-sm text-ink-400">No {filter || ''} slips</p>
         </div>
       ) : (
@@ -111,7 +111,7 @@ export default function PaymentSlipsPage() {
                   <span className="px-2.5 py-1 rounded-full text-xs font-semibold"
                     style={{
                       background: tx.status === 'completed' ? '#E0F2F1' : tx.status === 'pending' ? '#FFF8E1' : '#FFF0F0',
-                      color: tx.status === 'completed' ? '#00796B' : tx.status === 'pending' ? '#B45309' : '#E53E3E',
+                      color: tx.status === 'completed' ? '#00796B' : tx.status === 'pending' ? '#B45309' : '#C92A2A',
                     }}>
                     {tx.status === 'pending' ? 'pending review' : tx.status}
                   </span>
@@ -130,7 +130,7 @@ export default function PaymentSlipsPage() {
                 <div className="flex md:flex-col gap-2 justify-end">
                   <button disabled={busyId === tx.id} onClick={() => approve(tx.id)}
                     className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-white disabled:opacity-50"
-                    style={{ background: '#00A884' }}>
+                    style={{ background: '#00796B' }}>
                     <Check size={14} /> Approve
                   </button>
                   <button disabled={busyId === tx.id} onClick={() => { setRejectId(tx.id); setReason(''); }}
@@ -160,7 +160,7 @@ export default function PaymentSlipsPage() {
         <div className="flex justify-end gap-2 mt-4">
           <button onClick={() => setRejectId(null)} className="px-4 py-2 text-sm font-semibold text-ink-500">Cancel</button>
           <button onClick={reject} disabled={busyId === rejectId}
-            className="px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50" style={{ background: '#E53E3E' }}>
+            className="px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50" style={{ background: '#C92A2A' }}>
             Reject slip
           </button>
         </div>

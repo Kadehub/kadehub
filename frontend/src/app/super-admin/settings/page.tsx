@@ -4,6 +4,7 @@ import { useAuthStore } from '../../../hooks/useAuth';
 import api from '../../../lib/api';
 import toast from 'react-hot-toast';
 import { ShieldCheck, Mail, Key, Landmark, Building2 } from 'lucide-react';
+import { AdminAccounts, ChangeOwnPassword } from '../../../components/super-admin/AdminAccounts';
 
 export default function SuperAdminSettingsPage() {
   const { user } = useAuthStore();
@@ -14,6 +15,7 @@ export default function SuperAdminSettingsPage() {
   });
   const [savingBank, setSavingBank] = useState(false);
   const [savingCompany, setSavingCompany] = useState(false);
+  const [myEmail, setMyEmail] = useState('');
 
   useEffect(() => {
     api.get('/super-admin/bank-details').then(r => {
@@ -62,7 +64,7 @@ export default function SuperAdminSettingsPage() {
       <div className="kh-card p-6 space-y-5">
         <div className="flex items-center gap-4 pb-5 border-b border-ink-100">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-xl font-bold"
-            style={{ background: 'linear-gradient(135deg,#00796B,#00A884)' }}>
+            style={{ background: 'linear-gradient(135deg,#00796B,#00796B)' }}>
             <ShieldCheck size={24} />
           </div>
           <div>
@@ -76,7 +78,7 @@ export default function SuperAdminSettingsPage() {
             <Mail size={16} className="text-ink-400 flex-shrink-0" />
             <div>
               <p className="text-xs text-ink-400">Email</p>
-              <p className="text-sm font-semibold text-ink-800">superadmin@kadehub.com</p>
+              <p className="text-sm font-semibold text-ink-800">{myEmail || '—'}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-4 rounded-xl bg-ink-50">
@@ -88,12 +90,10 @@ export default function SuperAdminSettingsPage() {
           </div>
         </div>
 
-        <div className="pt-4 border-t border-ink-100">
-          <p className="text-xs text-ink-400">
-            To change the super admin password, update the <code className="bg-ink-100 px-1.5 py-0.5 rounded text-ink-600">password_hash</code> directly in the database using a bcrypt hash.
-          </p>
-        </div>
+        <ChangeOwnPassword />
       </div>
+
+      <AdminAccounts myId={user?.id} onMe={me => setMyEmail(me.email)} />
 
       <div className="kh-card p-6 space-y-4">
         <div className="flex items-center gap-3">

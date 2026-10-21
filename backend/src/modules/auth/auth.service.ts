@@ -113,6 +113,7 @@ export class AuthService {
     if (!user || !(await bcrypt.compare(dto.password, user.password_hash))) {
       throw new UnauthorizedException('Invalid credentials');
     }
+    if (user.disabled_at) throw new UnauthorizedException('This account has been disabled. Contact support.');
     // SUPER_ADMIN has no shop to block — skip tenant check
     if (user.role !== 'SUPER_ADMIN') {
       const tenant = await this.tenantRepo.findOne({ where: { id: user.tenant_id } });
@@ -141,7 +142,8 @@ export class AuthService {
 
     const tenant = await this.tenantRepo.findOne({ where: { slug: dto.tenant_slug } });
     const candidates = tenant
-      ? await this.userRepo.find({ where: { tenant_id: tenant.id }, select: ['id', 'tenant_id', 'name', 'role', 'pin'] })
+      ? (await this.userRepo.find({ where: { tenant_id: tenant.id }, select: ['id', 'tenant_id', 'name', 'role', 'pin', 'disabled_at'] }))
+        .filter(u => !u.disabled_at)
       : [];
 
     let match: User | undefined;

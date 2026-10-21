@@ -68,7 +68,7 @@ export default function BasicReport({ from, to }: Props) {
       {(+data?.total_discount > 0) && (
         <div className="kh-card p-4 flex items-center gap-3">
           <span className="text-sm text-ink-500">Total Discounts Given:</span>
-          <span className="font-bold" style={{ color: '#FF6B6B' }}>{LKR(+data.total_discount)}</span>
+          <span className="font-bold" style={{ color: '#C92A2A' }}>{LKR(+data.total_discount)}</span>
         </div>
       )}
 
@@ -97,7 +97,7 @@ export default function BasicReport({ from, to }: Props) {
                       {new Date(s.created_at).toLocaleString('en-LK', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </td>
                     <td data-label="Cashier" className="px-4 py-2.5 text-ink-700">{s.cashier || '—'}</td>
-                    <td data-label="Customer" className="px-4 py-2.5 text-ink-500">{s.customer || <span className="text-ink-300">Walk-in</span>}</td>
+                    <td data-label="Customer" className="px-4 py-2.5 text-ink-500">{s.customer || <span className="text-ink-400">Walk-in</span>}</td>
                     <td data-label="Payment" className="px-4 py-2.5">
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
                         style={{
@@ -107,7 +107,7 @@ export default function BasicReport({ from, to }: Props) {
                         {s.payment_method}
                       </span>
                     </td>
-                    <td data-label="Total" className="px-4 py-2.5 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+s.total_amount)}</td>
+                    <td data-label="Total" className="px-4 py-2.5 text-right font-bold" style={{ color: '#C2410C' }}>{LKR(+s.total_amount)}</td>
                     <td data-label="Actions" className="px-4 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
@@ -123,7 +123,7 @@ export default function BasicReport({ from, to }: Props) {
                             onClick={() => voidSale(s.id)}
                             disabled={voiding === s.id}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-40"
-                            style={{ background: '#FFF0F0', color: '#E53E3E' }}
+                            style={{ background: '#FFF0F0', color: '#C92A2A' }}
                             title="Void Sale">
                             <Ban size={13} />
                             Void
@@ -146,7 +146,7 @@ export default function BasicReport({ from, to }: Props) {
         <p className="text-sm font-semibold text-ink-600">Want deeper insights?</p>
         <p className="text-xs text-ink-400">Upgrade to Pro or Enterprise for full POS reports, revenue charts, customer analytics and more.</p>
         <a href="/settings?tab=billing" className="inline-block mt-2 px-4 py-2 rounded-xl text-sm font-bold text-white"
-          style={{ background: '#00A884' }}>View Plans →</a>
+          style={{ background: '#00796B' }}>View Plans →</a>
       </div>
 
       {receiptData && <ReceiptModal data={receiptData} onClose={() => setReceiptData(null)} />}

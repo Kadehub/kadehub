@@ -9,6 +9,7 @@ import { useAuthHydrated, useAuthStore } from '../../hooks/useAuth';
 import { ROOT_DOMAIN, getProduct, productUrl, type ProductSlug } from '../../lib/platform';
 import api from '../../lib/api';
 
+import { onColor } from '../../lib/color';
 type ProductState = 'not_started' | 'trial' | 'active' | 'expired' | 'free';
 type ProductRow = {
   slug: ProductSlug; name: string; tagline: string; color: string; state: ProductState;
@@ -50,7 +51,7 @@ export default function AccountPage() {
     setFailed(false);
     api.get<Account>('/platform/account').then(({ data }) => {
       // Colours and display names come from the frontend registry (the API only knows slugs and states)
-      setAccount({ ...data, products: data.products.map(p => ({ ...p, color: getProduct(p.slug)?.color ?? '#00A884' })) });
+      setAccount({ ...data, products: data.products.map(p => ({ ...p, color: getProduct(p.slug)?.color ?? '#00796B' })) });
       setProfile({ name: data.user.name, phone: data.user.phone ?? '' });
     }).catch(() => setFailed(true));
   };
@@ -137,14 +138,14 @@ export default function AccountPage() {
                   {p.state === 'not_started' ? (
                     isAdmin ? (
                       <button onClick={() => startProduct(p)} disabled={saving === p.slug}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-60" style={{ background: p.color }}>
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold disabled:opacity-60" style={{ background: p.color, color: onColor(p.color) }}>
                         {saving === p.slug ? 'Starting…' : p.slug === 'tasks' ? 'Join free' : 'Start free trial'} <ArrowRight size={14} />
                       </button>
                     ) : <span className="text-xs text-ink-400">Ask your account owner to turn this on</span>
                   ) : (
                     <>
                       {p.state !== 'expired' && (
-                        <a href={productUrl(p.slug)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: p.color }}>
+                        <a href={productUrl(p.slug)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold" style={{ background: p.color, color: onColor(p.color) }}>
                           Open <ArrowRight size={14} />
                         </a>
                       )}

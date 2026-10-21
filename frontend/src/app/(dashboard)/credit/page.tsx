@@ -56,9 +56,9 @@ export default function CreditPage() {
       {summary && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: t('credit.totalDue'),    value: LKR(+summary.total_due || 0),         color: '#FF6B6B' },
-            { label: t('credit.totalPaid'),   value: LKR(+summary.total_paid || 0),        color: '#009688' },
-            { label: t('credit.outstanding'), value: LKR(+summary.total_outstanding || 0), color: '#F59E0B' },
+            { label: t('credit.totalDue'),    value: LKR(+summary.total_due || 0),         color: '#C92A2A' },
+            { label: t('credit.totalPaid'),   value: LKR(+summary.total_paid || 0),        color: '#00796B' },
+            { label: t('credit.outstanding'), value: LKR(+summary.total_outstanding || 0), color: '#B45309' },
             { label: t('credit.openCredits'), value: (+summary.outstanding_count || 0) + (+summary.partial_count || 0), color: '#6366F1' },
           ].map(({ label, value, color }) => (
             <div key={label} className="kh-card p-4">
@@ -76,7 +76,7 @@ export default function CreditPage() {
             {(['outstanding', 'partial', 'paid', 'all'] as const).map(f => (
               <button key={f} onClick={() => setFilter(f)}
                 className="px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all"
-                style={{ background: filter === f ? '#009688' : '#F1F5F9', color: filter === f ? 'white' : '#475569' }}>
+                style={{ background: filter === f ? '#00796B' : '#F1F5F9', color: filter === f ? 'white' : '#475569' }}>
                 {f}
               </button>
             ))}
@@ -100,9 +100,9 @@ export default function CreditPage() {
               {filtered.map(c => (
                 <tr key={c.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
                   <td data-label={t('credit.customer')} className="px-5 py-3.5 font-semibold text-ink-800">{c.customer?.name || `#${c.customer_id}`}</td>
-                  <td data-label={t('credit.amountDue')} className="px-5 py-3.5 font-bold" style={{ color: '#FF6B6B' }}>{LKR(c.amount_due)}</td>
+                  <td data-label={t('credit.amountDue')} className="px-5 py-3.5 font-bold" style={{ color: '#C92A2A' }}>{LKR(c.amount_due)}</td>
                   <td data-label={t('credit.paid')} className="px-5 py-3.5 text-ink-500">{LKR(c.amount_paid)}</td>
-                  <td data-label={t('credit.balance')} className="px-5 py-3.5 font-bold" style={{ color: '#F59E0B' }}>{LKR(c.amount_due - c.amount_paid)}</td>
+                  <td data-label={t('credit.balance')} className="px-5 py-3.5 font-bold" style={{ color: '#B45309' }}>{LKR(c.amount_due - c.amount_paid)}</td>
                   <td data-label={t('credit.dueDate')} className="px-5 py-3.5 text-ink-400 text-xs">{c.due_date || '—'}</td>
                   <td data-label={t('credit.status')} className="px-5 py-3.5"><Badge variant={statusVariant(c.status) as any} dot>{c.status}</Badge></td>
                   <td className="px-5 py-3.5">
@@ -125,7 +125,7 @@ export default function CreditPage() {
           <form onSubmit={recordPayment} className="space-y-4">
             <div className="p-3 rounded-xl bg-ink-50 text-sm">
               <p className="font-semibold text-ink-800">{payModal.customer?.name}</p>
-              <p className="text-ink-500">{t('credit.balance')}: <strong style={{ color: '#F59E0B' }}>{LKR(payModal.amount_due - payModal.amount_paid)}</strong></p>
+              <p className="text-ink-500">{t('credit.balance')}: <strong style={{ color: '#B45309' }}>{LKR(payModal.amount_due - payModal.amount_paid)}</strong></p>
             </div>
             <Input label={t('credit.paymentAmount')} type="number" required min="0.01" step="0.01"
               max={payModal ? payModal.amount_due - payModal.amount_paid : undefined}

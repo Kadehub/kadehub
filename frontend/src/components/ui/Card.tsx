@@ -15,10 +15,10 @@ interface StatCardProps {
 }
 
 const colorMap = {
-  teal:  { text: '#009688', bg: '#E0F2F1', icon: '#009688' },
-  amber: { text: '#F59E0B', bg: '#FFF8E1', icon: '#FFB703' },
+  teal:  { text: '#00796B', bg: '#E0F2F1', icon: '#00796B' },
+  amber: { text: '#B45309', bg: '#FFF8E1', icon: '#FFB703' },
   blue:  { text: '#2563EB', bg: '#EFF6FF', icon: '#2563EB' },
-  coral: { text: '#FF6B6B', bg: '#FFF0F0', icon: '#FF6B6B' },
+  coral: { text: '#C92A2A', bg: '#FFF0F0', icon: '#C92A2A' },
   navy:  { text: '#0F172A', bg: '#F1F5F9', icon: '#334155' },
 };
 

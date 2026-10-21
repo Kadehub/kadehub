@@ -12,6 +12,7 @@ import { PRODUCTS, hubUrl, productPath, productUrl } from '../../lib/platform';
 import api from '../../lib/api';
 import { Avatar } from './ui';
 
+import { onColor } from '../../lib/color';
 const p = (path: string) => productPath('tasks', path);
 
 /** Top navigation for every KadeHub Tasks page (public and signed-in). */
@@ -60,7 +61,7 @@ export default function TasksShell({ children }: { children: React.ReactNode }) 
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-3">
           <div className="flex items-center gap-2 flex-shrink-0">
             <a href={hubUrl('/')} aria-label={t('nav.kadehubHome')}><KadeHubLogo width={118} theme="color" /></a>
-            <Link href={p('/')} className="text-xs font-extrabold px-2 py-0.5 rounded-md text-white" style={{ background: '#F59E0B' }}>Tasks</Link>
+            <Link href={p('/')} className="text-xs font-extrabold px-2 py-0.5 rounded-md" style={{ background: '#F59E0B', color: onColor('#F59E0B') }}>Tasks</Link>
           </div>
 
           <nav className="hidden lg:flex items-center gap-1 ml-4">
@@ -107,7 +108,7 @@ export default function TasksShell({ children }: { children: React.ReactNode }) 
                     <p className="px-3 pt-1 pb-1 text-2xs font-semibold uppercase tracking-widest text-ink-400">{t('nav.apps')}</p>
                     {PRODUCTS.filter(pr => pr.slug !== 'tasks').map(pr => (
                       <a key={pr.slug} href={productUrl(pr.slug)} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-ink-600 hover:bg-ink-50">
-                        <span className="w-5 h-5 rounded-md text-2xs font-extrabold text-white flex items-center justify-center" style={{ background: pr.color }}>
+                        <span className="w-5 h-5 rounded-md text-2xs font-extrabold flex items-center justify-center" style={{ background: pr.color, color: onColor(pr.color) }}>
                           {pr.name.replace('KadeHub ', '')[0]}
                         </span>
                         {pr.name}
@@ -134,7 +135,7 @@ export default function TasksShell({ children }: { children: React.ReactNode }) 
             <div className="hidden lg:flex items-center gap-2">
               <a href="/login" className="px-3 py-2 rounded-xl text-sm font-semibold text-ink-600 hover:bg-ink-50">{t('nav.signIn')}</a>
               <Link href={p('/register')} className="px-3 py-2 rounded-xl text-sm font-bold border-2"
-                style={{ borderColor: '#F59E0B', color: '#D97706' }}>{t('nav.signUp')}</Link>
+                style={{ borderColor: '#F59E0B', color: '#B45309' }}>{t('nav.signUp')}</Link>
             </div>
           )}
 

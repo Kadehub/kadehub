@@ -108,7 +108,7 @@ export default function Cart({ onSaleComplete }: Props) {
         {/* Header — hidden on mobile (drawer has its own header) */}
         <div className="hidden lg:flex flex-shrink-0 items-center justify-between px-4 py-3 border-b border-ink-100">
           <div className="flex items-center gap-2">
-            <ShoppingBag size={16} style={{ color: '#00A884' }} />
+            <ShoppingBag size={16} style={{ color: '#00796B' }} />
             <span className="font-semibold text-ink-800 text-sm">Cart</span>
             {items.length > 0 && (
               <span className="w-5 h-5 rounded-full text-xs font-bold text-white flex items-center justify-center"
@@ -128,7 +128,7 @@ export default function Cart({ onSaleComplete }: Props) {
         {/* Items */}
         <div className="flex-1 overflow-y-auto min-h-0 p-2 space-y-1.5">
           {items.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-ink-300 py-8">
+            <div className="flex flex-col items-center justify-center h-full text-ink-400 py-8">
               <ShoppingBag size={32} className="mb-2 opacity-20" />
               <p className="text-sm">Cart is empty</p>
               <p className="text-xs mt-0.5 opacity-70">Tap a product to add</p>
@@ -145,7 +145,7 @@ export default function Cart({ onSaleComplete }: Props) {
                   </p>
                   <button onClick={() => removeItem(item.product.id)}
                     aria-label={`Remove ${item.product.name} from cart`}
-                    className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded hover:bg-red-100 text-ink-300 hover:text-red-500 transition-colors mt-0.5">
+                    className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded hover:bg-red-100 text-ink-400 hover:text-red-500 transition-colors mt-0.5">
                     <Trash2 size={11} />
                   </button>
                 </div>
@@ -162,7 +162,7 @@ export default function Cart({ onSaleComplete }: Props) {
                     </button>
                     <span className="text-2xs text-ink-400 ml-1">× {LKR(Number(item.product.price))}</span>
                   </div>
-                  <span className="text-xs font-bold" style={{ color: '#00A884' }}>{LKR(lineTotal)}</span>
+                  <span className="text-xs font-bold" style={{ color: '#00796B' }}>{LKR(lineTotal)}</span>
                 </div>
               </div>
             );
@@ -183,7 +183,7 @@ export default function Cart({ onSaleComplete }: Props) {
           </div>
           <div className="flex justify-between items-center pt-1 border-t border-ink-100">
             <span className="text-sm font-semibold text-ink-700">Total</span>
-            <span className="text-xl font-extrabold" style={{ color: '#00A884' }}>{LKR(grandTotal)}</span>
+            <span className="text-xl font-extrabold" style={{ color: '#00796B' }}>{LKR(grandTotal)}</span>
           </div>
 
           {/* Payment method */}
@@ -196,7 +196,7 @@ export default function Cart({ onSaleComplete }: Props) {
                   style={{
                     borderColor: active ? '#FFB703' : '#E2E8F0',
                     background:  active ? '#FFF8E1' : 'white',
-                    color:       active ? '#F59E0B' : '#64748B',
+                    color:       active ? '#B45309' : '#64748B',
                     boxShadow:   active ? '0 0 0 3px rgb(255 183 3 / 0.15)' : 'none',
                   }}>
                   <Icon size={15} />

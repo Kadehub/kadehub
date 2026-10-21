@@ -91,15 +91,15 @@ export default function RegisterPage() {
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
                       style={{
-                        background: i < stepIdx ? '#00A884' : i === stepIdx ? '#00A884' : '#E2E8F0',
-                        color: i <= stepIdx ? 'white' : '#94A3B8',
+                        background: i < stepIdx ? '#00796B' : i === stepIdx ? '#00796B' : '#E2E8F0',
+                        color: i <= stepIdx ? 'white' : '#475569',
                       }}>
                       {i < stepIdx ? <Check size={13} /> : i + 1}
                     </div>
                     <span className="text-xs font-semibold hidden sm:block"
-                      style={{ color: i <= stepIdx ? '#00A884' : '#94A3B8' }}>{label}</span>
+                      style={{ color: i <= stepIdx ? '#00796B' : '#5E6E82' }}>{label}</span>
                   </div>
-                  {i < 1 && <div className="flex-1 h-0.5 rounded-full" style={{ background: i < stepIdx ? '#00A884' : '#E2E8F0' }} />}
+                  {i < 1 && <div className="flex-1 h-0.5 rounded-full" style={{ background: i < stepIdx ? '#00796B' : '#E2E8F0' }} />}
                 </div>
               ))}
             </div>
@@ -120,7 +120,7 @@ export default function RegisterPage() {
               <div className="space-y-1">
                 <label className="block text-sm font-medium text-ink-700">Your Shop Subdomain</label>
                 <div className="flex items-center border rounded-lg overflow-hidden bg-white"
-                  style={{ borderColor: subdomainStatus === 'available' ? '#00A884' : subdomainStatus === 'taken' || subdomainStatus === 'invalid' ? '#ef4444' : '#e2e8f0' }}>
+                  style={{ borderColor: subdomainStatus === 'available' ? '#00796B' : subdomainStatus === 'taken' || subdomainStatus === 'invalid' ? '#ef4444' : '#e2e8f0' }}>
                   <input
                     className="flex-1 px-3 py-2.5 text-sm text-ink-800 outline-none bg-transparent"
                     placeholder="yourshop"
@@ -134,7 +134,7 @@ export default function RegisterPage() {
                 </div>
                 <div className="flex items-center gap-1.5 min-h-[18px]">
                   {subdomainStatus === 'checking' && <span className="text-xs text-ink-400">Checking availability...</span>}
-                  {subdomainStatus === 'available' && <span className="text-xs font-medium" style={{ color: '#00A884' }}>{account.subdomain}.kadehub.com is available</span>}
+                  {subdomainStatus === 'available' && <span className="text-xs font-medium" style={{ color: '#00796B' }}>{account.subdomain}.kadehub.com is available</span>}
                   {subdomainStatus === 'taken' && <span className="text-xs text-red-500">Already taken — try another</span>}
                   {subdomainStatus === 'invalid' && <span className="text-xs text-red-500">Use lowercase letters, numbers, hyphens only (min 3 chars)</span>}
                 </div>
@@ -157,7 +157,7 @@ export default function RegisterPage() {
           <div className="w-full max-w-xl kh-card p-5 sm:p-8">
             <div className="flex items-center gap-3 mb-5 sm:mb-6">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#E0F2F1' }}>
-                <Building2 size={20} style={{ color: '#00A884' }} />
+                <Building2 size={20} style={{ color: '#00796B' }} />
               </div>
               <div>
                 <h2 className="text-lg sm:text-xl font-bold text-ink-900">Company Details</h2>
@@ -201,7 +201,7 @@ export default function RegisterPage() {
             <h2 className="text-2xl font-bold text-ink-900 mb-2">You&apos;re all set!</h2>
             <p className="text-ink-400 mb-2">Your 14-day free trial is now active with full access to all modules.</p>
             <p className="text-sm text-ink-400 mb-2">
-              Your shop: <strong style={{ color: '#00A884' }}>{account.subdomain}.kadehub.com</strong>
+              Your shop: <strong style={{ color: '#00796B' }}>{account.subdomain}.kadehub.com</strong>
             </p>
             <p className="text-xs text-ink-400 mb-8">
               After your trial, choose a plan from Settings. A one-time registration fee (LKR 25,000) applies with your first subscription payment.

@@ -132,7 +132,7 @@ export default function ExpensesPage() {
           <div className="flex items-center gap-2">
             <Receipt size={16} className="text-ink-400" />
             <span className="text-sm font-semibold text-ink-700">
-              {expenses.length} {t('expenses.entries')} — {t('expenses.total')}: <span style={{ color: '#FF6B6B' }}>{LKR(totalAmount)}</span>
+              {expenses.length} {t('expenses.entries')} — {t('expenses.total')}: <span style={{ color: '#C92A2A' }}>{LKR(totalAmount)}</span>
             </span>
           </div>
         </div>
@@ -156,9 +156,9 @@ export default function ExpensesPage() {
                   <td data-label={t('expenses.date')} className="px-5 py-3.5 text-ink-500 text-xs">{e.expense_date}</td>
                   <td data-label={t('expenses.category')} className="px-5 py-3.5"><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-ink-100 text-ink-600">{e.category}</span></td>
                   <td data-label={t('expenses.description')} className="px-5 py-3.5 text-ink-700">{e.description}</td>
-                  <td data-label={t('expenses.amount')} className="px-5 py-3.5 text-right font-bold" style={{ color: '#FF6B6B' }}>{LKR(e.amount)}</td>
+                  <td data-label={t('expenses.amount')} className="px-5 py-3.5 text-right font-bold" style={{ color: '#C92A2A' }}>{LKR(e.amount)}</td>
                   <td className="px-5 py-3.5 text-right">
-                    <button onClick={() => remove(e.id)} className="text-ink-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
+                    <button onClick={() => remove(e.id)} className="text-ink-400 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
                   </td>
                 </tr>
               ))}
@@ -202,7 +202,7 @@ export default function ExpensesPage() {
             {categories.map(c => (
               <div key={c.id} className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-ink-50">
                 <span className="text-sm text-ink-700">{c.name}</span>
-                <button onClick={() => deleteCategory(c.id)} className="text-ink-300 hover:text-red-500 transition-colors">
+                <button onClick={() => deleteCategory(c.id)} className="text-ink-400 hover:text-red-500 transition-colors">
                   <Trash2 size={13} />
                 </button>
               </div>

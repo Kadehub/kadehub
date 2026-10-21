@@ -10,7 +10,7 @@ export const STATUS_STYLE: Record<
     dot: "bg-amber-500",
     badge: "bg-amber-100 text-amber-800",
     card: "border-amber-300 bg-amber-50",
-    color: "#f59e0b",
+    color: "#B45309",
   },
   confirmed: {
     dot: "bg-cyan-500",

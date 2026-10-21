@@ -58,7 +58,7 @@ export default function InventoryReport() {
           </div>
           <div className="kh-card p-5">
             <p className="text-sm text-ink-500 font-medium">Potential Gross Profit</p>
-            <p className="text-2xl font-bold mt-1" style={{ color: '#00A884' }}>
+            <p className="text-2xl font-bold mt-1" style={{ color: '#00796B' }}>
               {LKR((+stockValue.total_retail_value || 0) - (+stockValue.total_cost_value || 0))}
             </p>
             <p className="text-xs text-ink-400 mt-1">If all current stock is sold</p>
@@ -74,7 +74,7 @@ export default function InventoryReport() {
             {(['all', 'low', 'out'] as const).map((f) => (
               <button key={f} onClick={() => setFilter(f)}
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
-                style={{ background: filter === f ? '#00A884' : '#F1F5F9', color: filter === f ? 'white' : '#475569' }}>
+                style={{ background: filter === f ? '#00796B' : '#F1F5F9', color: filter === f ? 'white' : '#475569' }}>
                 {f === 'all' ? `All (${stockReport.length})` :
                  f === 'low' ? `Low (${stockReport.filter(p => +p.quantity > 0 && +p.quantity <= +p.reorder_level).length})` :
                  `Out (${stockReport.filter(p => +p.quantity <= 0).length})`}
@@ -105,14 +105,14 @@ export default function InventoryReport() {
                   <td data-label="Category" className="px-4 py-3">{p.category ? <Badge variant="gray">{p.category}</Badge> : '—'}</td>
                   <td data-label="Stock" className="px-4 py-3 text-center">
                     <span className="text-base font-extrabold"
-                      style={{ color: +p.quantity <= 0 ? '#FF6B6B' : +p.quantity <= +p.reorder_level ? '#F59E0B' : '#00A884' }}>
+                      style={{ color: +p.quantity <= 0 ? '#C92A2A' : +p.quantity <= +p.reorder_level ? '#F59E0B' : '#00796B' }}>
                       {p.quantity}
                     </span>
                   </td>
                   <td data-label="Reorder" className="px-4 py-3 text-center text-ink-400">{p.reorder_level}</td>
                   <td data-label="Status" className="px-4 py-3 text-center"><Badge variant={v} dot>{l}</Badge></td>
                   <td data-label="Cost" className="px-4 py-3 text-right text-ink-500">{LKR(+p.cost_value || 0)}</td>
-                  <td data-label="Retail" className="px-4 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+p.stock_value || 0)}</td>
+                  <td data-label="Retail" className="px-4 py-3 text-right font-bold" style={{ color: '#C2410C' }}>{LKR(+p.stock_value || 0)}</td>
                 </tr>
               );
             })}

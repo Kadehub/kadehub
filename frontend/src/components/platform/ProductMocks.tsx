@@ -32,8 +32,8 @@ function MockHeader({ icon, title, meta, color }: { icon: ReactNode; title: stri
 export function PosMock() {
   const lines = [['Basmati rice 5kg', '1,450.00'], ['Milk powder 400g', '1,180.00'], ['Soap bar × 3', '435.00'], ['Tea leaves 200g', '620.00']];
   return (
-    <MockFrame color="#00A884" label="Preview of a POS sale being rung up">
-      <MockHeader icon={<ShoppingCart size={16} />} title="Sale #1042" meta="Counter 1" color="#00A884" />
+    <MockFrame color="#00796B" label="Preview of a POS sale being rung up">
+      <MockHeader icon={<ShoppingCart size={16} />} title="Sale #1042" meta="Counter 1" color="#00796B" />
       <div className="relative mx-5 mt-4 h-14 rounded-xl bg-ink-50 border border-dashed border-ink-200 flex items-center justify-center overflow-hidden">
         <span className="flex gap-[3px]" aria-hidden>
           {[3, 1, 2, 1, 3, 2, 1, 1, 3, 1, 2, 3, 1, 2, 1, 3, 2, 1].map((w, i) => (
@@ -160,16 +160,16 @@ export function TasksMock() {
   return (
     <MockFrame color="#F59E0B" label="Preview of offers arriving on a posted task">
       <div className="px-5 py-4 border-b border-ink-100">
-        <p className="flex items-center gap-2 text-sm font-bold text-ink-800"><Hammer size={16} style={{ color: '#F59E0B' }} /> Assemble a wardrobe</p>
+        <p className="flex items-center gap-2 text-sm font-bold text-ink-800"><Hammer size={16} style={{ color: '#B45309' }} /> Assemble a wardrobe</p>
         <p className="mt-1 text-xs text-ink-400">Budget Rs 6,000 · Tomorrow · In person</p>
       </div>
       <ul className="px-4 py-3 space-y-2">
         {offers.map(o => (
           <li key={o.name} className={`hub-offer ${o.picked ? 'hub-offer-picked' : ''} flex items-center gap-3 rounded-xl border border-ink-100 px-3 py-2.5`}>
-            <span className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: '#F59E0B' }}>{o.initials}</span>
+            <span className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-ink-900 flex-shrink-0" style={{ background: '#F59E0B' }}>{o.initials}</span>
             <span className="flex-1 min-w-0">
               <span className="block text-sm font-semibold text-ink-800">{o.name}</span>
-              <span className="flex items-center gap-1 text-2xs text-ink-400"><Star size={11} className="fill-current" style={{ color: '#F59E0B' }} /> {o.rating}</span>
+              <span className="flex items-center gap-1 text-2xs text-ink-400"><Star size={11} className="fill-current" style={{ color: '#B45309' }} /> {o.rating}</span>
             </span>
             <span className="text-sm font-extrabold text-ink-800">{o.price}</span>
             {o.picked && (
@@ -213,7 +213,7 @@ export function ReviewMock() {
     <MockFrame color="#F59E0B" label="Preview of a review left after a task">
       <div className="px-5 py-5">
         <div className="flex items-center gap-3">
-          <span className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: '#F59E0B' }}>DR</span>
+          <span className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-ink-900" style={{ background: '#F59E0B' }}>DR</span>
           <span>
             <span className="block text-sm font-bold text-ink-900">Dilini R.</span>
             <span className="block text-2xs text-ink-400">42 tasks completed · Handyman</span>

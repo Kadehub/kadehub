@@ -32,7 +32,7 @@ export default function ReportsPage() {
             <button key={key} onClick={() => setTab(key)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all relative"
               style={{
-                background: tab === key ? '#00A884' : 'transparent',
+                background: tab === key ? '#00796B' : 'transparent',
                 color: tab === key ? 'white' : '#64748B',
               }}>
               <Icon size={15} />

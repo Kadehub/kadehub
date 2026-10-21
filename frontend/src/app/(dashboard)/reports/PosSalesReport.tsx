@@ -72,9 +72,9 @@ export default function PosSalesReport({ from, to }: Props) {
       {summary && (
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: 'Cash', icon: Banknote, count: +summary.cash_count || 0, rev: +summary.cash_revenue || 0, color: '#00A884' },
+            { label: 'Cash', icon: Banknote, count: +summary.cash_count || 0, rev: +summary.cash_revenue || 0, color: '#00796B' },
             { label: 'Card', icon: CreditCard, count: +summary.card_count || 0, rev: +summary.card_revenue || 0, color: '#2563EB' },
-            { label: 'LankaQR', icon: QrCode, count: +summary.qr_count || 0, rev: +summary.qr_revenue || 0, color: '#FF7A00' },
+            { label: 'LankaQR', icon: QrCode, count: +summary.qr_count || 0, rev: +summary.qr_revenue || 0, color: '#C2410C' },
           ].map(({ label, icon: Icon, count, rev, color }) => (
             <div key={label} className="kh-card p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -98,32 +98,32 @@ export default function PosSalesReport({ from, to }: Props) {
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={revenue} barSize={24}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis dataKey="period" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
+              <XAxis dataKey="period" tick={{ fontSize: 11, fill: '#5E6E82' }} axisLine={false} tickLine={false}
                 tickFormatter={(v) => { try { return new Date(v).toLocaleDateString('en', { month: 'short', day: 'numeric' }); } catch { return v; } }} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
+              <YAxis tick={{ fontSize: 11, fill: '#5E6E82' }} axisLine={false} tickLine={false}
                 tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<ChartTip />} cursor={{ fill: '#E0F2F1' }} />
-              <Bar dataKey="revenue" name="revenue" fill="#00A884" radius={[5, 5, 0, 0]} />
+              <Bar dataKey="revenue" name="revenue" fill="#00796B" radius={[5, 5, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        ) : <p className="text-center text-ink-300 text-sm py-12">No data for this period</p>}
+        ) : <p className="text-center text-ink-400 text-sm py-12">No data for this period</p>}
       </Card>
 
       {/* Hourly heatmap */}
       <Card>
         <div className="flex items-center gap-2 mb-4">
-          <Clock size={16} style={{ color: '#00A884' }} />
+          <Clock size={16} style={{ color: '#00796B' }} />
           <h3 className="font-semibold text-ink-800">Sales by Hour</h3>
           <span className="text-xs text-ink-400 ml-1">Peak selling times</span>
         </div>
         <ResponsiveContainer width="100%" height={160}>
           <BarChart data={hourlyFull} barSize={14}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-            <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false}
+            <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#5E6E82' }} axisLine={false} tickLine={false}
               interval={2} />
-            <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: '#5E6E82' }} axisLine={false} tickLine={false} />
             <Tooltip content={<ChartTip />} cursor={{ fill: '#E0F2F1' }} />
-            <Bar dataKey="sales" name="sales" fill="#FF7A00" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="sales" name="sales" fill="#C2410C" radius={[3, 3, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </Card>
@@ -134,7 +134,7 @@ export default function PosSalesReport({ from, to }: Props) {
           <h3 className="font-semibold text-ink-800">Recent Sales</h3>
         </div>
         {sales.length === 0 ? (
-          <p className="text-center text-ink-300 text-sm py-10">No sales in this period</p>
+          <p className="text-center text-ink-400 text-sm py-10">No sales in this period</p>
         ) : (
           <div className="overflow-x-auto">
           <table className="mob-cards w-full text-sm">
@@ -153,7 +153,7 @@ export default function PosSalesReport({ from, to }: Props) {
                     {new Date(s.created_at).toLocaleString('en-LK', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </td>
                   <td data-label="Cashier" className="px-4 py-2.5 text-ink-700">{s.cashier || '—'}</td>
-                  <td data-label="Customer" className="px-4 py-2.5 text-ink-500">{s.customer || <span className="text-ink-300">Walk-in</span>}</td>
+                  <td data-label="Customer" className="px-4 py-2.5 text-ink-500">{s.customer || <span className="text-ink-400">Walk-in</span>}</td>
                   <td data-label="Payment" className="px-4 py-2.5">
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
                       style={{
@@ -163,7 +163,7 @@ export default function PosSalesReport({ from, to }: Props) {
                       {s.payment_method}
                     </span>
                   </td>
-                  <td data-label="Total" className="px-4 py-2.5 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+s.total_amount)}</td>
+                  <td data-label="Total" className="px-4 py-2.5 text-right font-bold" style={{ color: '#C2410C' }}>{LKR(+s.total_amount)}</td>
                 </tr>
               ))}
             </tbody>

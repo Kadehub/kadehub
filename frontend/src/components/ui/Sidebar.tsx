@@ -73,12 +73,12 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         style={{ background: '#E0F2F1', borderColor: '#B2DFDB' }}>
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg,#00796B,#00A884)' }}>
+            style={{ background: 'linear-gradient(135deg,#00796B,#00796B)' }}>
             {user?.name?.[0]?.toUpperCase()}
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold truncate" style={{ color: '#0F172A' }}>{user?.name}</p>
-            <p className="text-2xs font-semibold" style={{ color: '#00A884' }}>{user?.role}</p>
+            <p className="text-2xs font-semibold" style={{ color: '#00796B' }}>{user?.role}</p>
           </div>
         </div>
       </div>
@@ -105,7 +105,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
                         active ? 'text-white' : 'text-ink-600 hover:bg-ink-50 hover:text-ink-900'
                       }`}
-                      style={active ? { background: 'linear-gradient(135deg,#00796B,#00A884)' } : {}}>
+                      style={active ? { background: 'linear-gradient(135deg,#00796B,#00796B)' } : {}}>
                       <Icon size={17} style={active ? { color: 'white' } : {}} className={active ? '' : 'text-ink-400 group-hover:text-ink-600'} />
                       <span className="flex-1">{t(labelKey)}</span>
                       {active && <ChevronRight size={14} className="opacity-60" />}
@@ -125,7 +125,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
             pathname.startsWith('/settings') ? 'text-white' : 'text-ink-500 hover:bg-ink-50 hover:text-ink-800'
           }`}
-          style={pathname.startsWith('/settings') ? { background: 'linear-gradient(135deg,#00796B,#00A884)' } : {}}>
+          style={pathname.startsWith('/settings') ? { background: 'linear-gradient(135deg,#00796B,#00796B)' } : {}}>
           <Settings size={17} />
           {t('nav.settings')}
         </Link>

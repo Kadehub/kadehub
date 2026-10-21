@@ -196,7 +196,7 @@ export default function ShopsPage() {
           <button type="button" disabled={deleting} onClick={() => setRemoving(null)}
             className="px-4 py-2 text-sm font-semibold text-ink-500">Cancel</button>
           <button type="button" disabled={deleting} onClick={removeShop}
-            className="px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50" style={{ background: '#E53E3E' }}>
+            className="px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50" style={{ background: '#C92A2A' }}>
             {deleting ? 'Removing…' : 'Remove shop'}
           </button>
         </div>

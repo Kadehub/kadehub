@@ -143,7 +143,7 @@ function Hero() {
       <div className="max-w-6xl mx-auto grid gap-10 lg:grid-cols-[1.1fr_1fr] items-center">
         <div className="group text-center lg:text-left">
           <a href={hubUrl('/')} className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 p-1 pr-3 text-xs font-semibold text-white/90 hover:bg-white/15">
-            <ProductIcon slug="pos" color="#00A884" size={26} />
+            <ProductIcon slug="pos" color="#00796B" size={26} />
             Part of KadeHub <span aria-hidden>→</span>
           </a>
           <h1 className="mt-5 text-4xl sm:text-5xl font-extrabold text-white leading-tight tracking-tight">
@@ -330,13 +330,13 @@ function Pricing() {
             After your trial, choose a plan below. A one-time registration fee (LKR 25,000) applies with your first subscription payment.
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 28 }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: !yearly ? '#0d6e5a' : '#9ca3af', fontFamily: 'Poppins,sans-serif' }}>Monthly</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: !yearly ? '#0d6e5a' : '#5E6E82', fontFamily: 'Poppins,sans-serif' }}>Monthly</span>
             <button type="button" onClick={() => setYearly(y => !y)} aria-label="Toggle yearly billing"
               style={{ width: 52, height: 28, borderRadius: 100, border: 'none', cursor: 'pointer', background: yearly ? '#0d6e5a' : '#d1d5db', position: 'relative', transition: 'background 0.25s' }}>
               <span style={{ position: 'absolute', top: 3, left: yearly ? 26 : 3, width: 22, height: 22, borderRadius: '50%', background: '#fff', transition: 'left 0.25s', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }}/>
             </button>
-            <span style={{ fontSize: 14, fontWeight: 600, color: yearly ? '#0d6e5a' : '#9ca3af', fontFamily: 'Poppins,sans-serif' }}>Yearly</span>
-            {yearly && <span style={{ background: '#fef3c7', color: '#d97706', fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 100, fontFamily: 'Poppins,sans-serif' }}>Save 17%</span>}
+            <span style={{ fontSize: 14, fontWeight: 600, color: yearly ? '#0d6e5a' : '#5E6E82', fontFamily: 'Poppins,sans-serif' }}>Yearly</span>
+            {yearly && <span style={{ background: '#fef3c7', color: '#B45309', fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 100, fontFamily: 'Poppins,sans-serif' }}>Save 17%</span>}
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 24, alignItems: 'start' }}>
@@ -357,7 +357,7 @@ function Pricing() {
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
                   <span style={{ fontSize: 13, color: '#6b7280', fontFamily: 'Poppins,sans-serif' }}>LKR</span>
                   <span style={{ fontSize: 36, fontWeight: 800, color: '#0d6e5a', fontFamily: 'Poppins,sans-serif', lineHeight: 1 }}>{(yearly ? plan.price.yr : plan.price.mo).toLocaleString()}</span>
-                  <span style={{ fontSize: 14, color: '#9ca3af', fontFamily: 'Poppins,sans-serif' }}>/mo</span>
+                  <span style={{ fontSize: 14, color: '#5E6E82', fontFamily: 'Poppins,sans-serif' }}>/mo</span>
                 </div>
                 <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 20, minHeight: 18, fontFamily: 'Poppins,sans-serif' }}>
                   {yearly ? 'Billed annually' : '\u00A0'}
@@ -403,7 +403,7 @@ function Testimonials() {
         <div className="reveal" style={{ textAlign: 'center', marginBottom: 16 }}>
           <span style={{ display: 'inline-block', padding: '6px 16px', borderRadius: 100, background: '#e6f4f1', color: '#0d6e5a', fontSize: 13, fontWeight: 700, marginBottom: 16, fontFamily: 'Poppins,sans-serif' }}>Built For</span>
           <h2 style={{ fontSize: 'clamp(1.8rem,4vw,2.6rem)', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', fontFamily: 'Poppins,sans-serif' }}>Built for Sri Lankan Retailers</h2>
-          <p style={{ marginTop: 12, color: '#9ca3af', fontSize: 13, fontFamily: 'Poppins,sans-serif' }}>What KadeHub is designed to solve for shops like yours</p>
+          <p style={{ marginTop: 12, color: '#5E6E82', fontSize: 13, fontFamily: 'Poppins,sans-serif' }}>What KadeHub is designed to solve for shops like yours</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 24, marginTop: 48 }}>
           {USE_CASES.map(u => (

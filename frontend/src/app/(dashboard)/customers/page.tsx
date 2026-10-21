@@ -90,9 +90,9 @@ export default function CustomersPage() {
     <div className="space-y-5 max-w-5xl">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: t('customers.total'), value: customers.length, icon: Users, color: '#009688', bg: '#E0F2F1' },
-          { label: t('customers.loyaltyPoints'), value: totalPoints.toLocaleString(), icon: Star, color: '#FFB703', bg: '#FFF8E1' },
-          { label: t('customers.withPhone'), value: customers.filter((c) => c.phone).length, icon: Phone, color: '#009688', bg: '#E0F2F1' },
+          { label: t('customers.total'), value: customers.length, icon: Users, color: '#00796B', bg: '#E0F2F1' },
+          { label: t('customers.loyaltyPoints'), value: totalPoints.toLocaleString(), icon: Star, color: '#B45309', bg: '#FFF8E1' },
+          { label: t('customers.withPhone'), value: customers.filter((c) => c.phone).length, icon: Phone, color: '#00796B', bg: '#E0F2F1' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="kh-card p-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: bg }}>
@@ -143,16 +143,16 @@ export default function CustomersPage() {
                   <td data-label={t('customers.customer')} className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                        style={{ background: 'linear-gradient(135deg,#00796B,#009688)' }}>
+                        style={{ background: 'linear-gradient(135deg,#00796B,#00796B)' }}>
                         {c.name[0].toUpperCase()}
                       </div>
                       <span className="font-semibold text-ink-800">{c.name}</span>
                     </div>
                   </td>
-                  <td data-label={t('customers.phone')} className="px-5 py-3.5 text-ink-500">{c.phone || <span className="text-ink-300">—</span>}</td>
+                  <td data-label={t('customers.phone')} className="px-5 py-3.5 text-ink-500">{c.phone || <span className="text-ink-400">—</span>}</td>
                   <td data-label={t('customers.loyaltyPoints')} className="px-5 py-3.5 text-center">
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
-                      style={{ background: '#FFF8E1', color: '#F59E0B' }}>
+                      style={{ background: '#FFF8E1', color: '#B45309' }}>
                       <Star size={11} fill="currentColor" />
                       {c.loyalty_points}
                     </span>
@@ -163,11 +163,11 @@ export default function CustomersPage() {
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-1 justify-end">
                       <button onClick={() => openHistory(c)} title="Purchase History"
-                        className="p-1.5 rounded-lg text-ink-300 hover:text-teal-600 hover:bg-teal-50 transition-colors">
+                        className="p-1.5 rounded-lg text-ink-400 hover:text-teal-600 hover:bg-teal-50 transition-colors">
                         <ShoppingBag size={14} />
                       </button>
                       <button onClick={() => openEdit(c)} title="Edit"
-                        className="p-1.5 rounded-lg text-ink-300 hover:text-ink-700 hover:bg-ink-100 transition-colors">
+                        className="p-1.5 rounded-lg text-ink-400 hover:text-ink-700 hover:bg-ink-100 transition-colors">
                         <Pencil size={14} />
                       </button>
                     </div>
@@ -219,7 +219,7 @@ export default function CustomersPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-ink-500">{purchases.length} purchases</span>
-              <span className="font-bold" style={{ color: '#00A884' }}>
+              <span className="font-bold" style={{ color: '#00796B' }}>
                 Total: {LKR(purchases.reduce((s, p) => s + +p.total_amount, 0))}
               </span>
             </div>
@@ -248,7 +248,7 @@ export default function CustomersPage() {
                           {p.payment_method}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+p.total_amount)}</td>
+                      <td className="px-3 py-2 text-right font-bold" style={{ color: '#C2410C' }}>{LKR(+p.total_amount)}</td>
                     </tr>
                   ))}
                 </tbody>

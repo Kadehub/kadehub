@@ -2,9 +2,9 @@
 // Falls back gracefully when no product image is available
 
 export const CATEGORY_CONFIG: Record<string, { emoji: string; bg: string; color: string }> = {
-  'Grocery':       { emoji: '🌾', bg: '#FFF8E1', color: '#F59E0B' },
-  'Dairy':         { emoji: '🥛', bg: '#E0F2F1', color: '#009688' },
-  'Bakery':        { emoji: '🍞', bg: '#FFF3E0', color: '#FF7A00' },
+  'Grocery':       { emoji: '🌾', bg: '#FFF8E1', color: '#B45309' },
+  'Dairy':         { emoji: '🥛', bg: '#E0F2F1', color: '#00796B' },
+  'Bakery':        { emoji: '🍞', bg: '#FFF3E0', color: '#C2410C' },
   'Beverages':     { emoji: '🧃', bg: '#E8F5E9', color: '#43A047' },
   'Snacks':        { emoji: '🍪', bg: '#FCE4EC', color: '#E91E63' },
   'Pharmacy':      { emoji: '💊', bg: '#E3F2FD', color: '#1E88E5' },

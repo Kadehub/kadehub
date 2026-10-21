@@ -21,7 +21,7 @@ export function AmountDisplay({ value, label }: { value: string; label: string }
   return (
     <div className="text-center" aria-live="polite">
       <p className="text-2xs font-semibold uppercase tracking-widest text-ink-400">{label}</p>
-      <p className={cn('mt-0.5 font-extrabold tracking-tight tabular-nums', value ? 'text-ink-900' : 'text-ink-300', 'text-4xl')}>
+      <p className={cn('mt-0.5 font-extrabold tracking-tight tabular-nums', value ? 'text-ink-900' : 'text-ink-400', 'text-4xl')}>
         {formatTyped(value)}
       </p>
     </div>

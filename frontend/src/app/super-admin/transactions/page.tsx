@@ -94,7 +94,7 @@ export default function TransactionsPage() {
                         className="p-2 rounded-lg text-ink-400 hover:bg-teal-50 hover:text-teal-700 transition-colors" title="View slip">
                         <Eye size={15} />
                       </button>
-                    ) : <span className="text-ink-300 text-xs">—</span>}
+                    ) : <span className="text-ink-400 text-xs">—</span>}
                   </td>
                   <td className="px-5 py-3.5">
                     <button onClick={() => downloadInvoice(tx)}

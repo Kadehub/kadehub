@@ -48,29 +48,29 @@ export default function CrmReport({ from, to }: Props) {
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={growth}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false}
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#5E6E82' }} axisLine={false} tickLine={false}
                   tickFormatter={(v) => { try { return new Date(v).toLocaleDateString('en', { month: 'short', day: 'numeric' }); } catch { return v; } }} />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#5E6E82' }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip formatter={(v: any) => [v, 'New customers']} />
-                <Line type="monotone" dataKey="new_customers" stroke="#00A884" strokeWidth={2.5}
-                  dot={{ fill: '#00A884', r: 3 }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="new_customers" stroke="#00796B" strokeWidth={2.5}
+                  dot={{ fill: '#00796B', r: 3 }} activeDot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
-          ) : <p className="text-center text-ink-300 text-sm py-12">No new customers in this period</p>}
+          ) : <p className="text-center text-ink-400 text-sm py-12">No new customers in this period</p>}
         </Card>
 
         {/* Loyalty points leaderboard */}
         <Card>
           <h3 className="font-semibold text-ink-800 mb-4">Loyalty Points Leaderboard</h3>
           {topCustomers.length === 0 ? (
-            <p className="text-center text-ink-300 text-sm py-12">No customer purchase data</p>
+            <p className="text-center text-ink-400 text-sm py-12">No customer purchase data</p>
           ) : (
             <div className="space-y-2.5">
               {topCustomers.slice(0, 6).map((c, i) => (
                 <div key={c.id} className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-ink-300 w-4 flex-shrink-0">{i + 1}</span>
+                  <span className="text-xs font-bold text-ink-400 w-4 flex-shrink-0">{i + 1}</span>
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                    style={{ background: i === 0 ? '#FF7A00' : i === 1 ? '#94A3B8' : i === 2 ? '#CD7F32' : '#00A884' }}>
+                    style={{ background: i === 0 ? '#C2410C' : i === 1 ? '#5E6E82' : i === 2 ? '#CD7F32' : '#00796B' }}>
                     {c.name?.[0]?.toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -78,7 +78,7 @@ export default function CrmReport({ from, to }: Props) {
                     <p className="text-xs text-ink-400">{c.visit_count} visits</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-bold" style={{ color: '#FF7A00' }}>{LKR(+c.total_spend)}</p>
+                    <p className="text-sm font-bold" style={{ color: '#C2410C' }}>{LKR(+c.total_spend)}</p>
                     <p className="text-xs text-ink-400">{c.loyalty_points} pts</p>
                   </div>
                 </div>
@@ -94,7 +94,7 @@ export default function CrmReport({ from, to }: Props) {
           <h3 className="font-semibold text-ink-800">Top Customers by Spend</h3>
         </div>
         {topCustomers.length === 0 ? (
-          <p className="text-center text-ink-300 text-sm py-10">No data for this period</p>
+          <p className="text-center text-ink-400 text-sm py-10">No data for this period</p>
         ) : (
           <div className="overflow-x-auto">
           <table className="mob-cards w-full text-sm">
@@ -112,7 +112,7 @@ export default function CrmReport({ from, to }: Props) {
                   <td data-label="Customer" className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                        style={{ background: 'linear-gradient(135deg,#00796B,#00A884)' }}>
+                        style={{ background: 'linear-gradient(135deg,#00796B,#00796B)' }}>
                         {c.name?.[0]?.toUpperCase()}
                       </div>
                       <span className="font-semibold text-ink-800">{c.name}</span>
@@ -121,10 +121,10 @@ export default function CrmReport({ from, to }: Props) {
                   <td data-label="Phone" className="px-4 py-3 text-ink-500">{c.phone || '—'}</td>
                   <td data-label="Visits" className="px-4 py-3 text-center font-bold text-ink-700">{c.visit_count}</td>
                   <td data-label="Avg Spend" className="px-4 py-3 text-right text-ink-500">{LKR(+c.avg_spend)}</td>
-                  <td data-label="Total Spend" className="px-4 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(+c.total_spend)}</td>
+                  <td data-label="Total Spend" className="px-4 py-3 text-right font-bold" style={{ color: '#C2410C' }}>{LKR(+c.total_spend)}</td>
                   <td data-label="Points" className="px-4 py-3 text-right">
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
-                      style={{ background: '#FFF8E1', color: '#F59E0B' }}>
+                      style={{ background: '#FFF8E1', color: '#B45309' }}>
                       ★ {c.loyalty_points}
                     </span>
                   </td>

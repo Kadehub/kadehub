@@ -13,7 +13,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const status = exception.getStatus();
       const res = exception.getResponse();
       const message = typeof res === 'string' ? res : (res as any).message ?? 'An error occurred';
-      response.status(status).json({ statusCode: status, message, timestamp: new Date().toISOString() });
+      // Machine-readable codes (e.g. TASKS_BANNED) let the apps show their own translated message
+      const code = typeof res === 'object' && typeof (res as any).code === 'string' ? (res as any).code : undefined;
+      response.status(status).json({ statusCode: status, message, ...(code && { code }), timestamp: new Date().toISOString() });
     } else {
       this.logger.error(
         `Unhandled exception on ${request.method} ${request.url}`,

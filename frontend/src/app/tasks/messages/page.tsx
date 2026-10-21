@@ -54,7 +54,7 @@ export default function MessagesPage() {
                 <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                   <StatusBadge status={th.task.status} />
                   {th.unread > 0 && (
-                    <span className="min-w-[20px] h-5 px-1.5 rounded-full text-2xs font-bold text-white flex items-center justify-center" style={{ background: '#F59E0B' }}>
+                    <span className="min-w-[20px] h-5 px-1.5 rounded-full text-2xs font-bold text-ink-900 flex items-center justify-center" style={{ background: '#F59E0B' }}>
                       {th.unread}
                     </span>
                   )}

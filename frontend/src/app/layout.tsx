@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import './fonts.css';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import { LangProvider } from '../hooks/useLang';
@@ -23,14 +24,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Viewport for proper mobile scaling */}
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" rel="stylesheet" />
+        {/* The two weights almost every page paints first; the rest load when used */}
+        <link rel="preload" href="/fonts/poppins-400-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/poppins-600-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
       <body suppressHydrationWarning>
         <LangProvider>
         {children}
         <Toaster position="top-right" toastOptions={{
           style: { fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px' },
-          success: { iconTheme: { primary: '#00A884', secondary: '#fff' } },
+          success: { iconTheme: { primary: '#00796B', secondary: '#fff' } },
         }} />
         </LangProvider>
       </body>

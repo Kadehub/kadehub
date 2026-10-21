@@ -102,10 +102,10 @@ export default function ConversationPage() {
           {conv.messages.map(m => (
             <div key={m.id} className={`flex ${m.mine ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-line break-words ${
-                m.mine ? 'text-white rounded-br-md' : 'bg-white border border-ink-100 text-ink-800 rounded-bl-md'}`}
+                m.mine ? 'text-ink-900 rounded-br-md' : 'bg-white border border-ink-100 text-ink-800 rounded-bl-md'}`}
                 style={m.mine ? { background: '#F59E0B' } : undefined}>
                 {m.body}
-                <span className={`block mt-0.5 text-2xs ${m.mine ? 'text-white/75' : 'text-ink-400'}`}>
+                <span className={`block mt-0.5 text-2xs ${m.mine ? 'text-ink-800' : 'text-ink-400'}`}>
                   {new Date(m.created_at).toLocaleString('en-LK', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
                 </span>
               </div>

@@ -13,6 +13,11 @@ export class User {
   @Column({ nullable: true }) emp_no: string;
   @Column({ nullable: true }) photo_url: string;
   @Column({ nullable: true }) pin: string;
+  /** Set by the super admin: this person can't sign in (their shop is unaffected). */
+  @Column({ type: Date, nullable: true }) disabled_at: Date | null;
+  /** Set by the super admin: banned from posting, offering and messaging on KadeHub Tasks. */
+  @Column({ type: Date, nullable: true }) tasks_banned_at: Date | null;
+  @Column({ type: 'varchar', nullable: true }) tasks_ban_reason: string | null;
   @CreateDateColumn() created_at: Date;
   @ManyToOne(() => Tenant) @JoinColumn({ name: 'tenant_id' }) tenant: Tenant;
 }

@@ -15,16 +15,17 @@ module.exports = {
       },
       colors: {
         navy:  { DEFAULT: '#0F172A', mid: '#1E293B', light: '#334155' },
-        teal:  { DEFAULT: '#009688', dark: '#00796B', light: '#E0F2F1', mid: '#26A69A' },
-        amber: { DEFAULT: '#FFB703', dark: '#F59E0B', light: '#FFF8E1' },
-        coral: { DEFAULT: '#FF6B6B', light: '#FFF0F0' },
+        teal:  { DEFAULT: '#00796B', dark: '#00695C', light: '#E0F2F1', mid: '#26A69A' },
+        amber: { DEFAULT: '#FFB703', dark: '#B45309', light: '#FFF8E1' },
+        coral: { DEFAULT: '#C92A2A', light: '#FFF0F0' },
         ink: {
           50:  '#F8FAFC',
           100: '#F1F5F9',
           200: '#E2E8F0',
           300: '#CBD5E1',
-          400: '#94A3B8',
-          500: '#64748B',
+          // 400/500 are text greys: both keep >= 4.5:1 contrast on white, ink-50 and ink-100 (WCAG AA)
+          400: '#5E6E82',
+          500: '#56657A',
           600: '#475569',
           700: '#334155',
           800: '#1E293B',

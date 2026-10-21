@@ -13,18 +13,20 @@ import { Announcement } from '../../database/entities/announcement.entity';
 import { ApiLog } from '../../database/entities/api-log.entity';
 import { CompanyProfile } from '../../database/entities/company-profile.entity';
 import { AuditLog } from '../../database/entities/audit-log.entity';
+import { PackageModule } from '../../database/entities/package-module.entity';
+import { SuperAdminOpsService } from './super-admin-ops.service';
 import { EmailService } from '../../common/email.service';
 import { CloudflareService } from '../../common/cloudflare.service';
 import { BillingModule } from '../billing/billing.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Tenant, User, Subscription, PaymentTransaction, Package, Coupon, Announcement, ApiLog, CompanyProfile, AuditLog]),
+    TypeOrmModule.forFeature([Tenant, User, Subscription, PaymentTransaction, Package, Coupon, Announcement, ApiLog, CompanyProfile, AuditLog, PackageModule]),
     ScheduleModule.forRoot(),
     BillingModule,
   ],
   controllers: [SuperAdminController],
-  providers: [SuperAdminService, EmailService, CloudflareService],
+  providers: [SuperAdminService, SuperAdminOpsService, EmailService, CloudflareService],
   exports: [EmailService],
 })
 export class SuperAdminModule {}

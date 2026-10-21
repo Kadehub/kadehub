@@ -19,7 +19,9 @@ export default function KadeHubLogo({ height, width, variant = 'full', theme = '
     );
   }
 
-  const src = theme === 'mono' ? '/logo-mono.png' : '/logo-primary.png';
+  const name = theme === 'mono' ? 'logo-mono' : 'logo-primary';
+  // Intrinsic size of the 400px WebP; lets the browser reserve the box before the image arrives
+  const [iw, ih] = theme === 'mono' ? [400, 218] : [400, 203];
 
   // Use width to fill container, or height if specified
   const style: React.CSSProperties = width
@@ -27,11 +29,16 @@ export default function KadeHubLogo({ height, width, variant = 'full', theme = '
     : { height: height ?? 40, width: 'auto', objectFit: 'contain' as const };
 
   return (
-    <img
-      src={src}
-      alt="KadeHub"
-      style={style}
-      className={`select-none ${className}`}
-    />
+    <picture>
+      <source srcSet={`/${name}.webp`} type="image/webp" />
+      <img
+        src={`/${name}.png`}
+        width={iw}
+        height={ih}
+        alt="KadeHub"
+        style={style}
+        className={`select-none ${className}`}
+      />
+    </picture>
   );
 }

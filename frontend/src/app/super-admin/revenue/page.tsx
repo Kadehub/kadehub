@@ -41,7 +41,7 @@ export default function RevenuePage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total Revenue', value: report.totalRevenue, icon: TrendingUp, color: '#00796B' },
-          { label: 'Registration Fees', value: report.registrationRevenue, icon: Users, color: '#00A884' },
+          { label: 'Registration Fees', value: report.registrationRevenue, icon: Users, color: '#00796B' },
           { label: 'Subscriptions', value: report.subscriptionRevenue, icon: CreditCard, color: '#0284C7' },
           { label: 'Transactions', value: report.transactionCount, icon: CreditCard, color: '#64748B', isCount: true },
         ].map(({ label, value, icon: Icon, color, isCount }) => (

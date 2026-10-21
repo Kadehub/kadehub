@@ -17,6 +17,7 @@ import { CompanyProfile } from '../../database/entities/company-profile.entity';
 import { AuditLog } from '../../database/entities/audit-log.entity';
 import { EmailService } from '../../common/email.service';
 import { CloudflareService } from '../../common/cloudflare.service';
+import { deleteTasksDataForUsers } from './tasks-cleanup';
 import {
   IsString, IsOptional, IsEnum, IsNumber, IsBoolean,
   IsDateString, IsInt, Min, Max, MaxLength, Matches,
@@ -363,6 +364,11 @@ export class SuperAdminService implements OnModuleInit {
         }
       };
 
+      // Tasks rows point at people, not shops, and have no foreign keys — clear them before the people go
+      const people = (await trx.query(`SELECT id FROM ${userTable} WHERE tenant_id = ${p}`, [tenantId])).map((r: any) => Number(r.id));
+      await deleteTasksDataForUsers(trx, people);
+      // COD tables cascade from tenant; invoices only do on MySQL
+      await run(`DELETE FROM invoice WHERE tenant_id = ${p}`);
       await run(`DELETE FROM credit_payment WHERE credit_sale_id IN (SELECT id FROM credit_sale WHERE tenant_id = ${p})`);
       await run(`DELETE FROM sale_item WHERE sale_id IN (SELECT id FROM sale WHERE tenant_id = ${p})`);
       await run(`DELETE FROM purchase_order_item WHERE order_id IN (SELECT id FROM purchase_order WHERE tenant_id = ${p})`);

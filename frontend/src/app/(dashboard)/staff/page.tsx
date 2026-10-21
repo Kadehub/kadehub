@@ -164,7 +164,7 @@ export default function StaffPage() {
               className="w-20 h-20 rounded-full object-cover border-2 border-ink-200" />
           ) : (
             <div className="w-20 h-20 rounded-full bg-ink-100 flex items-center justify-center text-2xl font-bold text-ink-400"
-              style={{ background: 'linear-gradient(135deg,#00796B,#00A884)', color: 'white' }}>
+              style={{ background: 'linear-gradient(135deg,#00796B,#00796B)', color: 'white' }}>
               {empForm.name?.[0]?.toUpperCase() || '?'}
             </div>
           )}
@@ -243,7 +243,7 @@ export default function StaffPage() {
           ] as const).map(({ key, labelKey, icon: Icon }) => (
             <button key={key} onClick={() => setTab(key)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
-              style={{ background: tab === key ? '#009688' : 'transparent', color: tab === key ? 'white' : '#64748B' }}>
+              style={{ background: tab === key ? '#00796B' : 'transparent', color: tab === key ? 'white' : '#64748B' }}>
               <Icon size={15} />{t(labelKey)}
             </button>
           ))}
@@ -287,7 +287,7 @@ export default function StaffPage() {
                               className="w-9 h-9 rounded-full object-cover border border-ink-200 flex-shrink-0" />
                           ) : (
                             <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                              style={{ background: emp.role === 'ADMIN' ? '#00796B' : '#009688' }}>
+                              style={{ background: emp.role === 'ADMIN' ? '#00796B' : '#00796B' }}>
                               {emp.name[0].toUpperCase()}
                             </div>
                           )}
@@ -341,7 +341,7 @@ export default function StaffPage() {
                       <td data-label={t('staff.cashierCol')} className="px-5 py-3.5 font-semibold text-ink-800">{(s.user as any)?.name || `User #${s.user_id}`}</td>
                       <td data-label={t('staff.opened')} className="px-5 py-3.5 text-ink-500 text-xs">{new Date(s.opened_at).toLocaleString('en-LK')}</td>
                       <td data-label={t('staff.closed')} className="px-5 py-3.5 text-ink-500 text-xs">{s.closed_at ? new Date(s.closed_at).toLocaleString('en-LK') : '—'}</td>
-                      <td data-label={t('staff.openingCash')} className="px-5 py-3.5 font-medium" style={{ color: '#009688' }}>{LKR(s.opening_cash)}</td>
+                      <td data-label={t('staff.openingCash')} className="px-5 py-3.5 font-medium" style={{ color: '#00796B' }}>{LKR(s.opening_cash)}</td>
                       <td data-label={t('staff.closingCash')} className="px-5 py-3.5 font-medium text-ink-700">{s.closing_cash != null ? LKR(s.closing_cash) : '—'}</td>
                       <td data-label={t('staff.status')} className="px-5 py-3.5">
                         <Badge variant={s.closed_at ? 'gray' : 'teal'} dot>
@@ -383,7 +383,7 @@ export default function StaffPage() {
                     <tr key={i} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
                       <td className="px-5 py-3.5 font-semibold text-ink-800">{p.cashier}</td>
                       <td className="px-5 py-3.5 text-ink-700">{p.total_sales}</td>
-                      <td className="px-5 py-3.5 font-bold" style={{ color: '#009688' }}>{LKR(+p.revenue)}</td>
+                      <td className="px-5 py-3.5 font-bold" style={{ color: '#00796B' }}>{LKR(+p.revenue)}</td>
                       <td className="px-5 py-3.5 text-ink-500">{LKR(+p.avg_sale)}</td>
                     </tr>
                   ))}

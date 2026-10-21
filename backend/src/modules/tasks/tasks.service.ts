@@ -71,6 +71,14 @@ export class TasksService {
     this.enabledTenants.add(user.tenant_id);
   }
 
+  /** Super admin ban (Tasks only): reading still works, taking part doesn't. */
+  private async assertNotBanned(user: Viewer) {
+    const u = await this.userRepo.findOne({ where: { id: user.sub }, select: ['id', 'tasks_banned_at'] });
+    if (u?.tasks_banned_at) {
+      throw new ForbiddenException({ statusCode: 403, code: 'TASKS_BANNED', message: 'Your KadeHub Tasks access has been suspended. Contact support.' });
+    }
+  }
+
   private async getTask(id: number) {
     const task = await this.taskRepo.findOne({ where: { id } });
     if (!task) throw new NotFoundException('Task not found');
@@ -137,6 +145,7 @@ export class TasksService {
     const page = Math.max(1, parseInt(query.page || '1') || 1);
     const limit = Math.min(50, Math.max(1, parseInt(query.limit || '20') || 20));
     const qb = this.taskQuery().where('t.hidden = :hidden', { hidden: false });
+    qb.andWhere(`t.poster_id NOT IN ${qb.subQuery().select('bu.id').from(User, 'bu').where('bu.tasks_banned_at IS NOT NULL').getQuery()}`);
 
     const status = query.status || 'open';
     if (status === 'all') qb.andWhere('t.status IN (:...statuses)', { statuses: LISTED_STATUSES });
@@ -261,6 +270,7 @@ export class TasksService {
   // ── posting ───────────────────────────────────────────────────────────────
 
   async create(user: Viewer, dto: CreateTaskDto) {
+    await this.assertNotBanned(user);
     await this.ensureEnabled(user);
     const since = new Date(Date.now() - 24 * 3600_000);
     if (await this.taskRepo.count({ where: { poster_id: user.sub, created_at: MoreThan(since) } }) >= MAX_TASKS_PER_DAY) {
@@ -288,6 +298,7 @@ export class TasksService {
   }
 
   async update(user: Viewer, id: number, dto: UpdateTaskDto) {
+    await this.assertNotBanned(user);
     const task = await this.getTask(id);
     if (task.poster_id !== user.sub) throw new ForbiddenException('Only the poster can edit this task');
     if (task.status !== 'open') throw new BadRequestException('Only open tasks can be edited');
@@ -350,6 +361,7 @@ export class TasksService {
   // ── questions & offers ────────────────────────────────────────────────────
 
   async ask(user: Viewer, id: number, dto: QuestionDto) {
+    await this.assertNotBanned(user);
     await this.ensureEnabled(user);
     const task = await this.getTask(id);
     if (task.hidden || task.status !== 'open') throw new BadRequestException('Questions are closed for this task');
@@ -375,6 +387,7 @@ export class TasksService {
   }
 
   async makeOffer(user: Viewer, id: number, dto: OfferDto) {
+    await this.assertNotBanned(user);
     await this.ensureEnabled(user);
     const task = await this.getTask(id);
     if (task.hidden || task.status !== 'open') throw new BadRequestException('This task is no longer accepting offers');
@@ -480,6 +493,7 @@ export class TasksService {
   }
 
   async review(user: Viewer, id: number, dto: ReviewDto) {
+    await this.assertNotBanned(user);
     const task = await this.getTask(id);
     if (task.status !== 'closed') throw new BadRequestException('Reviews open once the task is closed');
     if (!this.isParty(task, user.sub) || !task.assigned_tasker_id) throw new ForbiddenException('Only the poster and the tasker can review');
@@ -527,6 +541,7 @@ export class TasksService {
   }
 
   async sendMessage(user: Viewer, id: number, dto: MessageDto) {
+    await this.assertNotBanned(user);
     const task = await this.getTask(id);
     if (!task.assigned_tasker_id || !this.isParty(task, user.sub)) throw new ForbiddenException('Messages are between the poster and the assigned tasker');
     if (!['assigned', 'completed', 'closed'].includes(task.status)) throw new BadRequestException('This conversation is closed');

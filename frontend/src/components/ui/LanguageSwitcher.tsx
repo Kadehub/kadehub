@@ -11,7 +11,7 @@ export default function LanguageSwitcher() {
           onClick={() => setLocale(l)}
           className="px-2.5 py-1 rounded-md text-xs font-bold transition-all"
           style={{
-            background: locale === l ? '#00A884' : 'transparent',
+            background: locale === l ? '#00796B' : 'transparent',
             color: locale === l ? 'white' : '#64748B',
           }}
         >

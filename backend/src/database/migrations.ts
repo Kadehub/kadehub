@@ -306,4 +306,14 @@ export const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    id: '011_admin_user_controls',
+    up: async (ds, dialect) => {
+      // Super admin can switch off one person (not the whole shop) and ban someone from the Tasks marketplace only
+      const ts = dialect === 'postgres' ? 'TIMESTAMP NULL' : 'DATETIME NULL';
+      await addColumn(ds, 'user', 'disabled_at', ts);
+      await addColumn(ds, 'user', 'tasks_banned_at', ts);
+      await addColumn(ds, 'user', 'tasks_ban_reason', 'VARCHAR(255) NULL');
+    },
+  },
 ];

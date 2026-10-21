@@ -29,7 +29,7 @@ export interface ProductDef {
 
 export const PRODUCTS: ProductDef[] = [
   {
-    slug: 'pos', name: 'KadeHub POS', subdomain: 'pos', status: 'live', homePath: '/dashboard', color: '#00A884',
+    slug: 'pos', name: 'KadeHub POS', subdomain: 'pos', status: 'live', homePath: '/dashboard', color: '#00796B',
     tagline: 'Point of sale, inventory and CRM for local shops',
     features: ['Fast checkout with cash, card, QR and credit', 'Stock, batches and expiry alerts', 'Loyalty, suppliers, expenses and reports'],
   },
@@ -39,7 +39,7 @@ export const PRODUCTS: ProductDef[] = [
     features: ['Order pipeline from pending to delivered', 'Landed cost and profit per item', 'Invoices, catalogs and WhatsApp sharing'],
   },
   {
-    slug: 'tasks', name: 'KadeHub Tasks', subdomain: 'tasks', status: 'live', homePath: '/', color: '#F59E0B',
+    slug: 'tasks', name: 'KadeHub Tasks', subdomain: 'tasks', status: 'live', homePath: '/', color: '#B45309',
     tagline: 'Post a task, get offers from local taskers',
     features: ['Post any job with a budget', 'Compare offers and pick a tasker', 'Ratings and reviews you can trust'],
   },

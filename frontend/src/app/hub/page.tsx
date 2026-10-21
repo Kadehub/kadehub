@@ -144,7 +144,7 @@ export default function HubPage() {
                 <span className="ml-1">POS · COD · Tasks</span>
               </div>
               <h1 className="mt-5 text-3xl sm:text-5xl font-extrabold text-ink-900 leading-tight tracking-tight">
-                One account. <span style={{ color: '#00A884' }}>Every tool</span> your business needs.
+                One account. <span style={{ color: '#00796B' }}>Every tool</span> your business needs.
               </h1>
               <p className="mt-4 text-base sm:text-lg text-ink-500 max-w-xl mx-auto md:mx-0">
                 Run your shop counter, your cash-on-delivery orders and the odd jobs around your business, all with a single KadeHub sign-in.
@@ -160,7 +160,7 @@ export default function HubPage() {
               <ul className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 max-w-xl mx-auto md:mx-0 text-left">
                 {TRUST.map(({ icon: Icon, text }) => (
                   <li key={text} className="flex items-center gap-2 text-sm text-ink-600">
-                    <Icon size={16} className="flex-shrink-0" style={{ color: '#00A884' }} /> {text}
+                    <Icon size={16} className="flex-shrink-0" style={{ color: '#00796B' }} /> {text}
                   </li>
                 ))}
               </ul>
@@ -198,7 +198,7 @@ export default function HubPage() {
         <section id="products" className="scroll-mt-20" style={{ background: '#F8FAFC' }}>
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
             <Reveal className="text-center max-w-2xl mx-auto">
-              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#00A884' }}>Our apps</p>
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#00796B' }}>Our apps</p>
               <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-ink-900">Three apps. One KadeHub.</h2>
               <p className="mt-2 text-sm sm:text-base text-ink-500">Each app has its own address and works on its own. Use one, or all of them together.</p>
             </Reveal>
@@ -269,7 +269,7 @@ export default function HubPage() {
         <section id="how" className="scroll-mt-20 bg-white">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
             <Reveal className="text-center max-w-2xl mx-auto">
-              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#00A884' }}>How it works</p>
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#00796B' }}>How it works</p>
               <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-ink-900">Up and running in minutes</h2>
             </Reveal>
             <Reveal className="relative mt-12">
@@ -278,7 +278,7 @@ export default function HubPage() {
                 {STEPS.map(({ icon: Icon, title, text }, i) => (
                   <li key={title} className="group text-center">
                     <span className="kh-ficon relative mx-auto w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-md"
-                      style={{ background: 'linear-gradient(135deg,#00796B,#00A884)' }}>
+                      style={{ background: 'linear-gradient(135deg,#00796B,#00796B)' }}>
                       <Icon size={24} />
                       <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white text-xs font-extrabold flex items-center justify-center shadow"
                         style={{ color: '#00796B' }}>{i + 1}</span>
@@ -296,7 +296,7 @@ export default function HubPage() {
         <section id="why" className="scroll-mt-20" style={{ background: '#F8FAFC' }}>
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
             <Reveal className="text-center max-w-2xl mx-auto">
-              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#00A884' }}>Why KadeHub</p>
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#00796B' }}>Why KadeHub</p>
               <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-ink-900">Built to make running a business simpler</h2>
             </Reveal>
             <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -319,7 +319,7 @@ export default function HubPage() {
         <section id="faq" className="scroll-mt-20 bg-white">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
             <Reveal className="text-center">
-              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#00A884' }}>FAQ</p>
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#00796B' }}>FAQ</p>
               <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-ink-900">Questions, answered</h2>
             </Reveal>
             <div className="mt-8 space-y-3">
@@ -340,7 +340,7 @@ export default function HubPage() {
         <section className="px-4 sm:px-6 pb-16 bg-white">
           <Reveal>
             <div className="max-w-6xl mx-auto rounded-3xl px-6 py-10 sm:px-10 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left"
-              style={{ background: 'linear-gradient(135deg,#004D40 0%,#00796B 55%,#00A884 100%)' }}>
+              style={{ background: 'linear-gradient(135deg,#004D40 0%,#00796B 55%,#00796B 100%)' }}>
               <Mascot pose="love" size="md" decorative />
               <div className="flex-1">
                 <h2 className="text-xl sm:text-2xl font-extrabold text-white">Start with the app you need today</h2>

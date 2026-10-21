@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -35,17 +33,17 @@ input, select, textarea, button { font-family: 'Poppins', sans-serif; font-weigh
 :root {
   --navy:       #0F172A;
   --navy-mid:   #1E293B;
-  --teal:       #009688;
-  --teal-dark:  #00796B;
+  --teal:       #00796B;
+  --teal-dark:  #00695C;
   --teal-light: #E0F2F1;
   --blue:       #2563EB;
   --amber:      #FFB703;
   --amber-dark: #F59E0B;
-  --coral:      #FF6B6B;
+  --coral:      #C92A2A;
   --gray-50:    #F1F5F9;
   --gray-100:   #E2E8F0;
   --gray-200:   #CBD5E1;
-  --gray-400:   #94A3B8;
+  --gray-400:   #5E6E82;
   --gray-500:   #64748B;
   --gray-600:   #475569;
   --radius-sm:  8px;
@@ -139,16 +137,16 @@ input:focus, select:focus, textarea:focus {
   .kh-btn-amber:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .kh-badge-teal   { background: #E0F2F1; color: #00796B; }
-  .kh-badge-amber  { background: #FFF8E1; color: #F59E0B; }
-  .kh-badge-coral  { background: #FFF0F0; color: #E53E3E; }
+  .kh-badge-amber  { background: #FFF8E1; color: #B45309; }
+  .kh-badge-coral  { background: #FFF0F0; color: #C92A2A; }
   .kh-badge-blue   { background: #EFF6FF; color: #2563EB; }
   .kh-badge-navy   { background: #F1F5F9; color: #0F172A; }
   .kh-badge-gray   { background: #F1F5F9; color: #475569; }
 
   /* keep old green aliases pointing to teal for backward compat */
   .kh-badge-green  { background: #E0F2F1; color: #00796B; }
-  .kh-badge-orange { background: #FFF8E1; color: #F59E0B; }
-  .kh-badge-red    { background: #FFF0F0; color: #E53E3E; }
+  .kh-badge-orange { background: #FFF8E1; color: #B45309; }
+  .kh-badge-red    { background: #FFF0F0; color: #C92A2A; }
 }
 
 /* ── Capybara mascot (components/brand/Mascot.tsx) ── */

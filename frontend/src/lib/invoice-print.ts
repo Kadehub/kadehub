@@ -137,7 +137,7 @@ export function printInvoice(data: InvoicePrintData) {
       border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 10px; background: #FAFBFC;
     }
     .party-box.from { border-left: 3px solid #00796B; }
-    .party-box.to { border-left: 3px solid #00A884; }
+    .party-box.to { border-left: 3px solid #00796B; }
     .party-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94A3B8; margin-bottom: 4px; }
     .party-name { font-size: 11px; font-weight: 700; color: #0F172A; margin-bottom: 2px; }
     .party-line { color: #475569; font-size: 9px; margin-bottom: 1px; }

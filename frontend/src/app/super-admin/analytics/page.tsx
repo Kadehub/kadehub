@@ -62,7 +62,7 @@ export default function AnalyticsPage() {
         {[
           { label: 'Total Shops',   value: stats.totalShops,                             icon: Store,      color: '#2563EB', bg: '#EFF6FF' },
           { label: 'Active Shops',  value: stats.activeShops,                            icon: TrendingUp, color: '#00796B', bg: '#E0F2F1' },
-          { label: 'Total Revenue', value: `LKR ${stats.totalRevenue.toLocaleString()}`, icon: CreditCard, color: '#F59E0B', bg: '#FFF8E1' },
+          { label: 'Total Revenue', value: `LKR ${stats.totalRevenue.toLocaleString()}`, icon: CreditCard, color: '#B45309', bg: '#FFF8E1' },
           { label: 'Total Staff',   value: shops.reduce((s: number, sh: any) => s + sh.userCount, 0), icon: Users, color: '#8B5CF6', bg: '#F5F3FF' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="kh-card p-5 flex items-center gap-4">
@@ -88,7 +88,7 @@ export default function AnalyticsPage() {
                 <div className="w-full rounded-t-lg transition-all" style={{
                   height: `${(count / maxSignups) * 100}%`,
                   minHeight: count > 0 ? '8px' : '2px',
-                  background: 'linear-gradient(180deg,#00A884,#00796B)',
+                  background: 'linear-gradient(180deg,#00796B,#00796B)',
                 }} />
                 <span className="text-2xs text-ink-400">{label}</span>
               </div>
@@ -109,7 +109,7 @@ export default function AnalyticsPage() {
                 <div className="h-2 bg-ink-100 rounded-full overflow-hidden">
                   <div className="h-full rounded-full" style={{
                     width: `${(count / stats.totalShops) * 100}%`,
-                    background: 'linear-gradient(90deg,#00796B,#00A884)',
+                    background: 'linear-gradient(90deg,#00796B,#00796B)',
                   }} />
                 </div>
               </div>
@@ -122,7 +122,7 @@ export default function AnalyticsPage() {
           <h3 className="font-semibold text-ink-800 mb-4">Shop Status Breakdown</h3>
           <div className="space-y-3">
             {Object.entries(statusDist).map(([status, count]: any) => {
-              const colors: any = { active: '#00796B', blocked: '#E53E3E', suspended: '#F59E0B' };
+              const colors: any = { active: '#00796B', blocked: '#C92A2A', suspended: '#F59E0B' };
               return (
                 <div key={status} className="flex items-center justify-between p-3 rounded-xl border border-ink-100">
                   <div className="flex items-center gap-2">

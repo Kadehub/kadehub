@@ -97,7 +97,7 @@ export default function SuppliersPage() {
           {(['suppliers', 'orders'] as const).map(tabKey => (
             <button key={tabKey} onClick={() => setTab(tabKey)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold capitalize transition-all"
-              style={{ background: tab === tabKey ? '#009688' : 'transparent', color: tab === tabKey ? 'white' : '#64748B' }}>
+              style={{ background: tab === tabKey ? '#00796B' : 'transparent', color: tab === tabKey ? 'white' : '#64748B' }}>
               {tabKey === 'suppliers' ? <Truck size={15} /> : <ShoppingBag size={15} />}
               {tabKey === 'suppliers' ? t('suppliers.suppliers') : t('suppliers.orders')}
             </button>
@@ -157,7 +157,7 @@ export default function SuppliersPage() {
                       <td data-label={t('suppliers.orderId')} className="px-5 py-3.5 text-ink-400 text-xs">#{o.id}</td>
                       <td data-label={t('suppliers.supplier')} className="px-5 py-3.5 font-semibold text-ink-800">{o.supplier?.name}</td>
                       <td data-label={t('suppliers.items')} className="px-5 py-3.5 text-ink-500">{o.items?.length || 0}</td>
-                      <td data-label={t('suppliers.total')} className="px-5 py-3.5 font-bold" style={{ color: '#009688' }}>{LKR(o.total_amount)}</td>
+                      <td data-label={t('suppliers.total')} className="px-5 py-3.5 font-bold" style={{ color: '#00796B' }}>{LKR(o.total_amount)}</td>
                       <td data-label={t('suppliers.status')} className="px-5 py-3.5"><Badge variant={statusVariant(o.status) as any} dot>{o.status}</Badge></td>
                       <td data-label={t('suppliers.date')} className="px-5 py-3.5 text-ink-400 text-xs">{new Date(o.created_at).toLocaleDateString('en-LK')}</td>
                       <td className="px-5 py-3.5">

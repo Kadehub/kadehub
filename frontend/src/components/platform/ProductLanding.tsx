@@ -8,6 +8,7 @@ import Mascot, { type MascotPose } from '../brand/Mascot';
 import { PRODUCTS, getProduct, hubUrl, productUrl, type ProductSlug } from '../../lib/platform';
 import './product-landing.css';
 
+import { onColor } from '../../lib/color';
 /*
  * Building blocks for a product's public landing page (cod.kadehub.com/, tasks.kadehub.com/…).
  * Every string comes from the caller, so a page can pass translated text.
@@ -40,7 +41,7 @@ export function LandingHeader({ slug, links, signIn, cta }: { slug: ProductSlug;
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         <a href={hubUrl('/')} className="flex items-center gap-2 min-w-0" aria-label="KadeHub home">
           <KadeHubLogo width={118} theme="color" />
-          <span className="hidden sm:inline text-2xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: product.color }}>
+          <span className="hidden sm:inline text-2xs font-bold px-2 py-0.5 rounded-full" style={{ background: product.color, color: onColor(product.color) }}>
             {product.name.replace('KadeHub ', '')}
           </span>
         </a>
@@ -49,7 +50,7 @@ export function LandingHeader({ slug, links, signIn, cta }: { slug: ProductSlug;
             <a key={l.href} href={l.href} className="hidden md:inline px-3 py-2 text-sm font-medium text-ink-600 hover:text-ink-900">{l.label}</a>
           ))}
           <a href={signIn.href} className="px-3 py-2 text-sm font-semibold text-ink-700 hover:text-ink-900">{signIn.label}</a>
-          <a href={cta.href} className="px-4 py-2 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90" style={{ background: product.color }}>
+          <a href={cta.href} className="px-4 py-2 rounded-xl text-sm font-bold transition-opacity hover:opacity-90" style={{ background: product.color, color: onColor(product.color) }}>
             {cta.label}
           </a>
         </nav>

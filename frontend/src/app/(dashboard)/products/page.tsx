@@ -198,9 +198,9 @@ export default function ProductsPage() {
                       <code className="text-xs text-ink-400 bg-ink-100 px-1.5 py-0.5 rounded">{p.barcode || '—'}</code>
                     </td>
                     <td data-label="Category" className="px-4 py-3">
-                      {p.category ? <Badge variant="gray">{p.category}</Badge> : <span className="text-ink-300">—</span>}
+                      {p.category ? <Badge variant="gray">{p.category}</Badge> : <span className="text-ink-400">—</span>}
                     </td>
-                    <td data-label="Price" className="px-4 py-3 text-right font-bold" style={{ color: '#FF7A00' }}>{LKR(p.price)}</td>
+                    <td data-label="Price" className="px-4 py-3 text-right font-bold" style={{ color: '#C2410C' }}>{LKR(p.price)}</td>
                     <td data-label="Cost" className="px-4 py-3 text-right text-ink-400">{LKR(p.cost)}</td>
                     <td data-label="Stock" className="px-4 py-3 text-center font-bold text-ink-700">{qty}</td>
                     <td data-label="Status" className="px-4 py-3 text-center"><Badge variant={statusVariant} dot>{statusLabel}</Badge></td>
@@ -208,7 +208,7 @@ export default function ProductsPage() {
                       <div className="flex items-center justify-end gap-1">
                         <Button size="xs" variant="ghost" icon={<Pencil size={13} />} onClick={() => openEdit(p)}>Edit</Button>
                         <button onClick={() => deleteProduct(p.id)} disabled={deleting === p.id}
-                          className="p-1.5 rounded-lg text-ink-300 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-40">
+                          className="p-1.5 rounded-lg text-ink-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-40">
                           <Trash2 size={13} />
                         </button>
                       </div>

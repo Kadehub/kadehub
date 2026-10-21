@@ -77,7 +77,7 @@ export default function ShopDetailPage() {
             <span className="font-semibold">{pendingSlips.length} bank slip{pendingSlips.length > 1 ? 's' : ''}</span> waiting for review
           </p>
           <button onClick={() => router.push('/super-admin/payments')}
-            className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ background: '#00A884', color: 'white' }}>
+            className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ background: '#00796B', color: 'white' }}>
             Review slips
           </button>
         </div>
@@ -86,7 +86,7 @@ export default function ShopDetailPage() {
       {/* Admin note */}
       {tenant.plan_note && (
         <div className="flex items-start gap-3 p-4 rounded-xl border" style={{ background: '#FFF8E1', borderColor: '#FDE68A' }}>
-          <AlertTriangle size={16} style={{ color: '#F59E0B' }} className="mt-0.5 flex-shrink-0" />
+          <AlertTriangle size={16} style={{ color: '#B45309' }} className="mt-0.5 flex-shrink-0" />
           <p className="text-sm text-ink-700"><span className="font-semibold">Admin Note:</span> {tenant.plan_note}</p>
         </div>
       )}
@@ -118,7 +118,7 @@ export default function ShopDetailPage() {
         {[
           { label: 'Current Plan', value: currentPlan?.name || 'Free', sub: currentPlan ? `LKR ${currentPlan.price_monthly}/mo` : 'No active plan', icon: Package, color: '#2563EB', bg: '#EFF6FF' },
           { label: 'Staff Members', value: users.length, sub: 'registered users', icon: Users, color: '#00796B', bg: '#E0F2F1' },
-          { label: 'Total Revenue', value: `LKR ${totalPaid.toLocaleString()}`, sub: `${transactions.length} transactions`, icon: CreditCard, color: '#F59E0B', bg: '#FFF8E1' },
+          { label: 'Total Revenue', value: `LKR ${totalPaid.toLocaleString()}`, sub: `${transactions.length} transactions`, icon: CreditCard, color: '#B45309', bg: '#FFF8E1' },
         ].map(({ label, value, sub, icon: Icon, color, bg }) => (
           <div key={label} className="kh-card p-5 flex items-center gap-4">
             <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: bg }}>
@@ -191,7 +191,7 @@ export default function ShopDetailPage() {
                       tx.status === 'pending' ? 'kh-badge-amber' : 'kh-badge-coral'
                     }`}>{tx.status === 'pending' ? 'pending review' : tx.status}</span>
                     {tx.metadata?.slip_url && (
-                      <a href={tx.metadata.slip_url} target="_blank" rel="noreferrer" className="ml-2 text-xs font-semibold" style={{ color: '#00A884' }}>Slip</a>
+                      <a href={tx.metadata.slip_url} target="_blank" rel="noreferrer" className="ml-2 text-xs font-semibold" style={{ color: '#00796B' }}>Slip</a>
                     )}
                   </td>
                   <td className="px-5 py-3 text-ink-400 text-xs">{new Date(tx.created_at).toLocaleDateString()}</td>

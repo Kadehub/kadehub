@@ -17,6 +17,7 @@ import { businessKpis, byCategory, monthlySeries } from '../../lib/cod/expenses/
 import { downloadCsv, toCsv } from '../../lib/cod/expenses/csv';
 import { BUSINESS_CATEGORIES, BUSINESS_TOUR, PAYMENT_METHODS, categoryColor, type BusinessExpense } from '../../lib/cod/expenses/types';
 
+import { mix, readableText } from '../../lib/color';
 const RANGE_KEYS: RangeKey[] = ['today', 'yesterday', 'this_month', 'last_month', 'last_3_months', 'this_year', 'all'];
 
 function toYmdRange(key: RangeKey): YmdRange {
@@ -256,7 +257,7 @@ function CategoryPill({ category }: { category: string }) {
   const Icon = categoryIcon('business', category);
   const color = categoryColor(category);
   return (
-    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: `${color}1a`, color }}>
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: `${color}1a`, color: readableText(color, mix(color, 0x1a / 255)) }}>
       <Icon size={12} /> {categoryLabel(t, 'business', category)}
     </span>
   );

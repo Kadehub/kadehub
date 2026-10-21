@@ -100,7 +100,7 @@ export default function DiscountsPage() {
                 <tr key={d.id} className="border-b border-ink-50 hover:bg-ink-50 last:border-0">
                   <td data-label={t('discounts.name')} className="px-5 py-3.5 font-semibold text-ink-800">{d.name}</td>
                   <td data-label={t('discounts.type')} className="px-5 py-3.5"><Badge variant={d.type === 'percentage' ? 'teal' : 'amber'}>{d.type}</Badge></td>
-                  <td data-label={t('discounts.value')} className="px-5 py-3.5 font-bold" style={{ color: '#009688' }}>{d.type === 'percentage' ? `${d.value}%` : LKR(d.value)}</td>
+                  <td data-label={t('discounts.value')} className="px-5 py-3.5 font-bold" style={{ color: '#00796B' }}>{d.type === 'percentage' ? `${d.value}%` : LKR(d.value)}</td>
                   <td data-label={t('discounts.minPurchase')} className="px-5 py-3.5 text-ink-500">{d.min_purchase > 0 ? LKR(d.min_purchase) : '—'}</td>
                   <td data-label={t('discounts.validPeriod')} className="px-5 py-3.5 text-ink-400 text-xs">{d.valid_from || d.valid_to ? `${d.valid_from || '∞'} → ${d.valid_to || '∞'}` : t('discounts.always')}</td>
                   <td data-label={t('discounts.status')} className="px-5 py-3.5"><Badge variant={isValid(d) ? 'teal' : 'gray'} dot>{isValid(d) ? t('discounts.active') : t('discounts.inactive')}</Badge></td>
@@ -108,9 +108,9 @@ export default function DiscountsPage() {
                     <div className="flex items-center gap-2">
                       <button onClick={() => openEdit(d)} aria-label={`Edit discount ${d.name}`} className="text-ink-400 hover:text-ink-700 transition-colors"><Pencil size={14} /></button>
                       <button onClick={() => toggle(d)} aria-label={`${d.is_active ? 'Deactivate' : 'Activate'} discount ${d.name}`} className="text-ink-400 hover:text-ink-700 transition-colors">
-                        {d.is_active ? <ToggleRight size={18} style={{ color: '#009688' }} /> : <ToggleLeft size={18} />}
+                        {d.is_active ? <ToggleRight size={18} style={{ color: '#00796B' }} /> : <ToggleLeft size={18} />}
                       </button>
-                      <button onClick={() => remove(d.id)} aria-label={`Delete discount ${d.name}`} className="text-ink-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
+                      <button onClick={() => remove(d.id)} aria-label={`Delete discount ${d.name}`} className="text-ink-400 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>

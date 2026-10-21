@@ -44,7 +44,7 @@ export default function ApiMonitorPage() {
         {[
           { label: 'Total Requests', value: data?.totalRequests ?? '—', icon: Activity, color: '#2563EB', bg: '#EFF6FF' },
           { label: 'Active Shops', value: data?.byTenant?.length ?? '—', icon: Zap, color: '#00796B', bg: '#E0F2F1' },
-          { label: 'Total Errors', value: data?.byTenant?.reduce((s: number, t: any) => s + t.errors, 0) ?? '—', icon: AlertTriangle, color: '#E53E3E', bg: '#FFF0F0' },
+          { label: 'Total Errors', value: data?.byTenant?.reduce((s: number, t: any) => s + t.errors, 0) ?? '—', icon: AlertTriangle, color: '#C92A2A', bg: '#FFF0F0' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="kh-card p-5 flex items-center gap-4">
             <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: bg }}>
@@ -83,7 +83,7 @@ export default function ApiMonitorPage() {
                   <div className="h-2 bg-ink-100 rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all" style={{
                       width: `${(t.total_requests / maxReqs) * 100}%`,
-                      background: t.errors > 0 ? 'linear-gradient(90deg,#00796B,#E53E3E)' : 'linear-gradient(90deg,#00796B,#00A884)',
+                      background: t.errors > 0 ? 'linear-gradient(90deg,#00796B,#C92A2A)' : 'linear-gradient(90deg,#00796B,#00796B)',
                     }} />
                   </div>
                 </div>

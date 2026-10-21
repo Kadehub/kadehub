@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bell, MessageSquare, Plus, Menu, X, LogOut, UserRound, LayoutGrid, Search, ClipboardList, ChevronDown } from 'lucide-react';
+import { Bell, MessageSquare, Plus, Menu, X, LogOut, UserRound, LayoutGrid, Home, Search, ClipboardList, ChevronDown } from 'lucide-react';
 import KadeHubLogo from '../ui/KadeHubLogo';
 import LanguageSwitcher from '../ui/LanguageSwitcher';
 import { useAuthStore } from '../../hooks/useAuth';
@@ -58,10 +58,10 @@ export default function TasksShell({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen flex flex-col" style={{ background: '#F8FAFC' }}>
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-ink-200">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-3">
-          <Link href={p('/')} className="flex items-center gap-2 flex-shrink-0">
-            <KadeHubLogo width={118} theme="color" />
-            <span className="text-xs font-extrabold px-2 py-0.5 rounded-md text-white" style={{ background: '#F59E0B' }}>Tasks</span>
-          </Link>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <a href={hubUrl('/')} aria-label={t('nav.kadehubHome')}><KadeHubLogo width={118} theme="color" /></a>
+            <Link href={p('/')} className="text-xs font-extrabold px-2 py-0.5 rounded-md text-white" style={{ background: '#F59E0B' }}>Tasks</Link>
+          </div>
 
           <nav className="hidden lg:flex items-center gap-1 ml-4">
             {navLink('/browse', t('nav.browse'), Search)}
@@ -119,6 +119,9 @@ export default function TasksShell({ children }: { children: React.ReactNode }) 
                     <a href={hubUrl('/apps')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-ink-600 hover:bg-ink-50">
                       <LayoutGrid size={15} /> {t('nav.apps')}
                     </a>
+                    <a href={hubUrl('/')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-ink-600 hover:bg-ink-50">
+                      <Home size={15} /> {t('nav.kadehubHome')}
+                    </a>
                     <div className="my-1 border-t border-ink-100" />
                     <button onClick={signOut} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-ink-600 hover:bg-red-50 hover:text-red-600">
                       <LogOut size={15} /> {t('nav.signOut')}
@@ -146,6 +149,7 @@ export default function TasksShell({ children }: { children: React.ReactNode }) 
               <Plus size={16} /> {t('nav.post')}
             </Link>
             <Link href={p('/browse')} className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-ink-700 hover:bg-ink-50">{t('nav.browse')}</Link>
+            <a href={hubUrl('/')} className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-ink-700 hover:bg-ink-50">{t('nav.kadehubHome')}</a>
             {signedIn ? (
               <>
                 <Link href={p('/my-tasks')} className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-ink-700 hover:bg-ink-50">{t('nav.myTasks')}</Link>

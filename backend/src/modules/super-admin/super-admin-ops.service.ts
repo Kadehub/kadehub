@@ -61,7 +61,11 @@ export class ChangeOwnPasswordDto {
   @IsString() @MinLength(8) @MaxLength(100) new_password: string;
 }
 
-export type CodFilter = { q?: string; type?: string; category?: string; page?: number; limit?: number };
+export type CodFilter = {
+  q?: string; type?: string; category?: string; page?: number; limit?: number;
+  /** Orders only */
+  status?: string; from?: string; to?: string;
+};
 
 const CSV_LIMIT = 50_000;
 
@@ -409,6 +413,73 @@ export class SuperAdminOpsService implements OnModuleInit {
     return toCsv(
       ['Business', 'Category', 'Owner', 'Email', 'Phone', 'Address', 'City', 'Plan', 'Plan expires', 'Orders', 'Order value (LKR)', 'Last order', 'Joined', 'Account status'],
       data.map(d => [d.business, d.category, d.owner, d.email, d.phone, d.address, d.city, d.plan, d.plan_expires, d.orders, d.order_value.toFixed(2), d.last_order, d.joined, d.account_status]),
+    );
+  }
+
+  /** Every COD order with the customer's details as typed on the order. */
+  async codOrders(f: CodFilter, all = false) {
+    const where: string[] = []; const params: unknown[] = [];
+    if (f.type) { where.push('b.business_type = ?'); params.push(f.type); }
+    if (f.status) { where.push('o.status = ?'); params.push(f.status); }
+    if (f.from) { where.push('o.created_at >= ?'); params.push(new Date(`${f.from}T00:00:00`)); }
+    if (f.to) { where.push('o.created_at < ?'); params.push(new Date(new Date(`${f.to}T00:00:00`).getTime() + 86400_000)); }
+    if (f.category) {
+      where.push('EXISTS (SELECT 1 FROM cod_order_item oi JOIN cod_item i ON i.id = oi.item_id WHERE oi.order_id = o.id AND i.category = ?)');
+      params.push(f.category);
+    }
+    if (f.q) {
+      where.push(`(LOWER(o.customer_name) LIKE ? OR o.customer_phone LIKE ? OR LOWER(COALESCE(o.customer_email, '')) LIKE ?
+        OR LOWER(o.customer_address) LIKE ? OR LOWER(o.city) LIKE ? OR LOWER(o.invoice_number) LIKE ?)`);
+      const like = `%${f.q.toLowerCase()}%`; params.push(like, `%${f.q}%`, like, like, like, like);
+    }
+    const from = `FROM cod_order o JOIN cod_business b ON b.tenant_id = o.tenant_id ${where.length ? 'WHERE ' + where.join(' AND ') : ''}`;
+    const [{ n }] = await this.sql(`SELECT COUNT(*) AS n ${from}`, params);
+    const limit = all ? CSV_LIMIT : (f.limit ?? 25); const page = all ? 1 : (f.page ?? 1);
+    const rows = await this.sql(
+      `SELECT o.id, o.tenant_id, o.invoice_number, o.customer_name, o.customer_phone, o.customer_email, o.customer_address, o.city,
+        o.customer_type, o.status, o.payment_type, o.subtotal, o.delivery_charge, o.discount, o.total_amount, o.tracking_number,
+        o.po_number, o.payment_due_date, o.notes, o.created_at, b.name AS business, b.business_type
+       ${from} ORDER BY o.created_at DESC, o.id DESC LIMIT ${Number(limit)} OFFSET ${(page - 1) * Number(limit)}`, params);
+
+    // What was on each order
+    const ids = rows.map(r => Number(r.id));
+    const lines = ids.length ? await this.sql(
+      `SELECT oi.order_id, oi.item_name, oi.quantity, i.category
+       FROM cod_order_item oi LEFT JOIN cod_item i ON i.id = oi.item_id
+       WHERE oi.order_id IN (${ids.map(() => '?').join(',')}) ORDER BY oi.id`, ids) : [];
+    const linesOf = new Map<number, { name: string; qty: number; category: string | null }[]>();
+    for (const l of lines) {
+      const k = Number(l.order_id);
+      linesOf.set(k, [...(linesOf.get(k) ?? []), { name: l.item_name, qty: Number(l.quantity), category: l.category ?? null }]);
+    }
+
+    return {
+      data: rows.map(r => {
+        const items = linesOf.get(Number(r.id)) ?? [];
+        return {
+          id: Number(r.id), tenant_id: Number(r.tenant_id), invoice: r.invoice_number, date: r.created_at,
+          name: r.customer_name, phone: r.customer_phone || '', email: r.customer_email || '', address: r.customer_address || '', city: r.city || '',
+          customer_type: r.customer_type, status: r.status, payment_type: r.payment_type,
+          subtotal: Number(r.subtotal), delivery: Number(r.delivery_charge), discount: Number(r.discount), total: Number(r.total_amount),
+          tracking: r.tracking_number || '', po: r.po_number || '', due: r.payment_due_date || null, notes: r.notes || '',
+          items: items.map(i => `${i.qty} × ${i.name}`).join('; '),
+          item_categories: [...new Set(items.map(i => i.category).filter(Boolean))] as string[],
+          business: r.business, business_type: r.business_type,
+        };
+      }),
+      total: Number(n), page, limit,
+    };
+  }
+
+  async codOrdersCsv(f: CodFilter) {
+    const { data } = await this.codOrders(f, true);
+    return toCsv(
+      ['Order date', 'Invoice', 'Customer', 'Phone', 'Email', 'Address', 'City', 'Customer type', 'Items', 'Item categories',
+        'Subtotal (LKR)', 'Delivery (LKR)', 'Discount (LKR)', 'Total (LKR)', 'Payment', 'Status', 'Payment due', 'Tracking no.', 'PO no.', 'Notes',
+        'Business', 'Business category'],
+      data.map(d => [d.date, d.invoice, d.name, d.phone, d.email, d.address, d.city, d.customer_type, d.items, d.item_categories.join('; '),
+        d.subtotal.toFixed(2), d.delivery.toFixed(2), d.discount.toFixed(2), d.total.toFixed(2), d.payment_type, d.status, d.due, d.tracking, d.po, d.notes,
+        d.business, d.business_type]),
     );
   }
 

@@ -44,8 +44,12 @@ export class SuperAdminController {
     res.send(csv);
   }
 
-  private codFilter(q?: string, type?: string, category?: string, page?: string): CodFilter {
-    return { q: q?.trim() || undefined, type: type || undefined, category: category || undefined, page: Math.max(1, +(page || 1) || 1) };
+  private codFilter(q?: string, type?: string, category?: string, page?: string, extra: { status?: string; from?: string; to?: string } = {}): CodFilter {
+    const day = (d?: string) => (d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : undefined);
+    return {
+      q: q?.trim() || undefined, type: type || undefined, category: category || undefined, page: Math.max(1, +(page || 1) || 1),
+      status: extra.status || undefined, from: day(extra.from), to: day(extra.to),
+    };
   }
 
   // ── Dashboard ──────────────────────────────────────────────────────────────
@@ -275,6 +279,22 @@ export class SuperAdminController {
     const filter = this.codFilter(q, type);
     const csv = await this.logged(u, 'cod.export_businesses', 'cod', null, this.ops.codBusinessesCsv(filter), () => ({ ...filter, page: undefined }));
     this.sendCsv(res, 'cod-businesses', csv);
+  }
+
+  @Get('cod/orders')
+  codOrders(@CurrentUser() u: any, @Query('q') q?: string, @Query('type') type?: string, @Query('category') category?: string,
+    @Query('status') status?: string, @Query('from') from?: string, @Query('to') to?: string, @Query('page') page?: string) {
+    this.guard(u); return this.ops.codOrders(this.codFilter(q, type, category, page, { status, from, to }));
+  }
+
+  @Get('cod/orders/export/csv')
+  async codOrdersCsv(@CurrentUser() u: any, @Res() res: Response, @Query('q') q?: string, @Query('type') type?: string,
+    @Query('category') category?: string, @Query('status') status?: string, @Query('from') from?: string, @Query('to') to?: string) {
+    this.guard(u);
+    const filter = this.codFilter(q, type, category, undefined, { status, from, to });
+    // Customer names, addresses and numbers — every download is recorded
+    const csv = await this.logged(u, 'cod.export_orders', 'cod', null, this.ops.codOrdersCsv(filter), () => ({ ...filter, page: undefined }));
+    this.sendCsv(res, 'cod-orders', csv);
   }
 
   @Get('cod/customers')

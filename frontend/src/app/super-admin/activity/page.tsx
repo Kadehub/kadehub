@@ -25,7 +25,7 @@ const LABELS: Record<string, string> = {
   'tasks.ban': 'Banned from Tasks', 'tasks.unban': 'Lifted Tasks ban',
   'package.create': 'Created package', 'package.update': 'Edited package', 'package.delete': 'Deleted package', 'package.product': 'Moved package',
   'payment.approve': 'Approved payment slip', 'payment.reject': 'Rejected payment slip',
-  'cod.export_businesses': 'Downloaded COD businesses', 'cod.export_customers': 'Downloaded COD customers',
+  'cod.export_businesses': 'Downloaded COD businesses', 'cod.export_customers': 'Downloaded COD customers', 'cod.export_orders': 'Downloaded COD orders',
   'admin.add': 'Added super admin', 'admin.disable': 'Switched off admin', 'admin.enable': 'Switched on admin', 'admin.password': 'Changed own password',
   'coupon.create': 'Created coupon', 'coupon.toggle': 'Turned coupon on/off', 'coupon.delete': 'Deleted coupon',
   'announcement.create': 'Posted announcement', 'announcement.delete': 'Deleted announcement',

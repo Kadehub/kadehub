@@ -76,7 +76,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F1F5F9' }}>
       <header className="bg-white border-b border-ink-200 px-6 py-4 flex items-center justify-between">
-        <KadeHubLogo height={32} />
+        <a href="/" aria-label="KadeHub POS home"><KadeHubLogo height={32} /></a>
         <a href="/login" className="text-sm text-ink-500 hover:text-ink-800 transition-colors">
           Already have an account? Sign in
         </a>

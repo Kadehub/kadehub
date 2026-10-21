@@ -8,10 +8,11 @@ export default function NotFound() {
       <p className="text-5xl font-extrabold text-ink-200">404</p>
       <h1 className="text-xl font-bold text-ink-800">Page not found</h1>
       <p className="text-sm text-ink-400">The page you're looking for doesn't exist or has been moved.</p>
-      <Link href="/pos"
+      {/* "/" is the landing page of whichever KadeHub site this is */}
+      <Link href="/"
         className="mt-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white"
         style={{ background: '#00A884' }}>
-        Go to Dashboard
+        Go to home page
       </Link>
     </div>
   );

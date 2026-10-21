@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard, Package, Receipt, Wallet, BarChart3, CreditCard, Settings, BookImage, LogOut, Banknote, MoreHorizontal,
+  LayoutDashboard, Package, Receipt, Wallet, BarChart3, CreditCard, Settings, BookImage, LogOut, Banknote, MoreHorizontal, LayoutGrid, Home,
 } from 'lucide-react';
 import { useAuthHydrated, useAuthStore } from '../../hooks/useAuth';
 import api from '../../lib/api';
@@ -16,6 +16,7 @@ import type { CodMe } from '../../lib/cod/session';
 import type { Business } from '../../lib/cod/types';
 import { MascotState } from '../brand/Mascot';
 import ProductSwitcher from '../platform/ProductSwitcher';
+import { hubUrl } from '../../lib/platform';
 import { CodContextProvider } from './CodContext';
 import { useCodCan, type CodCapability } from '../../lib/cod/capabilities';
 import { LanguageSwitcher, codHref } from './bits';
@@ -168,7 +169,7 @@ function Shell({ me, itemsLabel, path, children }: { me: CodMe & { business: Bus
         </nav>
         <div className="border-t border-ink-100 p-3">
           <ProductSwitcher current="cod" label={t('common.apps')} />
-          <p className="px-3 pt-2 text-2xs text-ink-400">KadeHub COD</p>
+          <a href={codHref('/')} className="block px-3 pt-2 text-2xs text-ink-400 hover:text-ink-600">KadeHub COD</a>
         </div>
       </aside>
 
@@ -204,7 +205,7 @@ function Shell({ me, itemsLabel, path, children }: { me: CodMe & { business: Bus
         <main className="flex-1 p-4 pb-[calc(5rem+env(safe-area-inset-bottom))] md:p-6">{children}</main>
       </div>
 
-      <MobileNav nav={nav} isActive={isActive} moreLabel={t('xp.navMore')} />
+      <MobileNav nav={nav} isActive={isActive} moreLabel={t('xp.navMore')} appsLabel={t('common.apps')} homeLabel={t('common.kadehubHome')} />
     </div>
   );
 }
@@ -212,8 +213,8 @@ function Shell({ me, itemsLabel, path, children }: { me: CodMe & { business: Bus
 /** Main destinations shown in the phone bottom nav, in priority order; everything else goes under "More". */
 const BOTTOM_NAV_ORDER = ['/dashboard', '/orders', '/expenses', '/credit', '/items'];
 
-function MobileNav({ nav, isActive, moreLabel }: {
-  nav: ReturnType<typeof navItems>; isActive: (href: string) => boolean; moreLabel: string;
+function MobileNav({ nav, isActive, moreLabel, appsLabel, homeLabel }: {
+  nav: ReturnType<typeof navItems>; isActive: (href: string) => boolean; moreLabel: string; appsLabel: string; homeLabel: string;
 }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const path = useCodPath();
@@ -242,6 +243,15 @@ function MobileNav({ nav, isActive, moreLabel }: {
               </li>
             ))}
           </ul>
+          {/* The sidebar's app switcher isn't shown on phones, so the way out of COD lives here */}
+          <div className="mt-1 grid grid-cols-2 gap-1 border-t border-ink-100 pt-1">
+            <a href={hubUrl('/apps')} className="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl text-xs font-semibold text-ink-600 hover:bg-ink-50">
+              <LayoutGrid size={16} /> {appsLabel}
+            </a>
+            <a href={hubUrl('/')} className="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl text-xs font-semibold text-ink-600 hover:bg-ink-50">
+              <Home size={16} /> {homeLabel}
+            </a>
+          </div>
         </div>
       )}
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 backdrop-blur md:hidden"

@@ -54,8 +54,8 @@ export default function CodRegisterPage() {
       <div className="absolute right-4 top-4"><LanguageSwitcher /></div>
       <div className="w-full max-w-xl">
         <div className="mb-6 flex flex-col items-center text-center">
-          <KadeHubLogo width={130} theme="color" />
-          <p className="mt-2 text-sm font-semibold text-ink-700">KadeHub COD</p>
+          <a href={codHref('/')} aria-label="KadeHub COD"><KadeHubLogo width={130} theme="color" /></a>
+          <a href={codHref('/')} className="mt-2 text-sm font-semibold text-ink-700 hover:underline">KadeHub COD</a>
           <p className="text-sm text-ink-500">{t('app.tagline')}</p>
         </div>
         {mode === 'checking' && <MascotState variant="loading" size="sm" title={t('app.loading')} />}

@@ -38,6 +38,9 @@ export default function ProductSwitcher({ current, label }: { current: ProductSl
             <a href={hubUrl('/apps')} className="block px-2.5 py-2 rounded-lg text-xs font-semibold text-ink-500 hover:bg-ink-50">
               All apps →
             </a>
+            <a href={hubUrl('/')} className="block px-2.5 py-2 rounded-lg text-xs font-semibold text-ink-500 hover:bg-ink-50">
+              KadeHub home
+            </a>
           </div>
         </div>
       )}

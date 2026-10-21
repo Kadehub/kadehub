@@ -528,6 +528,7 @@ export const ta: Record<MessageKey, string> = {
   "app.loadErrorBody": "உங்கள் இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.",
   "common.retry": "மீண்டும் முயற்சி",
   "common.allApps": "அனைத்து KadeHub செயலிகள்",
+  "common.kadehubHome": "KadeHub முகப்பு",
   "common.apps": "KadeHub செயலிகள்",
   "enable.title": "KadeHub COD-ஐப் பயன்படுத்தத் தொடங்குங்கள்",
   "enable.body": "உங்கள் KadeHub கணக்கில் இன்னும் COD இல்லை. 14 நாள் இலவச சோதனையைத் தொடங்க அதை இயக்குங்கள் — உங்கள் கணக்கின் மற்றவை அப்படியே இருக்கும்.",

@@ -72,10 +72,13 @@ export default function SubscribePage() {
               Ref {pendingSlip.gateway_ref} · {fmt(pendingSlip.amount, currency)}
             </p>
           )}
-          <button onClick={() => { logout(); window.location.href = '/login'; }}
-            className="text-sm font-semibold" style={{ color: '#00A884' }}>
-            Sign out
-          </button>
+          <div className="flex items-center justify-center gap-5">
+            <a href={hubUrl('/apps')} className="text-sm font-semibold" style={{ color: '#00A884' }}>Your apps</a>
+            <button onClick={() => { logout(); window.location.href = '/login'; }}
+              className="text-sm font-semibold" style={{ color: '#00A884' }}>
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -141,10 +144,15 @@ export default function SubscribePage() {
   // ── Package selection ──
   if (!selectedPkg) return (
     <div className="min-h-screen flex flex-col items-center py-12 px-4" style={{ background: 'linear-gradient(135deg,#0a4f40,#0d6e5a)' }}>
-      <button onClick={() => { logout(); window.location.href = '/login'; }}
-        className="self-end mr-4 mb-6 text-sm font-semibold text-white/70 hover:text-white">
-        Sign Out
-      </button>
+      <div className="w-full max-w-5xl flex items-center justify-between gap-3 mb-6">
+        <a href={hubUrl('/apps')} className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/70 hover:text-white">
+          <ArrowLeft size={15} /> Your apps
+        </a>
+        <button onClick={() => { logout(); window.location.href = '/login'; }}
+          className="text-sm font-semibold text-white/70 hover:text-white">
+          Sign Out
+        </button>
+      </div>
 
       <div className="text-center mb-8">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 text-sm font-bold"

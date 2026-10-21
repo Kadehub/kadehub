@@ -1,4 +1,5 @@
 'use client';
+import { hubUrl } from '../../lib/platform';
 import { useAuthStore } from '../../hooks/useAuth';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -54,11 +55,11 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
             <img src={logoUrl} alt="Shop logo" className="h-9 w-auto max-w-[130px] object-contain" />
             <div className="flex items-center gap-1">
               <span className="text-2xs text-ink-400">Powered by</span>
-              <KadeHubLogo height={11} variant="full" theme="mono" />
+              <a href={hubUrl('/')} aria-label="KadeHub home"><KadeHubLogo height={11} variant="full" theme="mono" /></a>
             </div>
           </div>
         ) : (
-          <KadeHubLogo width={140} variant="full" theme="color" />
+          <a href={hubUrl('/')} aria-label="KadeHub home"><KadeHubLogo width={140} variant="full" theme="color" /></a>
         )}
         {onClose && (
           <button onClick={onClose} className="lg:hidden p-1.5 rounded-lg hover:bg-ink-100 text-ink-400 ml-2 flex-shrink-0">

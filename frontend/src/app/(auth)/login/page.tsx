@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import KadeHubLogo from '../../../components/ui/KadeHubLogo';
 import { Input } from '../../../components/ui/Input';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import InteractiveMascot from '../../../components/brand/InteractiveMascot';
 import { useAuthHydrated, useAuthStore } from '../../../hooks/useAuth';
 import api from '../../../lib/api';
@@ -54,7 +54,7 @@ export default function LoginPage() {
       {/* Left brand panel */}
       <div className="hidden lg:flex flex-col justify-between w-[420px] flex-shrink-0 p-10 text-white"
         style={{ background: 'linear-gradient(160deg, #004D40 0%, #00796B 50%, #00A884 100%)' }}>
-        <KadeHubLogo width={200} theme="white" />
+        <a href="/" aria-label="Home" className="self-start"><KadeHubLogo width={200} theme="white" /></a>
         <div>
           <InteractiveMascot width={150} priority className="kh-mascot-enter"
             messages={product
@@ -82,8 +82,12 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-4 lg:p-6" style={{ background: '#F1F5F9' }}>
         <div className="w-full max-w-md">
           <div className="lg:hidden mb-8 flex justify-center">
-            <KadeHubLogo width={180} theme="color" />
+            <a href="/" aria-label="Home"><KadeHubLogo width={180} theme="color" /></a>
           </div>
+          {/* "/" is this site's landing page: the product's on its subdomain, KadeHub's on the main domain */}
+          <a href="/" className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 hover:text-ink-800">
+            <ArrowLeft size={15} /> Back to {product ? product.name : 'KadeHub'}
+          </a>
 
           <div className="kh-card p-8">
             <h2 className="text-xl font-bold text-ink-900 mb-1">Welcome back 👋</h2>

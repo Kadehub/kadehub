@@ -58,7 +58,7 @@ function Navbar() {
       borderBottom: scrolled ? '1px solid #e5e7eb' : 'none',
     }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', height: 68 }}>
-        <a href="#" onClick={e => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+        <a href={hubUrl('/')} aria-label="KadeHub home"
           style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
           <div style={{
             width: 36, height: 36, borderRadius: 10,

@@ -529,6 +529,7 @@ export const si: Record<MessageKey, string> = {
   "app.loadErrorBody": "ඔබේ connection එක පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
   "common.retry": "නැවත උත්සාහ කරන්න",
   "common.allApps": "සියලු KadeHub apps",
+  "common.kadehubHome": "KadeHub මුල් පිටුව",
   "common.apps": "KadeHub apps",
   "enable.title": "KadeHub COD භාවිතා කිරීම අරඹන්න",
   "enable.body": "ඔබේ KadeHub account එකට තවම COD නැත. දින 14ක free trial එකක් ආරම්භ කිරීමට එය on කරන්න — ඔබේ account එකේ අනෙක් සියල්ල එලෙසම පවතී.",

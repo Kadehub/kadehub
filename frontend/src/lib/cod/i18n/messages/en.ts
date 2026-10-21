@@ -531,6 +531,7 @@ export const en = {
   "app.loadErrorBody": "Check your connection and try again.",
   "common.retry": "Try again",
   "common.allApps": "All KadeHub apps",
+  "common.kadehubHome": "KadeHub home",
   "common.apps": "KadeHub apps",
   "enable.title": "Start using KadeHub COD",
   "enable.body": "Your KadeHub account doesn't have COD yet. Turn it on to start a 14-day free trial — anything else on your account stays as it is.",

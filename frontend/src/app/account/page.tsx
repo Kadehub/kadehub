@@ -51,7 +51,7 @@ export default function AccountPage() {
     setFailed(false);
     api.get<Account>('/platform/account').then(({ data }) => {
       // Colours and display names come from the frontend registry (the API only knows slugs and states)
-      setAccount({ ...data, products: data.products.map(p => ({ ...p, color: getProduct(p.slug)?.color ?? '#00796B' })) });
+      setAccount({ ...data, products: data.products.filter(p => getProduct(p.slug)?.listed).map(p => ({ ...p, color: getProduct(p.slug)?.color ?? '#00796B' })) });
       setProfile({ name: data.user.name, phone: data.user.phone ?? '' });
     }).catch(() => setFailed(true));
   };

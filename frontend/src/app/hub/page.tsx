@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import {
   KeyRound, Languages, Smartphone, Wallet, ArrowRight, Check, ChevronDown, QrCode, WifiOff, Boxes, CalendarClock,
-  Users, Truck, BarChart3, Receipt, Calculator, PackageCheck, FileText, Share2, Search, MessageCircle, Star,
-  Bell, ListChecks, UserPlus, LayoutGrid, Rocket, Sparkles, ShieldCheck, Store, Hammer, BadgeCheck,
+  Users, Truck, BarChart3, Receipt, Calculator, PackageCheck, FileText, Share2,
+  UserPlus, LayoutGrid, Rocket, Sparkles, ShieldCheck, Store, BadgeCheck,
 } from 'lucide-react';
 import KadeHubLogo from '../../components/ui/KadeHubLogo';
 import ProductCard from '../../components/platform/ProductCard';
@@ -11,12 +11,12 @@ import ProductIcon from '../../components/platform/ProductIcon';
 import Reveal from '../../components/platform/Reveal';
 import Mascot from '../../components/brand/Mascot';
 import InteractiveMascot from '../../components/brand/InteractiveMascot';
-import { PRODUCTS, getProduct, productUrl, type ProductSlug } from '../../lib/platform';
-import { PosMock, CodMock, TasksMock } from '../../components/platform/ProductMocks';
+import { LISTED_PRODUCTS, getProduct, productUrl, type ProductSlug } from '../../lib/platform';
+import { PosMock, CodMock } from '../../components/platform/ProductMocks';
 
 export const metadata: Metadata = {
   title: 'KadeHub — Business apps for growing businesses',
-  description: 'One KadeHub account for every tool your business needs: POS for shops, COD order management, and a local task marketplace.',
+  description: 'One KadeHub account for every tool your business needs: POS for shops and COD order management.',
 };
 
 const TRUST = [
@@ -27,7 +27,7 @@ const TRUST = [
 ];
 
 const STATS = [
-  { value: '3', label: 'apps, one account' },
+  { value: '2', label: 'apps, one account' },
   { value: '14', label: 'day free trial' },
   { value: '3', label: 'languages' },
   { value: '0', label: 'things to install' },
@@ -73,21 +73,6 @@ const DETAILS: Detail[] = [
     ],
     mock: <CodMock />,
   },
-  {
-    slug: 'tasks',
-    title: 'Get jobs done by people nearby',
-    body: 'Post what you need, compare offers from taskers, and pick the right person. Good with your hands? Earn by helping others.',
-    bestFor: 'Busy households, small businesses and skilled freelancers',
-    features: [
-      { icon: ListChecks,    title: 'Post for free', text: 'Describe the job, set a budget and a date.' },
-      { icon: Search,        title: 'Offers come to you', text: 'Taskers send prices; ask questions in public Q&A.' },
-      { icon: MessageCircle, title: 'Private messages', text: 'Chat with your tasker once you pick an offer.' },
-      { icon: Star,          title: 'Ratings and reviews', text: 'Both sides review each other after the job.' },
-      { icon: Bell,          title: 'Never miss an update', text: 'Notifications for offers, questions and messages.' },
-      { icon: Hammer,        title: 'Work as a tasker', text: 'Build a profile with your skills and earn on your schedule.' },
-    ],
-    mock: <TasksMock />,
-  },
 ];
 
 const STEPS = [
@@ -97,7 +82,7 @@ const STEPS = [
 ];
 
 const BENEFITS = [
-  { icon: KeyRound,    title: 'One login',             text: 'Sign in once and move between POS, COD and Tasks without signing in again.' },
+  { icon: KeyRound,    title: 'One login',             text: 'Sign in once and move between POS and COD without signing in again.' },
   { icon: Languages,   title: 'Your language',         text: 'Local currency and payments, with Sinhala and Tamil where you need them.' },
   { icon: Smartphone,  title: 'Any device',            text: 'Works in the browser on desktop, tablet and phone. Nothing to install.' },
   { icon: Wallet,      title: 'Pay for what you use',  text: 'Each app has its own plan and free trial. Add another app when you need it.' },
@@ -106,12 +91,11 @@ const BENEFITS = [
 ];
 
 const FAQS = [
-  { q: 'Do I need a separate account for each app?', a: 'No. One KadeHub account signs you in to POS, COD and Tasks. Sign in on one and you are signed in on the others.' },
-  { q: 'Is there a free trial?', a: 'Yes. POS and COD start with a 14-day free trial, no card needed. Tasks is free to use.' },
+  { q: 'Do I need a separate account for each app?', a: 'No. One KadeHub account signs you in to POS and COD. Sign in on one and you are signed in on the others.' },
+  { q: 'Is there a free trial?', a: 'Yes. POS and COD start with a 14-day free trial, no card needed.' },
   { q: 'How do I pay for a plan?', a: 'From the billing page inside each app, by bank transfer (upload your slip) or by online card payment.' },
   { q: 'Can I use more than one app?', a: 'Yes. Open the app launcher after you sign in and turn on any other app for the same account.' },
   { q: 'Which languages are supported?', a: 'English and Sinhala across the apps. KadeHub COD is also fully available in Tamil, including invoices and catalogs.' },
-  { q: 'How are tasks paid for?', a: 'You agree a price when you accept an offer, then pay the tasker directly once the job is done.' },
 ];
 
 // Served at the bare domain; src/proxy.ts rewrites "/" here.
@@ -140,8 +124,8 @@ export default function HubPage() {
           <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-20 grid gap-10 md:grid-cols-[1.2fr_1fr] items-center">
             <div className="text-center md:text-left order-2 md:order-1">
               <div className="inline-flex items-center gap-1.5 rounded-full bg-white/80 border border-ink-100 p-1 pr-3 text-xs font-semibold text-ink-600">
-                {PRODUCTS.map(p => <ProductIcon key={p.slug} slug={p.slug} color={p.color} size={24} />)}
-                <span className="ml-1">POS · COD · Tasks</span>
+                {LISTED_PRODUCTS.map(p => <ProductIcon key={p.slug} slug={p.slug} color={p.color} size={24} />)}
+                <span className="ml-1">POS · COD</span>
               </div>
               <h1 className="mt-5 text-3xl sm:text-5xl font-extrabold text-ink-900 leading-tight tracking-tight">
                 One account. <span style={{ color: '#00796B' }}>Every tool</span> your business needs.
@@ -171,7 +155,7 @@ export default function HubPage() {
                 <InteractiveMascot width="clamp(170px, 30vw, 260px)" priority className="relative kh-mascot-enter"
                   greeting="Hi there! Welcome to KadeHub."
                   messages={[
-                    'One account opens POS, COD and Tasks.',
+                    'One account opens POS and COD.',
                     'Every app comes with a free trial.',
                     'Pick an app below to get started!',
                   ]} />
@@ -199,11 +183,11 @@ export default function HubPage() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
             <Reveal className="text-center max-w-2xl mx-auto">
               <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#00796B' }}>Our apps</p>
-              <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-ink-900">Three apps. One KadeHub.</h2>
+              <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-ink-900">Two apps. One KadeHub.</h2>
               <p className="mt-2 text-sm sm:text-base text-ink-500">Each app has its own address and works on its own. Use one, or all of them together.</p>
             </Reveal>
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {PRODUCTS.map((p, i) => (
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 max-w-4xl mx-auto">
+              {LISTED_PRODUCTS.map((p, i) => (
                 <Reveal key={p.slug} delay={i * 120} className="flex flex-col">
                   <ProductCard product={p} href={productUrl(p.slug, '/')}
                     cta={p.status === 'coming_soon' ? 'Learn more' : `Open ${p.name.replace('KadeHub ', '')}`} />
@@ -253,7 +237,7 @@ export default function HubPage() {
                       Open {product.name.replace('KadeHub ', '')} <ArrowRight size={15} />
                     </a>
                     <a href={productUrl(d.slug, '/register')} className="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-bold border-2 border-ink-200 text-ink-700 hover:bg-white">
-                      {d.slug === 'tasks' ? 'Join free' : 'Start free trial'}
+                      Start free trial
                     </a>
                   </div>
                 </Reveal>
@@ -358,12 +342,12 @@ export default function HubPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
             <KadeHubLogo width={124} theme="color" />
-            <p className="mt-3 text-sm text-ink-500 max-w-sm">Business apps that share one account: point of sale, cash-on-delivery orders and a local task marketplace.</p>
+            <p className="mt-3 text-sm text-ink-500 max-w-sm">Business apps that share one account: point of sale and cash-on-delivery orders.</p>
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-ink-400">Apps</p>
             <ul className="mt-3 space-y-2 text-sm">
-              {PRODUCTS.map(p => (
+              {LISTED_PRODUCTS.map(p => (
                 <li key={p.slug}><a href={productUrl(p.slug, '/')} className="text-ink-600 hover:text-ink-900">{p.name}</a></li>
               ))}
             </ul>

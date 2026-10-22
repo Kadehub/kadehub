@@ -5,7 +5,7 @@ import KadeHubLogo from '../../components/ui/KadeHubLogo';
 import ProductCard from '../../components/platform/ProductCard';
 import InteractiveMascot from '../../components/brand/InteractiveMascot';
 import { useAuthHydrated, useAuthStore } from '../../hooks/useAuth';
-import { PRODUCTS, productUrl, type ProductDef } from '../../lib/platform';
+import { LISTED_PRODUCTS, productUrl, type ProductDef } from '../../lib/platform';
 import api from '../../lib/api';
 
 type MyProduct = { slug: string; enabled: boolean; state: 'not_started' | 'trial' | 'active' | 'expired' | 'free'; days_left: number | null };
@@ -74,10 +74,10 @@ export default function AppsPage() {
             <p className="mt-1 text-sm text-ink-500">One account works across every product.</p>
           </div>
         </div>
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 max-w-4xl">
           {mine === null
-            ? PRODUCTS.map(p => <div key={p.slug} className="kh-card h-72 animate-pulse" />)
-            : PRODUCTS.map(p => <ProductCard key={p.slug} product={p} {...cardProps(p)} />)}
+            ? LISTED_PRODUCTS.map(p => <div key={p.slug} className="kh-card h-72 animate-pulse" />)
+            : LISTED_PRODUCTS.map(p => <ProductCard key={p.slug} product={p} {...cardProps(p)} />)}
         </div>
       </main>
     </div>

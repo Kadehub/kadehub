@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import InteractiveMascot from '../../../components/brand/InteractiveMascot';
 import { useAuthHydrated, useAuthStore } from '../../../hooks/useAuth';
 import api from '../../../lib/api';
-import { homeAfterLogin, navigate, resolveHost, productForHost, PRODUCTS, type ProductDef } from '../../../lib/platform';
+import { homeAfterLogin, navigate, resolveHost, productForHost, LISTED_PRODUCTS, type ProductDef } from '../../../lib/platform';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
@@ -58,16 +58,16 @@ export default function LoginPage() {
         <div>
           <InteractiveMascot width={150} priority className="kh-mascot-enter"
             messages={product
-              ? [`Welcome back to ${product.name}!`, 'Your KadeHub account works here too.']
+              ? [`Welcome back to ${product.name}!`, ...(product.listed ? ['Your KadeHub account works here too.'] : [])]
               : ['Welcome back!', 'One sign-in works for every KadeHub app.']} />
           <h2 className="mt-6 text-3xl font-extrabold leading-tight">
             {product ? product.name : <>One account,<br /><span style={{ color: '#FFB703' }}>every KadeHub app.</span></>}
           </h2>
           <p className="mt-3 text-sm opacity-70 leading-relaxed">
-            {product ? product.tagline : 'Sign in once to use POS, COD and Tasks.'}
+            {product ? product.tagline : 'Sign in once to use POS and COD.'}
           </p>
           <ul className="mt-6 space-y-2.5">
-            {(product ? product.features : PRODUCTS.map(p => `${p.name} — ${p.tagline.toLowerCase()}`)).map(f => (
+            {(product ? product.features : LISTED_PRODUCTS.map(p => `${p.name} — ${p.tagline.toLowerCase()}`)).map(f => (
               <li key={f} className="flex items-start gap-2 text-sm opacity-90">
                 <Check size={16} className="mt-0.5 flex-shrink-0" style={{ color: '#FFB703' }} />
                 {f}

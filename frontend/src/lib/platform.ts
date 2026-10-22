@@ -23,27 +23,32 @@ export interface ProductDef {
   status: ProductStatus;
   /** Where a signed-in user lands when opening the product. */
   homePath: string;
+  /** False keeps the product off the hub, launcher, switchers and other product lists; its subdomain still works. */
+  listed: boolean;
   color: string;
   features: string[];
 }
 
 export const PRODUCTS: ProductDef[] = [
   {
-    slug: 'pos', name: 'KadeHub POS', subdomain: 'pos', status: 'live', homePath: '/dashboard', color: '#00796B',
+    slug: 'pos', name: 'KadeHub POS', subdomain: 'pos', status: 'live', homePath: '/dashboard', listed: true, color: '#00796B',
     tagline: 'Point of sale, inventory and CRM for local shops',
     features: ['Fast checkout with cash, card, QR and credit', 'Stock, batches and expiry alerts', 'Loyalty, suppliers, expenses and reports'],
   },
   {
-    slug: 'cod', name: 'KadeHub COD', subdomain: 'cod', status: 'live', homePath: '/dashboard', color: '#2563EB',
+    slug: 'cod', name: 'KadeHub COD', subdomain: 'cod', status: 'live', homePath: '/dashboard', listed: true, color: '#2563EB',
     tagline: 'Cash-on-delivery orders, landed costs and invoices',
     features: ['Order pipeline from pending to delivered', 'Landed cost and profit per item', 'Invoices, catalogs and WhatsApp sharing'],
   },
   {
-    slug: 'tasks', name: 'KadeHub Tasks', subdomain: 'tasks', status: 'live', homePath: '/', color: '#B45309',
+    slug: 'tasks', name: 'KadeHub Tasks', subdomain: 'tasks', status: 'live', homePath: '/', listed: false, color: '#B45309',
     tagline: 'Post a task, get offers from local taskers',
     features: ['Post any job with a budget', 'Compare offers and pick a tasker', 'Ratings and reviews you can trust'],
   },
 ];
+
+/** Products shown to users in lists of KadeHub apps. Use PRODUCTS for routing. */
+export const LISTED_PRODUCTS = PRODUCTS.filter(p => p.listed);
 
 export const ROOT_DOMAIN = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'kadehub.com').toLowerCase();
 const ROOT_HOSTNAME = ROOT_DOMAIN.split(':')[0];

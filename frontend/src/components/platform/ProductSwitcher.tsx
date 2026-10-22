@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { LayoutGrid, ChevronUp } from 'lucide-react';
-import { PRODUCTS, hubUrl, productUrl, type ProductSlug } from '../../lib/platform';
+import { LISTED_PRODUCTS, hubUrl, productUrl, type ProductSlug } from '../../lib/platform';
 
 /** Sidebar control for jumping between KadeHub products on their subdomains. */
 export default function ProductSwitcher({ current, label }: { current: ProductSlug; label: string }) {
@@ -19,7 +19,7 @@ export default function ProductSwitcher({ current, label }: { current: ProductSl
     <div ref={ref} className="relative">
       {open && (
         <div className="absolute bottom-full left-0 right-0 mb-1 kh-card p-1.5 z-20">
-          {PRODUCTS.map(p => {
+          {LISTED_PRODUCTS.map(p => {
             const soon = p.status === 'coming_soon';
             return (
               <a key={p.slug} href={p.slug === current ? undefined : productUrl(p.slug, soon ? '/' : undefined)}

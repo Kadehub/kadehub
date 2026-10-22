@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { PRODUCTS, productUrl, hubUrl } from '../../lib/platform';
+import { LISTED_PRODUCTS, productUrl, hubUrl } from '../../lib/platform';
 import ProductIcon from '../../components/platform/ProductIcon';
 import Reveal from '../../components/platform/Reveal';
 import { PosMock } from '../../components/platform/ProductMocks';
@@ -637,7 +637,7 @@ function Footer() {
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16, fontFamily: 'Poppins,sans-serif' }}>KadeHub Apps</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {PRODUCTS.map(p => (
+              {LISTED_PRODUCTS.map(p => (
                 <a key={p.slug} href={productUrl(p.slug, '/')}
                   style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', textDecoration: 'none', fontFamily: 'Poppins,sans-serif', fontWeight: 500 }}>
                   {p.name}

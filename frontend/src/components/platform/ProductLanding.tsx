@@ -5,7 +5,7 @@ import KadeHubLogo from '../ui/KadeHubLogo';
 import ProductIcon from './ProductIcon';
 import Reveal from './Reveal';
 import Mascot, { type MascotPose } from '../brand/Mascot';
-import { PRODUCTS, getProduct, hubUrl, productUrl, type ProductSlug } from '../../lib/platform';
+import { LISTED_PRODUCTS, getProduct, hubUrl, productUrl, type ProductSlug } from '../../lib/platform';
 import './product-landing.css';
 
 import { onColor } from '../../lib/color';
@@ -300,7 +300,7 @@ export function LandingFooter({ slug, blurb }: { slug: ProductSlug; blurb: strin
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-ink-400">KadeHub apps</p>
           <ul className="mt-3 space-y-2 text-sm">
-            {PRODUCTS.map(p => (
+            {LISTED_PRODUCTS.map(p => (
               <li key={p.slug}>
                 <a href={productUrl(p.slug, '/')} className={p.slug === slug ? 'font-semibold text-ink-900' : 'text-ink-600 hover:text-ink-900'}>{p.name}</a>
               </li>

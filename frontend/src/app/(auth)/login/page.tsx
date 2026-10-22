@@ -64,7 +64,7 @@ export default function LoginPage() {
             {product ? product.name : <>One account,<br /><span style={{ color: '#FFB703' }}>every KadeHub app.</span></>}
           </h2>
           <p className="mt-3 text-sm opacity-70 leading-relaxed">
-            {product ? product.tagline : 'Sign in once to use POS and COD.'}
+            {product ? product.tagline : 'Sign in once to use POS, COD and Staff.'}
           </p>
           <ul className="mt-6 space-y-2.5">
             {(product ? product.features : LISTED_PRODUCTS.map(p => `${p.name} — ${p.tagline.toLowerCase()}`)).map(f => (

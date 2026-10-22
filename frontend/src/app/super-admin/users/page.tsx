@@ -49,7 +49,7 @@ export default function UsersPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-ink-900">People</h2>
-          <p className="text-sm text-ink-400 mt-0.5">{total.toLocaleString()} accounts across POS, COD and Tasks</p>
+          <p className="text-sm text-ink-400 mt-0.5">{total.toLocaleString()} accounts across POS, COD, Tasks and Staff</p>
         </div>
         <form onSubmit={e => { e.preventDefault(); load(1); }} className="flex gap-2 w-full sm:w-auto">
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="Name, email, phone or shop…" className={`${inputCls} sm:w-72`} aria-label="Search people" />

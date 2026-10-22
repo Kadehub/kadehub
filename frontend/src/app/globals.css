@@ -332,6 +332,14 @@ input:focus, select:focus, textarea:focus {
   71% { opacity: 1; } 80%, 100% { opacity: 0; transform: rotate(var(--r)) translateY(-8px); }
 }
 
+/* Staff: the team gives a little wave */
+.kh-picon-hr .kh-picon-glyph { transform-origin: 50% 90%; animation: kh-picon-wave 4s ease-in-out infinite; }
+@keyframes kh-picon-wave {
+  0%, 58%, 100% { transform: rotate(0) translateY(0); }
+  64% { transform: rotate(-10deg) translateY(-1px); } 70% { transform: rotate(9deg); }
+  76% { transform: rotate(-7deg) translateY(-1px); } 82% { transform: rotate(5deg); } 88% { transform: rotate(0); }
+}
+
 /* Hovering the card plays the move on a loop */
 .group:hover .kh-picon-glyph, .group:hover .kh-picon-speed i, .group:hover .kh-picon-spark i, .group:hover .kh-picon-scan { animation-duration: 1.4s; animation-delay: 0s; }
 .group:hover .kh-picon { transform: scale(1.06) rotate(-3deg); }
@@ -351,12 +359,13 @@ input:focus, select:focus, textarea:focus {
   .kh-picon-glyph, .kh-picon::after, .kh-picon-speed i, .kh-picon-spark i, .kh-picon-scan { animation: none !important; }
   .kh-picon, .group:hover .kh-picon, .kh-ficon, .group:hover .kh-ficon { transform: none; transition: none; }
 }
-/* Stagger the periodic moves so the three products take turns */
+/* Stagger the periodic moves so the products take turns */
 .kh-picon-pos   { --d: 0s; }
 .kh-picon-cod   { --d: 1.3s; }
 .kh-picon-tasks { --d: 2.6s; }
+.kh-picon-hr    { --d: 2s; }
 .kh-picon-pos .kh-picon-glyph, .kh-picon-pos .kh-picon-scan,
-.kh-picon-cod .kh-picon-glyph, .kh-picon-tasks .kh-picon-glyph { animation-delay: var(--d); }
+.kh-picon-cod .kh-picon-glyph, .kh-picon-tasks .kh-picon-glyph, .kh-picon-hr .kh-picon-glyph { animation-delay: var(--d); }
 .kh-picon-speed i:nth-child(1), .kh-picon-spark i { animation-delay: var(--d); }
 .kh-picon-speed i:nth-child(2) { animation-delay: calc(var(--d) + .08s); }
 .kh-picon-speed i:nth-child(3) { animation-delay: calc(var(--d) + .16s); }

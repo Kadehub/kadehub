@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import {
   ShoppingCart, QrCode, FileText, Truck, Hammer, Star, Check, Calculator, Share2, MessageCircle, Lock, FileDown,
 } from 'lucide-react';
+import { Users, CalendarDays, Wallet, Clock } from 'lucide-react';
 import './product-landing.css';
 
 /*
@@ -224,6 +225,102 @@ export function ReviewMock() {
         </div>
         <p className="lm-in mt-3 text-sm text-ink-700">“Arrived on time, assembled the wardrobe in an hour and cleaned up after. Would hire again!”</p>
         <p className="lm-in mt-2 text-2xs text-ink-400">Review for “Assemble a wardrobe”</p>
+      </div>
+    </MockFrame>
+  );
+}
+
+/* ── Staff ── */
+
+const VIOLET = '#7C3AED';
+
+export function StaffMock() {
+  const people = [
+    { initials: 'NP', name: 'Nimal P.', role: 'Cashier', status: 'In · 7:58', tone: '#DCFCE7', fg: '#166534' },
+    { initials: 'KS', name: 'Kamala S.', role: 'Store keeper', status: 'Late · 8:24', tone: '#FEF3C7', fg: '#92400E' },
+    { initials: 'SK', name: 'Sunil K.', role: 'Driver', status: 'Annual leave', tone: '#E0F2FE', fg: '#075985' },
+    { initials: 'DR', name: 'Dilini R.', role: 'Cashier', status: 'Shift 2:00 PM', tone: '#F1F5F9', fg: '#475569' },
+  ];
+  return (
+    <MockFrame color={VIOLET} label="Preview of today's attendance board in KadeHub Staff">
+      <MockHeader icon={<Users size={16} />} title="Today · Main branch" meta="4 staff" color={VIOLET} />
+      <div className="grid grid-cols-3 gap-2 px-4 pt-3 text-center">
+        {[['2', 'In'], ['1', 'Late'], ['1', 'On leave']].map(([n, l]) => (
+          <div key={l} className="rounded-xl bg-ink-50 py-2">
+            <p className="text-lg font-extrabold" style={{ color: VIOLET }}>{n}</p>
+            <p className="text-2xs text-ink-500">{l}</p>
+          </div>
+        ))}
+      </div>
+      <ul className="px-4 py-3 space-y-2">
+        {people.map(p => (
+          <li key={p.name} className="hub-offer flex items-center gap-3 rounded-xl border border-ink-100 px-3 py-2">
+            <span className="w-8 h-8 rounded-full flex items-center justify-center text-2xs font-bold text-white flex-shrink-0" style={{ background: VIOLET }}>{p.initials}</span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-sm font-semibold text-ink-800">{p.name}</span>
+              <span className="block text-2xs text-ink-400">{p.role}</span>
+            </span>
+            <span className="rounded-full px-2 py-0.5 text-2xs font-bold" style={{ background: p.tone, color: p.fg }}>{p.status}</span>
+          </li>
+        ))}
+      </ul>
+    </MockFrame>
+  );
+}
+
+export function RosterMock() {
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  const rows: Array<[string, Array<'M' | 'E' | '' | 'L'>]> = [
+    ['Nimal', ['M', 'M', 'E', 'E', '']],
+    ['Kamala', ['E', '', 'M', 'M', 'M']],
+    ['Sunil', ['L', 'L', 'M', '', 'E']],
+  ];
+  const cell = { M: ['8–5', '#EDE9FE', VIOLET], E: ['2–10', '#E0F2FE', '#0369A1'], L: ['Leave', '#DCFCE7', '#166534'], '': ['', 'transparent', ''] } as const;
+  return (
+    <MockFrame color={VIOLET} label="Preview of a weekly roster with shifts and leave">
+      <MockHeader icon={<CalendarDays size={16} />} title="Roster · this week" meta="Shared on WhatsApp" color={VIOLET} />
+      <div className="px-4 py-3 overflow-hidden">
+        <div className="grid grid-cols-[4.5rem_repeat(5,minmax(0,1fr))] gap-1 text-center text-2xs">
+          <span />
+          {days.map(d => <span key={d} className="font-bold text-ink-500">{d}</span>)}
+          {rows.map(([name, shifts]) => (
+            <div key={name} className="contents">
+              <span className="text-left text-xs font-semibold text-ink-700 py-1.5">{name}</span>
+              {shifts.map((s, i) => (
+                <span key={i} className="rounded-md py-1.5 font-semibold" style={{ background: cell[s][1], color: cell[s][2] }}>{cell[s][0]}</span>
+              ))}
+            </div>
+          ))}
+        </div>
+        <p className="lm-in mt-3 flex items-center gap-1.5 rounded-xl bg-ink-50 px-3 py-2 text-2xs text-ink-600">
+          <Clock size={12} style={{ color: VIOLET }} /> Kamala asked to swap Wednesday with Nimal · waiting for approval
+        </p>
+      </div>
+    </MockFrame>
+  );
+}
+
+export function PayslipMock() {
+  const lines = [['Basic salary', '65,000.00'], ['Overtime · 6 h', '2,437.50'], ['Allowance', '5,000.00'], ['EPF 8%', '−5,200.00'], ['Salary advance', '−2,500.00']];
+  return (
+    <MockFrame color={VIOLET} label="Preview of a monthly payslip ready to share">
+      <MockHeader icon={<Wallet size={16} />} title="Payslip · March" meta="Nimal Perera" color={VIOLET} />
+      <ul className="px-5 pt-3">
+        {lines.map(([label, amount]) => (
+          <li key={label} className="hub-pos-line flex justify-between py-1.5 text-sm border-b border-ink-50">
+            <span className="text-ink-600">{label}</span>
+            <span className={`font-semibold ${amount.startsWith('−') ? 'text-red-600' : 'text-ink-800'}`}>{amount}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="hub-pos-total flex items-center justify-between px-5 py-4">
+        <span className="text-sm font-bold text-ink-800">Net pay</span>
+        <span className="flex items-center gap-2">
+          <span className="hub-paid inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-2xs font-bold" style={{ background: '#EDE9FE', color: VIOLET }}>
+            <Share2 size={12} /> WhatsApp
+          </span>
+          <span className="text-lg font-extrabold" style={{ color: VIOLET }}>Rs 64,737.50</span>
+        </span>
       </div>
     </MockFrame>
   );

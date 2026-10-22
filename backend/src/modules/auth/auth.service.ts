@@ -78,7 +78,7 @@ export class AuthService {
     };
   }
 
-  /** Account sign-up from cod./tasks.: tenant (no shop subdomain) + ADMIN user + the product turned on. */
+  /** Account sign-up from cod./tasks./staff.: tenant (no shop subdomain) + ADMIN user + the product turned on. */
   async registerAccount(dto: RegisterAccountDto) {
     const email = dto.email.trim().toLowerCase();
     const existing = await this.userRepo
@@ -87,7 +87,7 @@ export class AuthService {
       .getOne();
     if (existing) throw new ConflictException('Email already registered — sign in and enable this product from your apps page');
 
-    const name = (dto.product === 'cod' && dto.businessName?.trim()) || dto.name.trim();
+    const name = (dto.product !== 'tasks' && dto.businessName?.trim()) || dto.name.trim();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
     const slug = (name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'account') + '-' + randomSuffix;
     const tenant = await this.tenantRepo.save(this.tenantRepo.create({ name, slug, status: 'active' }));

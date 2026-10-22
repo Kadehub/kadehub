@@ -21,7 +21,7 @@ import { setDisabledUsers, markUserDisabled } from '../../common/disabled-users'
 export class SavePackageDto {
   @IsString() @MinLength(2) @MaxLength(80) name: string;
   @IsOptional() @IsString() @MaxLength(80) slug?: string;
-  @IsEnum(['pos', 'cod', 'tasks']) product: string;
+  @IsEnum(['pos', 'cod', 'tasks', 'hr']) product: string;
   @IsOptional() @IsString() @MaxLength(500) description?: string;
   @IsNumber() @Min(0) price_monthly: number;
   @IsNumber() @Min(0) price_yearly: number;

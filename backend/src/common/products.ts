@@ -19,6 +19,8 @@ export const PRODUCTS: ProductDef[] = [
   { slug: 'pos',   name: 'KadeHub POS',   subdomain: 'pos',   tagline: 'Point of sale, inventory and CRM for local shops', status: 'live' },
   { slug: 'cod',   name: 'KadeHub COD',   subdomain: 'cod',   tagline: 'Cash-on-delivery orders, landed costs and invoices', status: 'live' },
   { slug: 'tasks', name: 'KadeHub Tasks', subdomain: 'tasks', tagline: 'Post a task, get offers from local taskers', status: 'live' },
+  // Slug 'hr', not 'staff': POS already owns the /staff route, and the frontend proxy maps /<slug> paths to products
+  { slug: 'hr',    name: 'KadeHub Staff', subdomain: 'staff', tagline: 'Staff records, rosters, attendance, leave and payroll', status: 'live' },
 ];
 
 export const DEFAULT_PRODUCT = 'pos';

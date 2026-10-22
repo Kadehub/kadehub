@@ -5,6 +5,7 @@ import { Subscription } from '../../database/entities/subscription.entity';
 import { Package } from '../../database/entities/package.entity';
 import { BillingService } from '../billing/billing.service';
 import { PRODUCTS } from '../../common/products';
+import { HR_TRIAL_DAYS, HR_TRIAL_PLAN } from '../hr/hr-plans';
 
 const COD_TRIAL_DAYS = 14;
 /** Seeded by the COD migrations; the trial runs on this plan. */
@@ -35,6 +36,18 @@ export class ProductAccessService {
       expires.setDate(expires.getDate() + COD_TRIAL_DAYS);
       await this.subRepo.save(this.subRepo.create({
         tenant_id: tenantId, product: 'cod', module_name: 'cod', status: 'active',
+        package_id: pkg?.id ?? null, payment_status: 'trial', expires_at: expires,
+      }));
+      return;
+    }
+
+    if (product === 'hr') {
+      // 14 days of Staff Pro; afterwards the account drops to Staff Free instead of being locked out
+      const pkg = await this.packageRepo.findOne({ where: { slug: HR_TRIAL_PLAN.slug } });
+      const expires = new Date();
+      expires.setDate(expires.getDate() + HR_TRIAL_DAYS);
+      await this.subRepo.save(this.subRepo.create({
+        tenant_id: tenantId, product: 'hr', module_name: 'hr', status: 'active',
         package_id: pkg?.id ?? null, payment_status: 'trial', expires_at: expires,
       }));
       return;

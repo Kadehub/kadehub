@@ -7,12 +7,13 @@
  *   pos.kadehub.com       → POS (the routes at the app root)
  *   cod.kadehub.com       → COD   (src/app/cod, rewritten by src/proxy.ts)
  *   tasks.kadehub.com     → Tasks (src/app/tasks)
+ *   staff.kadehub.com     → Staff (src/app/hr; slug 'hr' because POS owns /staff)
  *   myshop.kadehub.com    → POS for that shop
  *
  * Keep PRODUCTS in sync with backend/src/common/products.ts.
  * Imported by src/proxy.ts, so keep this file free of browser-only code at module level.
  */
-export type ProductSlug = 'pos' | 'cod' | 'tasks';
+export type ProductSlug = 'pos' | 'cod' | 'tasks' | 'hr';
 export type ProductStatus = 'live' | 'beta' | 'coming_soon';
 
 export interface ProductDef {
@@ -44,6 +45,11 @@ export const PRODUCTS: ProductDef[] = [
     slug: 'tasks', name: 'KadeHub Tasks', subdomain: 'tasks', status: 'live', homePath: '/', listed: false, color: '#B45309',
     tagline: 'Post a task, get offers from local taskers',
     features: ['Post any job with a budget', 'Compare offers and pick a tasker', 'Ratings and reviews you can trust'],
+  },
+  {
+    slug: 'hr', name: 'KadeHub Staff', subdomain: 'staff', status: 'live', homePath: '/dashboard', listed: true, color: '#7C3AED',
+    tagline: 'Staff records, rosters, attendance, leave and payroll',
+    features: ['Rosters, shift swaps and a clock-in kiosk', 'Leave, payroll and payslips on WhatsApp', 'Hiring, reviews and company assets'],
   },
 ];
 

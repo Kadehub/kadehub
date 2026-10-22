@@ -10,6 +10,7 @@ const PRODUCTS = [
   { value: 'pos', label: 'POS' },
   { value: 'cod', label: 'COD' },
   { value: 'tasks', label: 'Tasks' },
+  { value: 'hr', label: 'Staff' },
 ];
 
 type Draft = {

@@ -44,8 +44,8 @@ export class PinLoginDto {
 
 /** Sign-up from a product other than POS (cod., tasks.): a KadeHub account without a shop subdomain. */
 export class RegisterAccountDto {
-  @IsIn(['cod', 'tasks'])
-  product: 'cod' | 'tasks';
+  @IsIn(['cod', 'tasks', 'hr'])
+  product: 'cod' | 'tasks' | 'hr';
 
   @IsString()
   @MinLength(2)
@@ -60,7 +60,7 @@ export class RegisterAccountDto {
   @Matches(/^(?=.*[A-Z])(?=.*\d)/, { message: 'Password must contain at least one uppercase letter and one number' })
   password: string;
 
-  /** Business name for COD; Tasks accounts use the person's name. */
+  /** Business name for COD and Staff; Tasks accounts use the person's name. */
   @IsOptional()
   @IsString()
   @MaxLength(100)

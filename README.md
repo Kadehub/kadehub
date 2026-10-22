@@ -12,7 +12,7 @@ Modular Monolith → Future Microservices
 
 ## Products
 
-KadeHub is a multi-product platform: `kadehub.com` is the hub, and each product has its own subdomain (`pos.`, `cod.`, `tasks.`), with one shared login. See [docs/PLATFORM.md](./docs/PLATFORM.md).
+KadeHub is a multi-product platform: `kadehub.com` is the hub, and each product has its own subdomain (`pos.`, `cod.`, `tasks.`, `staff.`), with one shared login. See [docs/PLATFORM.md](./docs/PLATFORM.md).
 
 ## Modules (POS)
 

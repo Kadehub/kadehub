@@ -1,10 +1,11 @@
-import { ShoppingCart, Truck, Hammer } from 'lucide-react';
+import { ShoppingCart, Truck, Hammer, Users } from 'lucide-react';
 import type { ProductSlug } from '../../lib/platform';
 
-const ICONS = { pos: ShoppingCart, cod: Truck, tasks: Hammer } as const;
+const ICONS = { pos: ShoppingCart, cod: Truck, tasks: Hammer, hr: Users } as const;
 
 /**
- * Animated product mark: a cart that rolls (POS), a truck that drives (COD), a hammer that taps (Tasks).
+ * Animated product mark: a cart that rolls (POS), a truck that drives (COD), a hammer that taps (Tasks),
+ * a team that waves (Staff).
  * Plays its move every few seconds and continuously while the surrounding `.group` is hovered.
  * CSS lives in globals.css (.kh-picon*); all motion is off under prefers-reduced-motion.
  */

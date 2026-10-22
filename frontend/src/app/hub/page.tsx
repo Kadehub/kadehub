@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import {
   KeyRound, Languages, Smartphone, Wallet, ArrowRight, Check, ChevronDown, QrCode, WifiOff, Boxes, CalendarClock,
   Users, Truck, BarChart3, Receipt, Calculator, PackageCheck, FileText, Share2,
-  UserPlus, LayoutGrid, Rocket, Sparkles, ShieldCheck, Store, BadgeCheck,
+  UserPlus, LayoutGrid, Rocket, Sparkles, ShieldCheck, Store, BadgeCheck, CalendarDays, MonitorSmartphone, Plane, Briefcase, Package,
 } from 'lucide-react';
 import KadeHubLogo from '../../components/ui/KadeHubLogo';
 import ProductCard from '../../components/platform/ProductCard';
@@ -12,11 +12,11 @@ import Reveal from '../../components/platform/Reveal';
 import Mascot from '../../components/brand/Mascot';
 import InteractiveMascot from '../../components/brand/InteractiveMascot';
 import { LISTED_PRODUCTS, getProduct, productUrl, type ProductSlug } from '../../lib/platform';
-import { PosMock, CodMock } from '../../components/platform/ProductMocks';
+import { PosMock, CodMock, StaffMock } from '../../components/platform/ProductMocks';
 
 export const metadata: Metadata = {
   title: 'KadeHub — Business apps for growing businesses',
-  description: 'One KadeHub account for every tool your business needs: POS for shops and COD order management.',
+  description: 'One KadeHub account for every tool your business needs: POS for shops, COD order management and staff management.',
 };
 
 const TRUST = [
@@ -27,7 +27,7 @@ const TRUST = [
 ];
 
 const STATS = [
-  { value: '2', label: 'apps, one account' },
+  { value: '3', label: 'apps, one account' },
   { value: '14', label: 'day free trial' },
   { value: '3', label: 'languages' },
   { value: '0', label: 'things to install' },
@@ -73,6 +73,21 @@ const DETAILS: Detail[] = [
     ],
     mock: <CodMock />,
   },
+  {
+    slug: 'hr',
+    title: 'Your whole team, in one place',
+    body: 'Keep staff records, plan the roster, clock people in with a PIN, approve leave and run payroll with payslips on WhatsApp.',
+    bestFor: 'Shops, restaurants, salons and any business with shift workers',
+    features: [
+      { icon: CalendarDays,      title: 'Rosters and swaps', text: 'Plan the week, copy last week and approve shift swaps.' },
+      { icon: MonitorSmartphone, title: 'Clock-in kiosk', text: 'Staff clock in on a shared tablet with a PIN and photo.' },
+      { icon: Plane,             title: 'Leave and balances', text: 'Requests, approvals and yearly balances for every leave type.' },
+      { icon: Wallet,            title: 'Payroll and payslips', text: 'Overtime, no-pay, EPF/ETF and advances, payslips on WhatsApp.' },
+      { icon: Briefcase,         title: 'Hiring', text: 'Share a job page and move applicants through to hired.' },
+      { icon: Package,           title: 'Reviews and assets', text: 'Reviews, warnings and who holds which uniform or key.' },
+    ],
+    mock: <StaffMock />,
+  },
 ];
 
 const STEPS = [
@@ -82,7 +97,7 @@ const STEPS = [
 ];
 
 const BENEFITS = [
-  { icon: KeyRound,    title: 'One login',             text: 'Sign in once and move between POS and COD without signing in again.' },
+  { icon: KeyRound,    title: 'One login',             text: 'Sign in once and move between POS, COD and Staff without signing in again.' },
   { icon: Languages,   title: 'Your language',         text: 'Local currency and payments, with Sinhala and Tamil where you need them.' },
   { icon: Smartphone,  title: 'Any device',            text: 'Works in the browser on desktop, tablet and phone. Nothing to install.' },
   { icon: Wallet,      title: 'Pay for what you use',  text: 'Each app has its own plan and free trial. Add another app when you need it.' },
@@ -91,8 +106,8 @@ const BENEFITS = [
 ];
 
 const FAQS = [
-  { q: 'Do I need a separate account for each app?', a: 'No. One KadeHub account signs you in to POS and COD. Sign in on one and you are signed in on the others.' },
-  { q: 'Is there a free trial?', a: 'Yes. POS and COD start with a 14-day free trial, no card needed.' },
+  { q: 'Do I need a separate account for each app?', a: 'No. One KadeHub account signs you in to POS, COD and Staff. Sign in on one and you are signed in on the others.' },
+  { q: 'Is there a free trial?', a: 'Yes. POS and COD start with a 14-day free trial, no card needed. Staff starts with 14 days of Pro, then stays free for up to 3 staff.' },
   { q: 'How do I pay for a plan?', a: 'From the billing page inside each app, by bank transfer (upload your slip) or by online card payment.' },
   { q: 'Can I use more than one app?', a: 'Yes. Open the app launcher after you sign in and turn on any other app for the same account.' },
   { q: 'Which languages are supported?', a: 'English and Sinhala across the apps. KadeHub COD is also fully available in Tamil, including invoices and catalogs.' },
@@ -125,7 +140,7 @@ export default function HubPage() {
             <div className="text-center md:text-left order-2 md:order-1">
               <div className="inline-flex items-center gap-1.5 rounded-full bg-white/80 border border-ink-100 p-1 pr-3 text-xs font-semibold text-ink-600">
                 {LISTED_PRODUCTS.map(p => <ProductIcon key={p.slug} slug={p.slug} color={p.color} size={24} />)}
-                <span className="ml-1">POS · COD</span>
+                <span className="ml-1">POS · COD · Staff</span>
               </div>
               <h1 className="mt-5 text-3xl sm:text-5xl font-extrabold text-ink-900 leading-tight tracking-tight">
                 One account. <span style={{ color: '#00796B' }}>Every tool</span> your business needs.
@@ -155,7 +170,7 @@ export default function HubPage() {
                 <InteractiveMascot width="clamp(170px, 30vw, 260px)" priority className="relative kh-mascot-enter"
                   greeting="Hi there! Welcome to KadeHub."
                   messages={[
-                    'One account opens POS and COD.',
+                    'One account opens POS, COD and Staff.',
                     'Every app comes with a free trial.',
                     'Pick an app below to get started!',
                   ]} />
@@ -183,10 +198,10 @@ export default function HubPage() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
             <Reveal className="text-center max-w-2xl mx-auto">
               <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#00796B' }}>Our apps</p>
-              <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-ink-900">Two apps. One KadeHub.</h2>
+              <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-ink-900">Three apps. One KadeHub.</h2>
               <p className="mt-2 text-sm sm:text-base text-ink-500">Each app has its own address and works on its own. Use one, or all of them together.</p>
             </Reveal>
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 max-w-4xl mx-auto">
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {LISTED_PRODUCTS.map((p, i) => (
                 <Reveal key={p.slug} delay={i * 120} className="flex flex-col">
                   <ProductCard product={p} href={productUrl(p.slug, '/')}
@@ -342,7 +357,7 @@ export default function HubPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
             <KadeHubLogo width={124} theme="color" />
-            <p className="mt-3 text-sm text-ink-500 max-w-sm">Business apps that share one account: point of sale and cash-on-delivery orders.</p>
+            <p className="mt-3 text-sm text-ink-500 max-w-sm">Business apps that share one account: point of sale, cash-on-delivery orders and staff management.</p>
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-ink-400">Apps</p>

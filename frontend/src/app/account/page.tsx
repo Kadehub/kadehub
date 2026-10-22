@@ -30,10 +30,10 @@ const STATE_BADGE: Record<ProductState, { text: string; cls: string }> = {
 };
 
 /** Where each product manages plans and payments. */
-const BILLING_PATH: Record<ProductSlug, string> = { pos: '/settings?tab=billing', cod: '/billing', tasks: '/' };
-const RENEW_PATH: Record<ProductSlug, string> = { pos: '/subscribe', cod: '/billing', tasks: '/' };
-/** After turning a product on: COD still needs its business set-up wizard. */
-const AFTER_ENABLE_PATH: Record<ProductSlug, string> = { pos: '/dashboard', cod: '/register', tasks: '/' };
+const BILLING_PATH: Record<ProductSlug, string> = { pos: '/settings?tab=billing', cod: '/billing', tasks: '/', hr: '/billing' };
+const RENEW_PATH: Record<ProductSlug, string> = { pos: '/subscribe', cod: '/billing', tasks: '/', hr: '/billing' };
+/** After turning a product on: COD and Staff still need their set-up wizards. */
+const AFTER_ENABLE_PATH: Record<ProductSlug, string> = { pos: '/dashboard', cod: '/register', tasks: '/', hr: '/register' };
 
 const fmtDate = (d: string | null) => (d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
 
@@ -153,7 +153,7 @@ export default function AccountPage() {
                         <a href={productUrl(p.slug, p.state === 'expired' ? RENEW_PATH[p.slug] : BILLING_PATH[p.slug])}
                           className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold ${p.state === 'expired' ? 'text-white' : 'border-2 border-ink-200 text-ink-700 hover:bg-ink-50'}`}
                           style={p.state === 'expired' ? { background: p.color } : undefined}>
-                          {p.state === 'expired' ? 'Renew plan' : p.state === 'trial' ? 'Choose a plan' : 'Manage billing'}
+                          {p.state === 'expired' ? 'Renew plan' : p.state === 'trial' || p.state === 'free' ? 'Choose a plan' : 'Manage billing'}
                         </a>
                       )}
                     </>
@@ -227,7 +227,7 @@ export default function AccountPage() {
       case 'active':  return [plan || 'Paid plan', p.billing_cycle, p.expires_at && `renews or ends ${fmtDate(p.expires_at)}`].filter(Boolean).join(' · ');
       case 'trial':   return `Free trial · ${p.days_left ?? 0} day${p.days_left === 1 ? '' : 's'} left${p.expires_at ? ` (ends ${fmtDate(p.expires_at)})` : ''}`;
       case 'expired': return `${plan ? `${plan} · ` : ''}Ended ${fmtDate(p.expires_at)} — renew to keep using it`;
-      case 'free':    return 'Free to use · post tasks and make offers';
+      case 'free':    return p.slug === 'hr' ? 'Staff Free · up to 3 staff and 1 branch' : 'Free to use · post tasks and make offers';
       default:        return p.tagline;
     }
   }

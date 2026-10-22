@@ -6,7 +6,7 @@ import { LangProvider } from '../hooks/useLang';
 
 export const metadata: Metadata = {
   title: 'KadeHub — Business apps for growing businesses',
-  description: 'One KadeHub account for POS and COD order management.',
+  description: 'One KadeHub account for POS, COD order management and staff management.',
   // Square icons made from the K mark (public/logo-icon.png is a wide logo and shrinks to a speck in a tab)
   icons: {
     icon: [

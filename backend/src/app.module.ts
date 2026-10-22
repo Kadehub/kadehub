@@ -28,6 +28,7 @@ import { QuotationModule } from './modules/quotation/quotation.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { CodModule } from './modules/cod/cod.module';
 import { TasksModule } from './modules/tasks/tasks.module';
+import { HrModule } from './modules/hr/hr.module';
 import { EmailService } from './common/email.service';
 
 @Module({
@@ -64,6 +65,7 @@ import { EmailService } from './common/email.service';
     PlatformModule,
     CodModule,
     TasksModule,
+    HrModule,
     TypeOrmModule.forFeature([ApiLog, Coupon, Announcement]),
   ],
   providers: [EmailService],

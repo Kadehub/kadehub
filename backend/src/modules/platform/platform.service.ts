@@ -9,7 +9,7 @@ import { Tenant } from '../../database/entities/tenant.entity';
 import { PRODUCTS, type ProductDef } from '../../common/products';
 import { ChangeAccountPasswordDto, UpdateAccountDto } from './platform.dto';
 
-/** Where an account stands with one product. Tasks has no plans, so joining it is simply 'free'. */
+/** Where an account stands with one product. 'free': Tasks (no plans) or Staff on its Free plan. */
 export type ProductState = 'not_started' | 'trial' | 'active' | 'expired' | 'free';
 
 export interface ProductSummary extends ProductDef {
@@ -64,6 +64,8 @@ export class PlatformService {
         expires_at: pick.expires_at ?? null, days_left: daysLeft(pick.expires_at),
       };
     }
+    // Staff never locks: once the trial or a paid plan ends, the account carries on with Staff Free
+    if (p.slug === 'hr') return { ...base, enabled: true, state: 'free', plan: 'Staff Free' };
     const last = [...rows].sort((a, b) => new Date(b.expires_at ?? 0).getTime() - new Date(a.expires_at ?? 0).getTime())[0];
     return { ...base, enabled: false, state: 'expired', plan: planName(last), expires_at: last.expires_at ?? null, days_left: 0 };
   }

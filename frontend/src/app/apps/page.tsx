@@ -74,7 +74,7 @@ export default function AppsPage() {
             <p className="mt-1 text-sm text-ink-500">One account works across every product.</p>
           </div>
         </div>
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 max-w-4xl">
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {mine === null
             ? LISTED_PRODUCTS.map(p => <div key={p.slug} className="kh-card h-72 animate-pulse" />)
             : LISTED_PRODUCTS.map(p => <ProductCard key={p.slug} product={p} {...cardProps(p)} />)}

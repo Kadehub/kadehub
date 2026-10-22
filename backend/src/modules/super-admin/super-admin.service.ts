@@ -31,7 +31,7 @@ export class BlockTenantDto {
 }
 
 export class SetPackageProductDto {
-  @IsEnum(['pos', 'cod', 'tasks']) product: string;
+  @IsEnum(['pos', 'cod', 'tasks', 'hr']) product: string;
 }
 
 export class ChangePlanDto {
@@ -367,7 +367,7 @@ export class SuperAdminService implements OnModuleInit {
       // Tasks rows point at people, not shops, and have no foreign keys — clear them before the people go
       const people = (await trx.query(`SELECT id FROM ${userTable} WHERE tenant_id = ${p}`, [tenantId])).map((r: any) => Number(r.id));
       await deleteTasksDataForUsers(trx, people);
-      // COD tables cascade from tenant; invoices only do on MySQL
+      // COD and Staff (hr_) tables cascade from tenant; invoices only do on MySQL
       await run(`DELETE FROM invoice WHERE tenant_id = ${p}`);
       await run(`DELETE FROM credit_payment WHERE credit_sale_id IN (SELECT id FROM credit_sale WHERE tenant_id = ${p})`);
       await run(`DELETE FROM sale_item WHERE sale_id IN (SELECT id FROM sale WHERE tenant_id = ${p})`);
@@ -488,7 +488,7 @@ export class SuperAdminService implements OnModuleInit {
     return this.packageRepo.find({ relations: ['modules'], order: { product: 'ASC', sort_order: 'ASC' } });
   }
 
-  /** Which product (pos / cod / tasks) a package sells. */
+  /** Which product (pos / cod / tasks / hr) a package sells. */
   async setPackageProduct(id: number, product: string) {
     const pkg = await this.packageRepo.findOne({ where: { id } });
     if (!pkg) throw new NotFoundException('Package not found');

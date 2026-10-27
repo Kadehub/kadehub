@@ -58,7 +58,7 @@ export class CodService {
     if (dto.image_url !== undefined) item.image_url = dto.image_url || null;
     item.cost_currency = dto.cost_currency ?? item.cost_currency ?? 'LKR';
     item.buying_price = n(dto.buying_price, item.buying_price ?? 0);
-    item.exchange_rate = n(dto.exchange_rate, item.exchange_rate ?? 1);
+    item.exchange_rate = item.cost_currency === 'LKR' ? 1 : n(dto.exchange_rate, item.exchange_rate ?? 1);
     item.shipping_cost = n(dto.shipping_cost, item.shipping_cost ?? 0);
     item.customs_price = n(dto.customs_price, item.customs_price ?? 0);
     item.other_cost = n(dto.other_cost, item.other_cost ?? 0);

@@ -60,7 +60,8 @@ export default function ItemForm({ item, categorySuggestions, onSaved }: {
     setError(undefined);
     const body = {
       name: values.name, sku: values.sku, category: values.category, image_url: values.image_url || null,
-      cost_currency: values.cost_currency, buying_price: values.buying_price, exchange_rate: values.exchange_rate,
+      cost_currency: values.cost_currency, buying_price: values.buying_price,
+      exchange_rate: values.cost_currency === 'LKR' ? 1 : values.exchange_rate,
       shipping_cost: values.shipping_cost, customs_price: values.customs_price, other_cost: values.other_cost,
       selling_price: values.selling_price, stock_quantity: Math.max(0, Math.trunc(values.stock_quantity)),
       low_stock_threshold: Math.max(0, Math.trunc(values.low_stock_threshold)),
@@ -119,12 +120,17 @@ export default function ItemForm({ item, categorySuggestions, onSaved }: {
             {importsGoods && (
               <>
                 <Field label={t('items.costCurrency')} htmlFor="cost_currency">
-                  <NativeSelect id="cost_currency" value={values.cost_currency} onChange={e => set('cost_currency', e.target.value)}>
+                  <NativeSelect id="cost_currency" value={values.cost_currency} onChange={e => {
+                    const currency = e.target.value;
+                    setValues(v => ({ ...v, cost_currency: currency, exchange_rate: currency === 'LKR' ? 1 : v.exchange_rate }));
+                  }}>
                     {COST_CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </NativeSelect>
                 </Field>
                 <Field label={t('items.exchangeRate')} htmlFor="exchange_rate">
-                  <TextInput id="exchange_rate" type="number" step="0.0001" min={0} value={values.exchange_rate} onChange={num('exchange_rate')} />
+                  <TextInput id="exchange_rate" type="number" step="0.0001" min={0.0001} required
+                    disabled={values.cost_currency === 'LKR'}
+                    value={values.cost_currency === 'LKR' ? 1 : values.exchange_rate} onChange={num('exchange_rate')} />
                 </Field>
               </>
             )}

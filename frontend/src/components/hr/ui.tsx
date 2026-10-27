@@ -5,8 +5,8 @@
  * by --cod-primary / --cod-primary-fg; the Staff layout sets those to the business's brand colour.
  * Everything Staff-specific (avatars, pickers, confirm dialogs…) lives here.
  */
-import { useEffect, useState, type ReactNode } from 'react';
-import { ChevronLeft, ChevronRight, Download, Star } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ChevronDown, ChevronLeft, ChevronRight, Download, Star } from 'lucide-react';
 import { Button, Dialog, NativeSelect, cn } from '../cod/ui';
 import { MascotState } from '../brand/Mascot';
 import { useHrT, type HrKey } from '../../lib/hr/i18n';
@@ -71,7 +71,8 @@ export function Tabs<T extends string>({ value, onChange, items, className = '' 
   value: T; onChange: (v: T) => void; items: Array<{ value: T; label: ReactNode; badge?: number }>; className?: string;
 }) {
   return (
-    <div role="tablist" className={cn('flex gap-1 overflow-x-auto border-b border-ink-200', className)}>
+    // overflow-y-hidden: the tabs' -mb-px underline would otherwise give the bar a stray vertical scrollbar
+    <div role="tablist" className={cn('flex gap-1 overflow-x-auto overflow-y-hidden border-b border-ink-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden', className)}>
       {items.map(i => (
         <button key={i.value} type="button" role="tab" aria-selected={value === i.value} onClick={() => onChange(i.value)}
           className={cn('-mb-px inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors',
@@ -84,15 +85,66 @@ export function Tabs<T extends string>({ value, onChange, items, className = '' 
   );
 }
 
-/** ‹ March 2026 › */
+/** Short month names in the current language (Jan… / ජන…). */
+function monthNames(locale: string): string[] {
+  const fmt = new Intl.DateTimeFormat(locale === 'si' ? 'si-LK' : 'en-GB', { month: 'short', timeZone: 'UTC' });
+  return Array.from({ length: 12 }, (_, m) => fmt.format(new Date(Date.UTC(2000, m, 1))));
+}
+
+/** ‹ March 2026 › — tap the name to jump to any month and year. */
 export function MonthPicker({ value, onChange, max }: { value: string; onChange: (p: string) => void; max?: string }) {
-  const { t } = useHrT();
+  const { t, locale } = useHrT();
+  const [open, setOpen] = useState(false);
+  const [year, setYear] = useState(Number(value.slice(0, 4)));
+  const ref = useRef<HTMLDivElement>(null);
   const next = addMonths(value, 1);
+
+  useEffect(() => { if (open) setYear(Number(value.slice(0, 4))); }, [open, value]);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', esc);
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', esc); };
+  }, [open]);
+
+  const pick = (period: string) => { onChange(period); setOpen(false); };
+  const maxYear = max ? Number(max.slice(0, 4)) : Infinity;
+
   return (
-    <div className="inline-flex items-center gap-1 rounded-xl border border-ink-200 bg-white p-0.5">
+    <div ref={ref} className="relative inline-flex items-center gap-1 rounded-xl border border-ink-200 bg-white p-0.5">
       <Button variant="ghost" size="icon-sm" aria-label={t('common.previous')} onClick={() => onChange(addMonths(value, -1))}><ChevronLeft /></Button>
-      <span className="min-w-[8.5rem] text-center text-sm font-semibold text-ink-800">{formatPeriod(value)}</span>
+      <button type="button" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(o => !o)}
+        className="inline-flex min-w-[8.5rem] items-center justify-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold text-ink-800 hover:bg-ink-50">
+        {formatPeriod(value)} <ChevronDown size={14} className={cn('text-ink-400 transition-transform', open && 'rotate-180')} />
+      </button>
       <Button variant="ghost" size="icon-sm" aria-label={t('common.following')} disabled={!!max && next > max} onClick={() => onChange(next)}><ChevronRight /></Button>
+
+      {open && (
+        <div role="dialog" aria-label={formatPeriod(value)}
+          className="absolute left-1/2 top-full z-30 mt-1.5 w-64 -translate-x-1/2 rounded-2xl border border-ink-200 bg-white p-3 shadow-lg">
+          <div className="mb-2 flex items-center justify-between">
+            <Button variant="ghost" size="icon-sm" aria-label={t('common.previous')} onClick={() => setYear(y => y - 1)}><ChevronLeft /></Button>
+            <span className="text-sm font-bold text-ink-900">{year}</span>
+            <Button variant="ghost" size="icon-sm" aria-label={t('common.following')} disabled={year >= maxYear} onClick={() => setYear(y => y + 1)}><ChevronRight /></Button>
+          </div>
+          <div className="grid grid-cols-3 gap-1">
+            {monthNames(locale).map((name, i) => {
+              const period = `${year}-${String(i + 1).padStart(2, '0')}`;
+              const selected = period === value;
+              const disabled = !!max && period > max;
+              return (
+                <button key={period} type="button" disabled={disabled} onClick={() => pick(period)}
+                  className={cn('rounded-lg py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:text-ink-300',
+                    selected ? 'bg-[color:var(--cod-primary)] text-[color:var(--cod-primary-fg)]' : 'text-ink-700 hover:bg-ink-100')}>
+                  {name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

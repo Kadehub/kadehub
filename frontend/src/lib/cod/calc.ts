@@ -2,6 +2,7 @@
  *  live cost calculator (client) and any server-side computations. */
 
 export interface CostInputs {
+  cost_currency: string;
   buying_price: number;
   exchange_rate: number;
   shipping_cost: number;
@@ -22,9 +23,11 @@ const n = (v: unknown) => {
   return Number.isFinite(x) ? x : 0;
 };
 
-/** Landed cost = (buying × rate) + shipping + customs + other (all per unit, LKR). */
+/** Landed cost = (buying × rate) + shipping + customs + other (all per unit, LKR).
+ *  LKR prices always use a rate of 1, whatever is stored. */
 export function computeCosts(input: Partial<CostInputs>): CostBreakdown {
-  const buyingInLKR = n(input.buying_price) * n(input.exchange_rate);
+  const rate = !input.cost_currency || input.cost_currency === 'LKR' ? 1 : n(input.exchange_rate);
+  const buyingInLKR = n(input.buying_price) * rate;
   const landedCost =
     buyingInLKR +
     n(input.shipping_cost) +

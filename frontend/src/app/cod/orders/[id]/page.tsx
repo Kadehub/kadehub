@@ -319,8 +319,10 @@ function ShareButton({ data, logoUrl }: { data: InvoicePdfData; logoUrl: string 
       <Button onClick={() => setOpen(o => !o)} aria-expanded={open}><Share2 /> {t('common.share')}</Button>
       {open && (
         <>
-          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} aria-hidden />
-          <div role="menu" className="absolute right-0 z-30 mt-1 w-72 rounded-xl border border-ink-200 bg-white p-1 shadow-lg">
+          {/* Phones: bottom sheet over the nav bar (a dropdown runs off the screen). sm and up: dropdown under the button. */}
+          <div className="fixed inset-0 z-50 bg-ink-900/30 sm:z-20 sm:bg-transparent" onClick={() => setOpen(false)} aria-hidden />
+          <div role="menu" className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-ink-200 bg-white p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:z-30 sm:mt-1 sm:w-72 sm:rounded-xl sm:border sm:p-1 sm:shadow-lg">
+            <div className="mx-auto mb-1 h-1 w-10 rounded-full bg-ink-200 sm:hidden" aria-hidden />
             <p className="px-2.5 py-1.5 text-xs font-semibold text-ink-500">{t('share.menuLabel', { invoice: data.invoice_number })}</p>
             <button type="button" role="menuitem" className={option}
               onClick={() => { setOpen(false); window.open(whatsappUrl(data.customer.phone, message), '_blank', 'noopener,noreferrer'); }}>

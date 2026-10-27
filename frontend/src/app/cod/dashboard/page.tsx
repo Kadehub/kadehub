@@ -128,13 +128,13 @@ function OverviewDashboard() {
           ) : (
             // Donut with the total in the middle, and a legend so the counts are readable without hovering
             <div className="flex h-full flex-col gap-3">
-              <div className="relative min-h-0 flex-1">
+              {/* No tooltip: it would cover the total, and the legend already shows every number. No focus box on click. */}
+              <div className="relative min-h-0 flex-1 [&_*:focus]:outline-none">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={donut} dataKey="count" nameKey="name" innerRadius="62%" outerRadius="95%" paddingAngle={2} stroke="none">
                       {donut.map(d => <Cell key={d.status} fill={STATUS_STYLE[d.status as OrderStatus].color} />)}
                     </Pie>
-                    <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">

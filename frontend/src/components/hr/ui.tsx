@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, Download, Star } from 'lucide-react';
 import { Button, Dialog, NativeSelect, cn } from '../cod/ui';
+import { useStayOnScreen } from '../../hooks/useStayOnScreen';
 import { MascotState } from '../brand/Mascot';
 import { useHrT, type HrKey } from '../../lib/hr/i18n';
 import { addDays, addMonths, downloadCsv, formatDate, formatPeriod, initials, weekStart } from '../../lib/hr/format';
@@ -97,6 +98,7 @@ export function MonthPicker({ value, onChange, max }: { value: string; onChange:
   const [open, setOpen] = useState(false);
   const [year, setYear] = useState(Number(value.slice(0, 4)));
   const ref = useRef<HTMLDivElement>(null);
+  const popup = useStayOnScreen<HTMLDivElement>(open);
   const next = addMonths(value, 1);
 
   useEffect(() => { if (open) setYear(Number(value.slice(0, 4))); }, [open, value]);
@@ -122,7 +124,7 @@ export function MonthPicker({ value, onChange, max }: { value: string; onChange:
       <Button variant="ghost" size="icon-sm" aria-label={t('common.following')} disabled={!!max && next > max} onClick={() => onChange(next)}><ChevronRight /></Button>
 
       {open && (
-        <div role="dialog" aria-label={formatPeriod(value)}
+        <div ref={popup} role="dialog" aria-label={formatPeriod(value)}
           className="absolute left-1/2 top-full z-30 mt-1.5 w-64 -translate-x-1/2 rounded-2xl border border-ink-200 bg-white p-3 shadow-lg">
           <div className="mb-2 flex items-center justify-between">
             <Button variant="ghost" size="icon-sm" aria-label={t('common.previous')} onClick={() => setYear(y => y - 1)}><ChevronLeft /></Button>

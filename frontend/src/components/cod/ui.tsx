@@ -7,6 +7,7 @@
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import Modal from '../ui/Modal';
+import { useStayOnScreen } from '../../hooks/useStayOnScreen';
 
 export function cn(...parts: (string | false | null | undefined)[]) {
   return parts.filter(Boolean).join(' ');
@@ -137,6 +138,7 @@ export function Dialog({ open, onClose, title, children, width }: { open: boolea
 export function Menu({ trigger, label, align = 'right', children }: { trigger: ReactNode; label: string; align?: 'left' | 'right'; children: (close: () => void) => ReactNode }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const popup = useStayOnScreen<HTMLDivElement>(open);
   useEffect(() => {
     if (!open) return;
     const close = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
@@ -151,7 +153,7 @@ export function Menu({ trigger, label, align = 'right', children }: { trigger: R
         {trigger}
       </Button>
       {open && (
-        <div role="menu" className={cn('absolute z-30 mt-1 min-w-[12rem] rounded-xl border border-ink-200 bg-white p-1 shadow-lg', align === 'right' ? 'right-0' : 'left-0')}>
+        <div ref={popup} role="menu" className={cn('absolute z-30 mt-1 min-w-[12rem] rounded-xl border border-ink-200 bg-white p-1 shadow-lg', align === 'right' ? 'right-0' : 'left-0')}>
           {children(() => setOpen(false))}
         </div>
       )}

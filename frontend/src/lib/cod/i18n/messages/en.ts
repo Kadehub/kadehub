@@ -240,6 +240,7 @@ export const en = {
   "dash.allGood": "All good",
   "dash.chartRevExp": "Revenue vs expenses (last 6 months)",
   "dash.ordersByStatus": "Orders by status",
+  "dash.ordersTotal": "Total",
   "dash.noOrdersMonth": "No orders this month yet.",
   "dash.recentOrders": "Recent orders",
   "dash.noOrders": "No orders yet.",

@@ -238,6 +238,7 @@ export const ta: Record<MessageKey, string> = {
   "dash.allGood": "எல்லாம் சரி",
   "dash.chartRevExp": "வருவாய் vs செலவுகள் (கடந்த 6 மாதங்கள்)",
   "dash.ordersByStatus": "நிலை வாரியாக ஆர்டர்கள்",
+  "dash.ordersTotal": "மொத்தம்",
   "dash.noOrdersMonth": "இந்த மாதம் இன்னும் ஆர்டர்கள் இல்லை.",
   "dash.recentOrders": "சமீபத்திய ஆர்டர்கள்",
   "dash.noOrders": "இன்னும் ஆர்டர்கள் இல்லை.",

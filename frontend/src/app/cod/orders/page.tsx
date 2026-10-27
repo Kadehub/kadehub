@@ -195,18 +195,27 @@ export default function CodOrdersPage() {
 
           {/* status chips — counts & values follow search/date/payment; click to filter, click again to clear */}
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {chips.map(c => (
-              <button key={c.key} type="button" aria-pressed={filters.status === c.key}
-                onClick={() => setFilters(f => ({ ...f, status: f.status === c.key && c.key !== 'all' ? 'all' : c.key }))}
-                className={cn('min-w-[7.5rem] shrink-0 rounded-xl border bg-white px-3 py-2 text-left transition-colors hover:bg-ink-50',
-                  filters.status === c.key ? 'border-[color:var(--cod-primary)] ring-1 ring-[color:var(--cod-primary)]' : 'border-ink-200')}>
-                <span className="flex items-center gap-1.5 text-[11px] text-ink-500">
-                  {c.key !== 'all' && <StatusDot status={c.key} />}
-                  {c.key === 'all' ? t('orders.cardAll') : t(`status.${c.key}`)} · {c.count}
-                </span>
-                <span className="mt-0.5 block text-sm font-semibold text-ink-900">{formatLKR(c.total)}</span>
-              </button>
-            ))}
+            {chips.map(c => {
+              const active = filters.status === c.key;
+              return (
+                <button key={c.key} type="button" aria-pressed={active}
+                  onClick={() => setFilters(f => ({ ...f, status: f.status === c.key && c.key !== 'all' ? 'all' : c.key }))}
+                  className={cn('min-w-[8.5rem] shrink-0 rounded-xl border px-3 py-2.5 text-left transition-colors',
+                    active
+                      ? cn('shadow-sm', c.key === 'all' ? 'border-ink-300 bg-ink-50' : STATUS_STYLE[c.key].card)
+                      : 'border-ink-200 bg-white hover:border-ink-300 hover:bg-ink-50')}>
+                  <span className="flex items-center justify-between gap-2">
+                    <span className={cn('flex items-center gap-1.5 text-xs font-medium', active ? 'text-ink-800' : 'text-ink-500')}>
+                      {c.key !== 'all' && <StatusDot status={c.key} />}
+                      {c.key === 'all' ? t('orders.cardAll') : t(`status.${c.key}`)}
+                    </span>
+                    <span className={cn('rounded-full px-1.5 text-[11px] font-semibold tabular-nums',
+                      active ? 'bg-white/80 text-ink-800' : 'bg-ink-100 text-ink-600')}>{c.count}</span>
+                  </span>
+                  <span className="mt-1 block text-sm font-bold tabular-nums text-ink-900">{formatLKR(c.total)}</span>
+                </button>
+              );
+            })}
           </div>
 
           {selected.size > 0 && (

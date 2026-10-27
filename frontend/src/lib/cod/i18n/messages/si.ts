@@ -239,6 +239,7 @@ export const si: Record<MessageKey, string> = {
   "dash.allGood": "සියල්ල හොඳයි",
   "dash.chartRevExp": "Revenue vs expenses (පසුගිය මාස 6)",
   "dash.ordersByStatus": "Status අනුව Orders",
+  "dash.ordersTotal": "මුළු",
   "dash.noOrdersMonth": "මේ මාසයේ තවම orders නැත.",
   "dash.recentOrders": "මෑත Orders",
   "dash.noOrders": "තවම orders නැත.",

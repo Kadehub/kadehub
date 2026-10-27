@@ -84,6 +84,7 @@ function OverviewDashboard() {
 
   const { model, premium } = data;
   const donut = model.ordersByStatus.filter(s => s.count > 0).map(s => ({ ...s, name: t(`status.${s.status as OrderStatus}`) }));
+  const donutTotal = donut.reduce((sum, s) => sum + s.count, 0);
   // The backend already sends sample numbers here for accounts without Premium
   const monthly = model.monthly.map(m => ({ ...m, label: monthLabel(m.key, t.locale) }));
 
@@ -125,14 +126,36 @@ function OverviewDashboard() {
           {donut.length === 0 ? (
             <p className="flex h-full items-center justify-center text-sm text-ink-400">{t('dash.noOrdersMonth')}</p>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={donut} dataKey="count" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={2}>
-                  {donut.map(d => <Cell key={d.status} fill={STATUS_STYLE[d.status as OrderStatus].color} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            // Donut with the total in the middle, and a legend so the counts are readable without hovering
+            <div className="flex h-full flex-col gap-3">
+              <div className="relative min-h-0 flex-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={donut} dataKey="count" nameKey="name" innerRadius="62%" outerRadius="95%" paddingAngle={2} stroke="none">
+                      {donut.map(d => <Cell key={d.status} fill={STATUS_STYLE[d.status as OrderStatus].color} />)}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-bold tabular-nums text-ink-900">{donutTotal}</span>
+                  <span className="text-2xs text-ink-500">{t('dash.ordersTotal')}</span>
+                </div>
+              </div>
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                {donut.map(d => (
+                  <li key={d.status} className="flex items-center justify-between gap-2 text-xs">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: STATUS_STYLE[d.status as OrderStatus].color }} aria-hidden />
+                      <span className="truncate text-ink-700">{d.name}</span>
+                    </span>
+                    <span className="shrink-0 tabular-nums font-semibold text-ink-900">
+                      {d.count} <span className="font-normal text-ink-400">· {Math.round((d.count / donutTotal) * 100)}%</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </Card>
       </div>

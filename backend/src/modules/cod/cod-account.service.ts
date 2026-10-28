@@ -7,10 +7,10 @@ import { Package } from '../../database/entities/package.entity';
 import { User } from '../../database/entities/user.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { CodBusiness } from '../../database/entities/cod-business.entity';
-import { CodItem } from '../../database/entities/cod-item.entity';
 import { CodOrder } from '../../database/entities/cod-order.entity';
-import { COD_PLANS, codPlanBySlug, CodPlanDef } from './cod-plans';
-import { startOfColomboMonth } from './cod-analytics';
+import { CodOrderTopup } from '../../database/entities/cod-order-topup.entity';
+import { COD_FREE_PLAN, COD_ORDER_GRACE, COD_PLANS, COD_TOPUP, COD_TOPUP_PLAN_SLUG, codPlanBySlug, CodPlanDef } from './cod-plans';
+import { colomboMonthKey, startOfColomboMonth } from './cod-analytics';
 import { UpdateCodBusinessDto, ChangePasswordDto } from './cod.dto';
 
 /** CODPlatform's subscription vocabulary, derived from the shared subscription row. */
@@ -22,13 +22,13 @@ export interface CodPlanState {
   trial_ends_at: Date | null;
   current_period_end: Date | null;
   active: boolean;
-  /** Active paid Pro/Business plan — the trial runs on Free and does not count. */
+  /** Active paid plan (Growth, Scale or a legacy Pro/Business) — Free and trials do not count. */
   premium: boolean;
 }
 
 /** Thrown with a stable code so the frontend can show a translated message. */
 export class CodLimitException extends ForbiddenException {
-  constructor(code: 'PLAN_LIMIT_ITEMS' | 'PLAN_LIMIT_ORDERS', limit: number) {
+  constructor(code: 'PLAN_LIMIT_ORDERS', limit: number) {
     super({ statusCode: 403, code, limit, message: code });
   }
 }
@@ -41,8 +41,8 @@ export class CodAccountService {
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Tenant) private tenantRepo: Repository<Tenant>,
     @InjectRepository(CodBusiness) private businessRepo: Repository<CodBusiness>,
-    @InjectRepository(CodItem) private itemRepo: Repository<CodItem>,
     @InjectRepository(CodOrder) private orderRepo: Repository<CodOrder>,
+    @InjectRepository(CodOrderTopup) private topupRepo: Repository<CodOrderTopup>,
   ) {}
 
   /** Null when the tenant never turned COD on. */
@@ -56,19 +56,21 @@ export class CodAccountService {
     const expires = sub.expires_at ? new Date(sub.expires_at) : null;
     const trial = sub.payment_status === 'trial';
 
-    let status: CodSubStatus;
-    if (sub.status !== 'active') status = 'canceled';
-    else if (expires && expires.getTime() < Date.now()) status = 'past_due';
-    else status = trial ? 'trialing' : 'active';
-
-    const active = status === 'trialing' || status === 'active';
+    if (sub.status !== 'active') {
+      return { plan, status: 'canceled', trial_ends_at: null, current_period_end: expires, active: false, premium: false };
+    }
+    // COD never locks for lapsing: Free (50 orders a month) never expires, and an ended trial
+    // or paid plan carries on as Free until the seller buys a plan again
+    if (plan.key === 'free' || (expires && expires.getTime() < Date.now())) {
+      return { plan: COD_FREE_PLAN, status: 'active', trial_ends_at: null, current_period_end: null, active: true, premium: false };
+    }
     return {
       plan,
-      status,
+      status: trial ? 'trialing' : 'active',
       trial_ends_at: trial ? expires : null,
       current_period_end: expires,
-      active,
-      premium: active && plan.key !== 'free' && sub.payment_status === 'paid',
+      active: true,
+      premium: !trial && sub.payment_status === 'paid',
     };
   }
 
@@ -85,9 +87,9 @@ export class CodAccountService {
     ]);
     if (!state) return { enabled: false, email: account?.email ?? null, name: account?.name ?? null };
 
-    const [items, ordersThisMonth] = await Promise.all([
-      this.itemRepo.count({ where: { tenant_id: user.tenant_id } }),
-      this.orderRepo.count({ where: { tenant_id: user.tenant_id, created_at: MoreThanOrEqual(startOfColomboMonth()) } }),
+    const [ordersThisMonth, limit] = await Promise.all([
+      this.countOrdersThisMonth(user.tenant_id),
+      this.orderLimit(user.tenant_id, state),
     ]);
     return {
       enabled: true,
@@ -98,7 +100,11 @@ export class CodAccountService {
       subscription: { status: state.status, trial_ends_at: state.trial_ends_at, current_period_end: state.current_period_end },
       active: state.active,
       premium: state.premium,
-      usage: { items, orders_this_month: ordersThisMonth },
+      usage: {
+        orders_this_month: ordersThisMonth, orders_limit: limit.total, topup_orders: limit.topups,
+        orders_grace: limit.total === null ? 0 : COD_ORDER_GRACE,
+      },
+      topup: await this.topupOffer(state),
     };
   }
 
@@ -110,7 +116,7 @@ export class CodAccountService {
   /** Plans with the package ids the shared checkout needs; prices come from the package table. */
   async plans() {
     const packages = await this.packageRepo.find({ where: { product: 'cod', is_active: true }, order: { sort_order: 'ASC' } });
-    return COD_PLANS.map(p => {
+    return COD_PLANS.filter(p => !p.legacy).map(p => {
       const pkg = packages.find(x => x.slug === p.slug);
       return {
         ...this.planView(p),
@@ -168,17 +174,32 @@ export class CodAccountService {
 
   // ---------- plan limits ----------
 
-  async assertCanAddItem(tenantId: number) {
-    const { plan } = await this.requireEnabled(tenantId);
-    if (plan.max_items === null) return;
-    const count = await this.itemRepo.count({ where: { tenant_id: tenantId } });
-    if (count >= plan.max_items) throw new CodLimitException('PLAN_LIMIT_ITEMS', plan.max_items);
+  async assertCanAddOrder(tenantId: number) {
+    const state = await this.requireEnabled(tenantId);
+    const { total } = await this.orderLimit(tenantId, state);
+    if (total === null) return;
+    // The last few orders past the limit still go through (the app warns), then orders are blocked
+    const count = await this.countOrdersThisMonth(tenantId);
+    if (count >= total + COD_ORDER_GRACE) throw new CodLimitException('PLAN_LIMIT_ORDERS', total);
   }
 
-  async assertCanAddOrder(tenantId: number) {
-    const { plan } = await this.requireEnabled(tenantId);
-    if (plan.max_orders_per_month === null) return;
-    const count = await this.orderRepo.count({ where: { tenant_id: tenantId, created_at: MoreThanOrEqual(startOfColomboMonth()) } });
-    if (count >= plan.max_orders_per_month) throw new CodLimitException('PLAN_LIMIT_ORDERS', plan.max_orders_per_month);
+  private countOrdersThisMonth(tenantId: number) {
+    return this.orderRepo.count({ where: { tenant_id: tenantId, created_at: MoreThanOrEqual(startOfColomboMonth()) } });
+  }
+
+  /** This month's order limit: the plan's monthly orders plus any top-ups bought this month. Null = unlimited. */
+  private async orderLimit(tenantId: number, state: CodPlanState): Promise<{ total: number | null; topups: number }> {
+    const rows = await this.topupRepo.find({ where: { tenant_id: tenantId, month: colomboMonthKey() } });
+    const topups = rows.reduce((sum, r) => sum + r.orders, 0);
+    const base = state.plan.max_orders_per_month;
+    return { total: base === null ? null : base + topups, topups };
+  }
+
+  /** The +100 orders top-up, offered only on a paid, current top plan — smaller plans upgrade instead. */
+  private async topupOffer(state: CodPlanState) {
+    if (!state.premium || state.plan.slug !== COD_TOPUP_PLAN_SLUG) return null;
+    const pkg = await this.packageRepo.findOne({ where: { slug: COD_TOPUP.slug, is_active: true } });
+    if (!pkg) return null;
+    return { package_id: pkg.id, orders: COD_TOPUP.orders, price_lkr: Number(pkg.price_monthly) };
   }
 }

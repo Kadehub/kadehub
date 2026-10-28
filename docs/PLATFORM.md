@@ -40,6 +40,12 @@ KadeHub is one platform with several products. Each product runs on its own subd
 4. Create `backend/src/modules/<slug>/` and register it in `app.module.ts`. Gate it with `subscription.product = '<slug>'`.
 5. Add a DNS record for the subdomain (below).
 
+## KadeHub COD
+
+- **Plans by monthly order volume** (`cod-plans.ts`, seeded into `package` with `product = 'cod'`): Free (50 orders a month), Growth (100, Rs 5,000) and Scale (200, Rs 10,000). Items are unlimited on every plan. Free never expires, and when a paid plan ends the account carries on as Free instead of being locked out.
+- **Grace and warnings.** Past the monthly limit, 5 more orders still go through (`COD_ORDER_GRACE`), then new orders are blocked. A banner across the app warns from 80% of the limit, turns red during the grace orders and stays while blocked. The toast after creating an order says how many are left. The old Pro and Business plans are no longer sold; current subscribers keep them until they expire.
+- **Top-ups.** On a paid Scale plan the billing page offers 100 more orders for Rs 5,000 once the seller has used 90% of the month's orders. It's a hidden package (`cod-topup-100`) sold through the shared checkout. Paying adds a `cod_order_topup` row for the current calendar month, and the plan stays as it is. The order limit is the plan's orders plus this month's top-ups.
+
 ## KadeHub Staff
 
 - **Slug `hr`, subdomain `staff`.** Pages live in `frontend/src/app/hr`, the API under `/api/hr` (`backend/src/modules/hr`), tables are prefixed `hr_` (migrations `300`–`399` in `migrations-hr.ts`).

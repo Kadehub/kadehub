@@ -8,6 +8,9 @@ import { Subscription } from '../../database/entities/subscription.entity';
 import { PaymentTransaction } from '../../database/entities/payment-transaction.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { User } from '../../database/entities/user.entity';
+import { CodOrderTopup } from '../../database/entities/cod-order-topup.entity';
+import { COD_TOPUP, COD_TOPUP_PLAN_SLUG } from '../cod/cod-plans';
+import { colomboMonthKey } from '../cod/cod-analytics';
 import { UpdateCompanyDto, InitiateOnepayDto, BankTransferDto, UpdateBankDetailsDto } from './billing.dto';
 import { InvoiceService } from './invoice.service';
 import { EmailService } from '../../common/email.service';
@@ -59,6 +62,7 @@ export class BillingService {
     @InjectRepository(PaymentTransaction) private txRepo: Repository<PaymentTransaction>,
     @InjectRepository(Tenant) private tenantRepo: Repository<Tenant>,
     @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(CodOrderTopup) private topupRepo: Repository<CodOrderTopup>,
     private invoiceService: InvoiceService,
     private emailService: EmailService,
   ) {}
@@ -248,6 +252,7 @@ export class BillingService {
       if (!dto.package_id) throw new BadRequestException('package_id is required for subscription payments.');
       pkg = await this.packageRepo.findOne({ where: { id: dto.package_id }, relations: ['modules'] });
       if (!pkg) throw new NotFoundException('Package not found');
+      await this.assertCanBuy(tenantId, pkg);
       packageId = pkg.id;
       amount = billingCycle === 'yearly' ? Number(pkg.price_yearly) : Number(pkg.price_monthly);
       if (dto.registration_fee && dto.registration_fee > 0) amount += Number(dto.registration_fee);
@@ -538,6 +543,7 @@ export class BillingService {
       relations: ['modules'],
     });
     if (!pkg) throw new NotFoundException('Package not found');
+    await this.assertCanBuy(tenantId, pkg);
 
     const appId   = process.env.ONEPAY_APP_ID;
     const appToken = process.env.ONEPAY_APP_TOKEN;
@@ -704,12 +710,35 @@ export class BillingService {
     return { status: tx.status, transaction: tx };
   }
 
+  /** COD packages that aren't for sale: retired plans, and top-ups outside a current paid top plan. */
+  private async assertCanBuy(tenantId: number, pkg: Package) {
+    if (pkg.product === 'cod' && !pkg.is_active) throw new BadRequestException('This plan is no longer available. Please choose another plan.');
+    if (pkg.slug !== COD_TOPUP.slug) return;
+    const subs = await this.subRepo.find({ where: { tenant_id: tenantId, product: 'cod', status: 'active', payment_status: 'paid' } });
+    const now = Date.now();
+    for (const sub of subs) {
+      if (sub.expires_at && new Date(sub.expires_at).getTime() <= now) continue;
+      const plan = sub.package_id ? await this.packageRepo.findOne({ where: { id: sub.package_id } }) : null;
+      if (plan?.slug === COD_TOPUP_PLAN_SLUG) return;
+    }
+    throw new BadRequestException('Extra orders are available on the Scale plan. Please upgrade instead.');
+  }
+
   private async activateSubscription(tx: PaymentTransaction) {
     const pkg = await this.packageRepo.findOne({
       where: { id: tx.package_id },
       relations: ['modules'],
     });
     if (!pkg) return;
+
+    // A COD top-up adds orders to the current month and leaves the plan as it is
+    if (pkg.slug === COD_TOPUP.slug) {
+      if (await this.topupRepo.findOne({ where: { payment_ref: tx.gateway_ref } })) return;
+      await this.topupRepo.save(this.topupRepo.create({
+        tenant_id: tx.tenant_id, month: colomboMonthKey(), orders: COD_TOPUP.orders, payment_ref: tx.gateway_ref,
+      }));
+      return;
+    }
 
     const expiresAt = new Date();
     if (tx.billing_cycle === 'yearly') expiresAt.setFullYear(expiresAt.getFullYear() + 1);

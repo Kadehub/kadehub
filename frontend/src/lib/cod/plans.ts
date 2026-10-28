@@ -33,3 +33,26 @@ export function hasPremium(
 ): boolean {
   return plan.id !== "free" && isSubscriptionActive(subscription.status, subscription.current_period_end);
 }
+
+/** Where the month's orders stand. `left` counts plan orders while warning, grace orders after. */
+export type OrderAllowance =
+  | { state: "ok" }
+  | { state: "warn" | "grace"; left: number; limit: number }
+  | { state: "blocked"; limit: number };
+
+/** Share of the monthly limit at which the app starts warning. */
+export const ORDER_WARN_AT = 0.8;
+
+/** `extra` previews the state after that many more orders (e.g. 1 right after creating one). */
+export function orderAllowance(
+  usage: { orders_this_month: number; orders_limit: number | null; orders_grace: number } | undefined,
+  extra = 0,
+): OrderAllowance {
+  if (!usage || usage.orders_limit === null) return { state: "ok" };
+  const used = usage.orders_this_month + extra;
+  const limit = usage.orders_limit;
+  if (used >= limit + usage.orders_grace) return { state: "blocked", limit };
+  if (used >= limit) return { state: "grace", left: limit + usage.orders_grace - used, limit };
+  if (used >= limit * ORDER_WARN_AT) return { state: "warn", left: limit - used, limit };
+  return { state: "ok" };
+}

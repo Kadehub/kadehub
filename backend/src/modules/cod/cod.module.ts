@@ -5,6 +5,7 @@ import { Package } from '../../database/entities/package.entity';
 import { User } from '../../database/entities/user.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { CodBusiness } from '../../database/entities/cod-business.entity';
+import { CodOrderTopup } from '../../database/entities/cod-order-topup.entity';
 import { CodItem } from '../../database/entities/cod-item.entity';
 import { CodExpense } from '../../database/entities/cod-expense.entity';
 import { CodOrder } from '../../database/entities/cod-order.entity';
@@ -26,7 +27,7 @@ import { CodPersonalSettings } from '../../database/entities/cod-personal-settin
 @Module({
   imports: [TypeOrmModule.forFeature([
     Subscription, Package, User, Tenant, CodBusiness, CodItem, CodExpense, CodOrder, CodOrderItem, AuditLog,
-    CodPersonalExpense, CodPersonalSettings, CodCreditPayment,
+    CodPersonalExpense, CodPersonalSettings, CodCreditPayment, CodOrderTopup,
   ])],
   controllers: [CodPublicController, CodAccountController, CodController, CodExpensesController, CodFinanceController],
   // CodExpensesService is exported for the financial summary (listExpenses / listPersonal with a date range)

@@ -1,7 +1,7 @@
 import type { DataSource } from 'typeorm';
 import type { Migration } from './migrations';
 import { tableExists } from './migration-utils';
-import { COD_PLANS } from '../modules/cod/cod-plans';
+import { COD_PLANS, COD_TOPUP } from '../modules/cod/cod-plans';
 import { COD_ORDER_MIGRATIONS } from './migrations-cod-orders';
 import { COD_EXPENSE_MIGRATIONS } from './migrations-cod-expenses';
 
@@ -30,6 +30,32 @@ async function createTable(ds: DataSource, pg: boolean, table: string, cols: Col
 async function createIndex(ds: DataSource, pg: boolean, name: string, table: string, cols: string) {
   if (pg) await ds.query(`CREATE INDEX IF NOT EXISTS ${name} ON ${table} (${cols})`);
   else await ds.query(`CREATE INDEX ${name} ON \`${table}\` (${cols})`).catch(() => {});
+}
+
+interface PackageSeed {
+  slug: string; name: string; description: string; price_monthly: number; price_yearly: number;
+  sort_order: number; is_popular: boolean; is_active: boolean;
+}
+
+/** Inserts a COD package (granting the 'cod' module) unless its slug already exists. */
+async function seedCodPackage(ds: DataSource, pg: boolean, pkg: PackageSeed) {
+  const p = (i: number) => (pg ? `$${i}` : '?');
+  const found: Array<{ id: number }> = await ds.query(`SELECT id FROM package WHERE slug = ${p(1)}`, [pkg.slug]);
+  let packageId = found[0]?.id;
+  if (!packageId) {
+    const values = [pkg.slug, pkg.name, pkg.description, pkg.price_monthly, pkg.price_yearly, pkg.sort_order, pkg.is_popular, pkg.is_active];
+    const cols = 'slug, name, description, price_monthly, price_yearly, sort_order, is_popular, is_active, product';
+    const ph = values.map((_, i) => p(i + 1)).join(', ');
+    if (pg) {
+      const rows = await ds.query(`INSERT INTO package (${cols}) VALUES (${ph}, 'cod') RETURNING id`, values);
+      packageId = rows[0].id;
+    } else {
+      await ds.query(`INSERT INTO package (${cols}) VALUES (${ph}, 'cod')`, values);
+      packageId = (await ds.query('SELECT id FROM package WHERE slug = ?', [pkg.slug]))[0].id;
+    }
+  }
+  const mod = await ds.query(`SELECT id FROM package_module WHERE package_id = ${p(1)} AND module_name = 'cod'`, [packageId]);
+  if (!mod.length) await ds.query(`INSERT INTO package_module (package_id, module_name) VALUES (${p(1)}, 'cod')`, [packageId]);
 }
 
 export const COD_MIGRATIONS: Migration[] = [
@@ -110,26 +136,48 @@ export const COD_MIGRATIONS: Migration[] = [
     up: async (ds, dialect) => {
       // COD plans live in the shared package table (product = 'cod') so the existing
       // bank-transfer / OnePay checkout can sell them; each grants the single 'cod' module.
+      for (const plan of COD_PLANS) {
+        await seedCodPackage(ds, dialect === 'postgres', {
+          slug: plan.slug, name: plan.name, description: plan.description, price_monthly: plan.monthly_price_lkr,
+          price_yearly: plan.monthly_price_lkr * 12, sort_order: plan.sort_order, is_popular: plan.slug === 'cod-growth', is_active: !plan.legacy,
+        });
+      }
+    },
+  },
+  {
+    id: '102_cod_volume_plans',
+    up: async (ds, dialect) => {
+      // Volume pricing: Free 50 / Growth 100 / Scale 200 orders a month, plus a hidden +100 top-up.
+      // Pro and Business stop being sold; current subscribers keep them until they expire.
       const pg = dialect === 'postgres';
       const p = (i: number) => (pg ? `$${i}` : '?');
       for (const plan of COD_PLANS) {
-        const found: Array<{ id: number }> = await ds.query(`SELECT id FROM package WHERE slug = ${p(1)}`, [plan.slug]);
-        let packageId = found[0]?.id;
-        if (!packageId) {
-          const values = [plan.slug, plan.name, plan.description, plan.monthly_price_lkr, plan.monthly_price_lkr * 12, plan.sort_order, plan.slug === 'cod-pro'];
-          const cols = 'slug, name, description, price_monthly, price_yearly, sort_order, is_popular, is_active, product';
-          const ph = values.map((_, i) => p(i + 1)).join(', ');
-          if (pg) {
-            const rows = await ds.query(`INSERT INTO package (${cols}) VALUES (${ph}, TRUE, 'cod') RETURNING id`, values);
-            packageId = rows[0].id;
-          } else {
-            await ds.query(`INSERT INTO package (${cols}) VALUES (${ph}, 1, 'cod')`, values);
-            packageId = (await ds.query('SELECT id FROM package WHERE slug = ?', [plan.slug]))[0].id;
-          }
-        }
-        const mod = await ds.query(`SELECT id FROM package_module WHERE package_id = ${p(1)} AND module_name = 'cod'`, [packageId]);
-        if (!mod.length) await ds.query(`INSERT INTO package_module (package_id, module_name) VALUES (${p(1)}, 'cod')`, [packageId]);
+        await seedCodPackage(ds, pg, {
+          slug: plan.slug, name: plan.name, description: plan.description, price_monthly: plan.monthly_price_lkr,
+          price_yearly: plan.monthly_price_lkr * 12, sort_order: plan.sort_order, is_popular: plan.slug === 'cod-growth', is_active: !plan.legacy,
+        });
+        await ds.query(`UPDATE package SET is_active = ${p(1)}, is_popular = ${p(2)}, description = ${p(3)} WHERE slug = ${p(4)}`,
+          [!plan.legacy, plan.slug === 'cod-growth', plan.description, plan.slug]);
       }
+      // Monthly and yearly cost the same: a top-up only ever lasts until the end of the month
+      await seedCodPackage(ds, pg, {
+        slug: COD_TOPUP.slug, name: COD_TOPUP.name, description: COD_TOPUP.description, price_monthly: COD_TOPUP.price_lkr,
+        price_yearly: COD_TOPUP.price_lkr, sort_order: COD_TOPUP.sort_order, is_popular: false, is_active: true,
+      });
+    },
+  },
+  {
+    id: '103_cod_order_topup',
+    up: async (ds, dialect) => {
+      const pg = dialect === 'postgres';
+      await createTable(ds, pg, 'cod_order_topup', [
+        ID, TENANT,
+        ['month', 'CHAR(7) NOT NULL', 'CHAR(7) NOT NULL'], // Colombo calendar month, 'YYYY-MM'
+        ['orders', 'INT NOT NULL', 'INT NOT NULL'],
+        text('payment_ref'),
+        CREATED,
+      ], [], ['FOREIGN KEY (`tenant_id`) REFERENCES `tenant` (`id`) ON DELETE CASCADE']);
+      await createIndex(ds, pg, 'cod_order_topup_month_idx', 'cod_order_topup', 'tenant_id, month');
     },
   },
   // Orders + credit (ids 110-139) and expenses (ids 140-169) live in their own files

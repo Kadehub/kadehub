@@ -11,7 +11,7 @@ import api from '../../lib/api';
 import { CodI18nProvider, useT } from '../../lib/cod/i18n/client';
 import { itemLabelsFor } from '../../lib/cod/business-types';
 import { normalizeHex, readableTextColor } from '../../lib/cod/brand';
-import { daysRemaining, planLabel } from '../../lib/cod/plans';
+import { daysRemaining, orderAllowance, planLabel } from '../../lib/cod/plans';
 import type { CodMe } from '../../lib/cod/session';
 import type { Business } from '../../lib/cod/types';
 import { MascotState } from '../brand/Mascot';
@@ -143,6 +143,7 @@ function Shell({ me, itemsLabel, path, children }: { me: CodMe & { business: Bus
   const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
   const sub = me.subscription!;
   const trialDaysLeft = sub.status === 'trialing' ? daysRemaining(sub.trial_ends_at) : null;
+  const allowance = orderAllowance(me.usage);
   const signOut = () => { logout(); window.location.href = '/login'; };
   const b = me.business;
 
@@ -199,6 +200,17 @@ function Shell({ me, itemsLabel, path, children }: { me: CodMe & { business: Bus
           <div className="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900">
             {trialDaysLeft === 0 ? t('app.trialEndsToday') : t.n('app.trialEndsIn', trialDaysLeft)}{' '}
             <Link href={codHref('/billing')} className="font-semibold underline underline-offset-4">{t('app.viewPlans')}</Link>
+          </div>
+        )}
+        {allowance.state !== 'ok' && (
+          <div role={allowance.state === 'warn' ? 'status' : 'alert'}
+            className={cn('px-4 py-2 text-center text-sm', allowance.state === 'warn' ? 'bg-amber-100 text-amber-900' : 'bg-red-100 text-red-900')}>
+            {allowance.state === 'warn' && t.n('app.ordersLeft', allowance.left, { limit: allowance.limit })}
+            {allowance.state === 'grace' && t.n('app.ordersGrace', allowance.left, { limit: allowance.limit })}
+            {allowance.state === 'blocked' && t('app.ordersBlocked', { limit: allowance.limit })}{' '}
+            {can('personal_finance') ? (
+              <Link href={codHref('/billing')} className="font-semibold underline underline-offset-4">{t(me.topup ? 'app.addOrders' : 'app.viewPlans')}</Link>
+            ) : t('app.askOwner')}
           </div>
         )}
         {/* Bottom padding on phones keeps content clear of the bottom nav and the safe area */}

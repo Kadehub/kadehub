@@ -9,7 +9,7 @@ import { Badge, Button, Card, Dialog, Field, TextInput, cn } from '../../../comp
 import api from '../../../lib/api';
 import { useT } from '../../../lib/cod/i18n/client';
 import { formatDate, formatLKR } from '../../../lib/cod/format';
-import { daysRemaining, planLabel } from '../../../lib/cod/plans';
+import { daysRemaining, orderAllowance, planLabel } from '../../../lib/cod/plans';
 import { apiError, type CodPlanOffer } from '../../../lib/cod/session';
 
 interface PaymentOptions {
@@ -17,6 +17,8 @@ interface PaymentOptions {
   onepay_enabled: boolean;
 }
 type Cycle = 'monthly' | 'yearly';
+/** What the checkout sells: a plan, or a one-off top-up of extra orders. */
+interface CheckoutItem { package_id: number; title: string; amount: number; cycle: Cycle; recurring: boolean }
 /** OnePay returns to a shared page, so the reference is kept here and verified on the next visit. */
 const ONEPAY_REF_KEY = 'cod_onepay_ref';
 
@@ -28,7 +30,7 @@ export default function CodBillingPage() {
   const [options, setOptions] = useState<PaymentOptions | null>(null);
   const [pendingSlip, setPendingSlip] = useState(false);
   const [cycle, setCycle] = useState<Cycle>('monthly');
-  const [checkout, setCheckout] = useState<CodPlanOffer | null>(null);
+  const [checkout, setCheckout] = useState<CheckoutItem | null>(null);
 
   const loadPending = () =>
     api.get<{ status: string }[]>('/billing/bank-transfer/mine').then(r => setPendingSlip(r.data.some(x => x.status === 'pending'))).catch(() => {});
@@ -55,7 +57,16 @@ export default function CodBillingPage() {
   const sub = me.subscription!;
   const active = !!me.active;
   const trialLeft = sub.status === 'trialing' ? daysRemaining(sub.trial_ends_at) : null;
-  const usage = me.usage ?? { items: 0, orders_this_month: 0 };
+  const usage = me.usage ?? { orders_this_month: 0, orders_limit: plan.max_orders_per_month, topup_orders: 0, orders_grace: 0 };
+  const ordersLimit = usage.orders_limit;
+  const allowance = orderAllowance(usage);
+  // Sellers only hear about top-ups once they're close to running out
+  const topup = me.topup && ordersLimit !== null && usage.orders_this_month >= ordersLimit * 0.9 ? me.topup : null;
+  const legacy = plan.key === 'pro' || plan.key === 'business';
+  const buyPlan = (p: CodPlanOffer) => setCheckout({
+    package_id: p.package_id!, title: t('pay.title', { plan: planLabel(t, { id: p.key, name: p.name }) }),
+    amount: cycle === 'yearly' ? p.yearly_price_lkr : p.monthly_price_lkr, cycle, recurring: true,
+  });
 
   return (
     <div className="space-y-6">
@@ -84,14 +95,22 @@ export default function CodBillingPage() {
             <div className="pt-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">{t('bill.usage')}</p>
               <p className="mt-1 text-sm text-ink-700">
-                {plan.max_items === null ? t('bill.usageUnlimitedItems', { used: usage.items }) : t('bill.usageItems', { used: usage.items, limit: plan.max_items })}
-              </p>
-              <p className="text-sm text-ink-700">
-                {plan.max_orders_per_month === null
+                {ordersLimit === null
                   ? t('bill.usageUnlimitedOrders', { used: usage.orders_this_month })
-                  : t('bill.usageOrders', { used: usage.orders_this_month, limit: plan.max_orders_per_month })}
+                  : t('bill.usageOrders', { used: usage.orders_this_month, limit: ordersLimit })}
               </p>
+              {ordersLimit !== null && (
+                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-ink-100" role="progressbar" aria-label={t('bill.usage')}
+                  aria-valuemin={0} aria-valuemax={ordersLimit} aria-valuenow={Math.min(usage.orders_this_month, ordersLimit)}>
+                  <div className={cn('h-full rounded-full', allowance.state === 'grace' || allowance.state === 'blocked' ? 'bg-red-500' : allowance.state === 'warn' ? 'bg-amber-500' : 'bg-[color:var(--cod-primary)]')}
+                    style={{ width: `${Math.min(100, (usage.orders_this_month / Math.max(1, ordersLimit)) * 100)}%` }} />
+                </div>
+              )}
+              {usage.topup_orders > 0 && <p className="mt-1 text-xs text-ink-500">{t('bill.topupIncluded', { orders: usage.topup_orders })}</p>}
             </div>
+            {legacy && sub.current_period_end && (
+              <p className="rounded-lg bg-ink-50 px-3 py-2 text-sm text-ink-700">{t('bill.legacyNote', { date: formatDate(sub.current_period_end, t.locale) })}</p>
+            )}
             {pendingSlip && <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{t('pay.pendingSlip')}</p>}
           </div>
         </Card>
@@ -106,6 +125,20 @@ export default function CodBillingPage() {
           </div>
         </Card>
       </div>
+
+      {topup && (
+        <section className="kh-card flex flex-wrap items-center justify-between gap-3 p-5">
+          <div>
+            <h2 className="font-bold text-ink-900">{t('bill.topupTitle')}</h2>
+            <p className="text-sm text-ink-500">{t('bill.topupBody', { orders: topup.orders, price: formatLKR(topup.price_lkr) })}</p>
+          </div>
+          <Button disabled={pendingSlip} onClick={() => setCheckout({
+            package_id: topup.package_id, title: t('bill.topupTitle'), amount: topup.price_lkr, cycle: 'monthly', recurring: false,
+          })}>
+            {t('bill.topupBuy', { orders: topup.orders })}
+          </Button>
+        </section>
+      )}
 
       <div>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -145,7 +178,7 @@ export default function CodBillingPage() {
                       <li key={f} className="flex items-start gap-1.5"><Check size={14} className="mt-0.5 shrink-0 text-emerald-600" />{t.lookup('feat', f)}</li>
                     ))}
                   </ul>
-                  <Button className="mt-4 w-full justify-center" disabled={!canBuy || pendingSlip} onClick={() => setCheckout(p)}>
+                  <Button className="mt-4 w-full justify-center" disabled={!canBuy || pendingSlip} onClick={() => buyPlan(p)}>
                     {isCurrent && active && sub.status !== 'trialing' ? t('bill.currentPlan') : isCurrent && paid ? t('bill.renew') : t('bill.upgrade')}
                   </Button>
                 </section>
@@ -157,7 +190,7 @@ export default function CodBillingPage() {
       </div>
 
       {checkout && (
-        <Checkout plan={checkout} cycle={cycle} options={options} onClose={() => setCheckout(null)}
+        <Checkout item={checkout} options={options} onClose={() => setCheckout(null)}
           onSubmitted={() => { setCheckout(null); loadPending(); }} />
       )}
     </div>
@@ -167,9 +200,9 @@ export default function CodBillingPage() {
 function safeGet(key: string) { try { return localStorage.getItem(key); } catch { return null; } }
 function safeRemove(key: string) { try { localStorage.removeItem(key); } catch {} }
 
-/** Pay for a COD package with the platform's bank-transfer slip flow or OnePay. */
-function Checkout({ plan, cycle, options, onClose, onSubmitted }: {
-  plan: CodPlanOffer; cycle: Cycle; options: PaymentOptions | null; onClose: () => void; onSubmitted: () => void;
+/** Pay for a COD package (plan or top-up) with the platform's bank-transfer slip flow or OnePay. */
+function Checkout({ item, options, onClose, onSubmitted }: {
+  item: CheckoutItem; options: PaymentOptions | null; onClose: () => void; onSubmitted: () => void;
 }) {
   const t = useT();
   const [method, setMethod] = useState<'bank' | 'onepay'>('bank');
@@ -178,7 +211,7 @@ function Checkout({ plan, cycle, options, onClose, onSubmitted }: {
   const [slip, setSlip] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>();
-  const amount = cycle === 'yearly' ? plan.yearly_price_lkr : plan.monthly_price_lkr;
+  const { amount, cycle } = item;
   const bank = options?.bank;
 
   async function submitSlip(e: React.FormEvent) {
@@ -190,7 +223,7 @@ function Checkout({ plan, cycle, options, onClose, onSubmitted }: {
     try {
       const fd = new FormData();
       fd.append('type', 'subscription');
-      fd.append('package_id', String(plan.package_id));
+      fd.append('package_id', String(item.package_id));
       fd.append('billing_cycle', cycle);
       fd.append('depositor_name', depositor.trim());
       if (reference.trim()) fd.append('slip_reference', reference.trim());
@@ -210,7 +243,7 @@ function Checkout({ plan, cycle, options, onClose, onSubmitted }: {
     setBusy(true);
     setError(undefined);
     try {
-      const { data } = await api.post<{ payment_url: string; reference: string }>('/billing/onepay/initiate', { package_id: plan.package_id, billing_cycle: cycle });
+      const { data } = await api.post<{ payment_url: string; reference: string }>('/billing/onepay/initiate', { package_id: item.package_id, billing_cycle: cycle });
       try { localStorage.setItem(ONEPAY_REF_KEY, data.reference); } catch {}
       window.location.assign(data.payment_url);
     } catch (err) {
@@ -220,11 +253,11 @@ function Checkout({ plan, cycle, options, onClose, onSubmitted }: {
   }
 
   return (
-    <Dialog open onClose={() => !busy && onClose()} title={t('pay.title', { plan: planLabel(t, { id: plan.key, name: plan.name }) })}>
+    <Dialog open onClose={() => !busy && onClose()} title={item.title}>
       <div className="space-y-4">
         <div className="flex items-center justify-between rounded-xl border border-ink-200 bg-ink-50 px-4 py-3">
           <span className="text-sm text-ink-500">{t('pay.amount')}</span>
-          <span className="text-lg font-bold text-ink-900">{formatLKR(amount)}<span className="text-xs font-normal text-ink-500">{t(cycle === 'yearly' ? 'bill.perYear' : 'bill.perMonth')}</span></span>
+          <span className="text-lg font-bold text-ink-900">{formatLKR(amount)}{item.recurring && <span className="text-xs font-normal text-ink-500">{t(cycle === 'yearly' ? 'bill.perYear' : 'bill.perMonth')}</span>}</span>
         </div>
 
         {options?.onepay_enabled && (

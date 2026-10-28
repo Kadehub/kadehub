@@ -2,13 +2,12 @@ import type { Business, SubscriptionStatus } from "@/lib/cod/types";
 import type { Translator } from "@/lib/cod/i18n/translator";
 import { planLabel } from "@/lib/cod/plans";
 
-/** Plan as sent by the API (limits + feature bullets; `key` is free | pro | business). */
+/** Plan as sent by the API (limits + feature bullets; `key` is free | growth | scale, or a legacy pro | business). */
 export interface CodPlanView {
   slug: string;
-  key: "free" | "pro" | "business";
+  key: "free" | "growth" | "scale" | "pro" | "business";
   name: string;
   monthly_price_lkr: number;
-  max_items: number | null;
   max_orders_per_month: number | null;
   features: string[];
   sort_order: number;
@@ -30,7 +29,16 @@ export interface CodMe {
   subscription?: { status: SubscriptionStatus; trial_ends_at: string | null; current_period_end: string | null };
   active?: boolean;
   premium?: boolean;
-  usage?: { items: number; orders_this_month: number };
+  /** `orders_limit` includes this month's top-ups (null = unlimited); `orders_grace` more are allowed past it. */
+  usage?: { orders_this_month: number; orders_limit: number | null; topup_orders: number; orders_grace: number };
+  /** Extra orders for the rest of the month — only offered on a paid Scale plan. */
+  topup?: CodTopupOffer | null;
+}
+
+export interface CodTopupOffer {
+  package_id: number;
+  orders: number;
+  price_lkr: number;
 }
 
 /** Readable, translated message for an API error (stable `code`s from the COD backend). */
@@ -39,8 +47,11 @@ export function apiError(err: unknown, t: Translator, me?: CodMe | null): string
   const code = data?.code ?? (typeof data?.message === "string" ? data.message : undefined);
   const plan = me?.plan ? planLabel(t, { id: me.plan.key, name: me.plan.name }) : "";
   switch (code) {
-    case "PLAN_LIMIT_ITEMS": return t("err.limitItems", { plan, limit: data?.limit ?? "" });
-    case "PLAN_LIMIT_ORDERS": return t("err.limitOrders", { plan, limit: data?.limit ?? "" });
+    case "PLAN_LIMIT_ORDERS":
+      // On the top plan there's nothing to upgrade to — point to the top-up instead
+      return me?.topup
+        ? t("err.limitOrdersTopup", { limit: data?.limit ?? "", grace: me.usage?.orders_grace ?? 0, orders: me.topup.orders })
+        : t("err.limitOrders", { plan, limit: data?.limit ?? "", grace: me?.usage?.orders_grace ?? 0 });
     case "DUPLICATE_SKU": return t("err.duplicateSku");
     case "NO_LINES": return t("err.addOneItem");
     case "PREMIUM_REQUIRED": return t("err.premiumRequired");

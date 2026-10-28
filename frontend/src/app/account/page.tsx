@@ -227,7 +227,10 @@ export default function AccountPage() {
       case 'active':  return [plan || 'Paid plan', p.billing_cycle, p.expires_at && `renews or ends ${fmtDate(p.expires_at)}`].filter(Boolean).join(' · ');
       case 'trial':   return `Free trial · ${p.days_left ?? 0} day${p.days_left === 1 ? '' : 's'} left${p.expires_at ? ` (ends ${fmtDate(p.expires_at)})` : ''}`;
       case 'expired': return `${plan ? `${plan} · ` : ''}Ended ${fmtDate(p.expires_at)} — renew to keep using it`;
-      case 'free':    return p.slug === 'hr' ? 'Staff Free · up to 3 staff and 1 branch' : 'Free to use · post tasks and make offers';
+      case 'free':
+        if (p.slug === 'hr') return 'Staff Free · up to 3 staff and 1 branch';
+        if (p.slug === 'cod') return 'COD Free · 50 orders every month';
+        return 'Free to use · post tasks and make offers';
       default:        return p.tagline;
     }
   }

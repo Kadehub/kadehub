@@ -80,7 +80,7 @@ export class CodService {
   }
 
   async createItem(tenantId: number, dto: SaveCodItemDto) {
-    await this.account.assertCanAddItem(tenantId);
+    await this.account.requireEnabled(tenantId);
     const item = this.itemRepo.create({ tenant_id: tenantId });
     this.applyItem(item, dto);
     return this.saveItemRow(item);

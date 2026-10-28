@@ -7,8 +7,7 @@ import { BillingService } from '../billing/billing.service';
 import { PRODUCTS } from '../../common/products';
 import { HR_TRIAL_DAYS, HR_TRIAL_PLAN } from '../hr/hr-plans';
 
-const COD_TRIAL_DAYS = 14;
-/** Seeded by the COD migrations; the trial runs on this plan. */
+/** Seeded by the COD migrations; new accounts start here (50 orders a month, never expires). */
 export const COD_FREE_PACKAGE_SLUG = 'cod-free';
 
 /**
@@ -32,11 +31,9 @@ export class ProductAccessService {
 
     if (product === 'cod') {
       const pkg = await this.packageRepo.findOne({ where: { slug: COD_FREE_PACKAGE_SLUG } });
-      const expires = new Date();
-      expires.setDate(expires.getDate() + COD_TRIAL_DAYS);
       await this.subRepo.save(this.subRepo.create({
         tenant_id: tenantId, product: 'cod', module_name: 'cod', status: 'active',
-        package_id: pkg?.id ?? null, payment_status: 'trial', expires_at: expires,
+        package_id: pkg?.id ?? null, payment_status: 'paid', payment_ref: 'free',
       }));
       return;
     }
@@ -64,6 +61,9 @@ export class ProductAccessService {
   async getAccess(tenantId: number, product: string): Promise<Subscription | null> {
     const subs = await this.subRepo.find({ where: { tenant_id: tenantId, product, status: 'active' } });
     const now = Date.now();
-    return subs.find(s => !s.expires_at || new Date(s.expires_at).getTime() > now) ?? null;
+    const current = subs.find(s => !s.expires_at || new Date(s.expires_at).getTime() > now) ?? null;
+    // COD doesn't lock: an expired trial or plan carries on as COD Free (limits enforced by CodAccountService)
+    if (!current && product === 'cod') return subs[0] ?? null;
+    return current;
   }
 }

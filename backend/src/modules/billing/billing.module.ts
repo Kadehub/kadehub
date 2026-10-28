@@ -12,9 +12,10 @@ import { PaymentTransaction } from '../../database/entities/payment-transaction.
 import { Invoice } from '../../database/entities/invoice.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { User } from '../../database/entities/user.entity';
+import { CodOrderTopup } from '../../database/entities/cod-order-topup.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Package, PackageModule, CompanyProfile, Subscription, PaymentTransaction, Tenant, Invoice, User])],
+  imports: [TypeOrmModule.forFeature([Package, PackageModule, CompanyProfile, Subscription, PaymentTransaction, Tenant, Invoice, User, CodOrderTopup])],
   controllers: [BillingController],
   providers: [BillingService, InvoiceService, EmailService],
   exports: [BillingService, InvoiceService],

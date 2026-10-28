@@ -29,14 +29,14 @@ export default function CodLandingPage() {
           title="Every cash-on-delivery order,"
           highlight="under control."
           subtitle="Know what each item really costs you, move orders from pending to delivered, and send invoices to customers in a tap."
-          primary={{ label: 'Start 14-day free trial', href: '/register' }}
+          primary={{ label: 'Start free', href: '/register' }}
           secondary={{ label: 'Sign in', href: '/login' }}
           points={['No card needed to start', 'Invoices in English, Sinhala or Tamil', 'Works on your phone', 'Set up in under 5 minutes']}
           preview={<CodMock />} />
 
         <LandingStats slug="cod" items={[
           { value: '6', label: 'order stages' },
-          { value: '14', label: 'day free trial' },
+          { value: '50', label: 'free orders every month' },
           { value: '3', label: 'invoice languages' },
           { value: '1', label: 'tap to share' },
         ]} />
@@ -73,7 +73,7 @@ export default function CodLandingPage() {
         ]} />
 
         <LandingSteps slug="cod" eyebrow="How it works" title="From first item to first delivery" steps={[
-          { icon: UserPlus,      title: 'Create your business', text: 'Pick your business type and brand colour. Your trial starts right away.' },
+          { icon: UserPlus,      title: 'Create your business', text: 'Pick your business type and brand colour. You can take orders right away.' },
           { icon: PackagePlus,   title: 'Add your items', text: 'Enter costs once and see profit per item instantly.' },
           { icon: ClipboardList, title: 'Take orders', text: 'Pick items, add the customer and the invoice number is created for you.' },
           { icon: TrendingUp,    title: 'Deliver and grow', text: 'Mark orders delivered, collect cash and watch your profit in reports.' },
@@ -95,8 +95,8 @@ export default function CodLandingPage() {
         ]} />
 
         <LandingFaq slug="cod" eyebrow="FAQ" title="Questions, answered" items={[
-          { q: 'Is there a free trial?', a: 'Yes. Every new business gets a 14-day free trial. No card is needed to start.' },
-          { q: 'What happens when the trial ends?', a: 'Choose a plan from the billing page. Your items, orders and settings stay exactly as you left them.' },
+          { q: 'Is it free?', a: 'Yes. Your first 50 orders every month are free, with no time limit. No card is needed to start.' },
+          { q: 'What if I need more than 50 orders a month?', a: 'Choose a bigger plan from the billing page. If a plan ends, you carry on with 50 free orders a month and your items, orders and settings stay as they are.' },
           { q: 'How do I pay?', a: 'By bank transfer (upload your slip from the billing page) or by online card payment.' },
           { q: 'Does stock update automatically?', a: 'Yes. Stock is reduced when an order is marked delivered and restored if the order is returned or cancelled after delivery.' },
           { q: 'Can I use it with KadeHub POS?', a: 'Yes. The same KadeHub account works for both. Turn COD on from your app launcher.' },
@@ -104,8 +104,8 @@ export default function CodLandingPage() {
         ]} />
 
         <LandingCta slug="cod" title="Ready to run your COD business properly?"
-          text="Start your 14-day free trial. It takes less than five minutes to set up."
-          action={{ label: 'Start free trial', href: '/register' }} pose="celebrate" />
+          text="Start free with 50 orders every month. It takes less than five minutes to set up."
+          action={{ label: 'Start free', href: '/register' }} pose="celebrate" />
       </main>
 
       <LandingFooter slug="cod" blurb="Cash-on-delivery orders, landed costs, invoices and reports for sellers who deliver to the door." />

@@ -64,6 +64,8 @@ export function lastNMonths(n: number, now = new Date()) {
 /** Colombo calendar year, e.g. for invoice numbers. */
 export const colomboYear = (now = new Date()) => parts(now).y;
 export const startOfColomboMonth = (now = new Date()) => { const { y, m } = parts(now); return colomboMidnight(y, m, 1); };
+/** Colombo calendar month key, `yyyy-MM` (the month a COD order top-up counts towards). */
+export const colomboMonthKey = (now = new Date()) => { const { y, m } = parts(now); return `${y}-${String(m + 1).padStart(2, '0')}`; };
 
 const toTime = (v: Date | string) => (typeof v === 'string'
   // DATE columns come back as 'YYYY-MM-DD' — that's a Colombo calendar day

@@ -8,6 +8,7 @@ import { User } from '../../database/entities/user.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { PRODUCTS, type ProductDef } from '../../common/products';
 import { ChangeAccountPasswordDto, UpdateAccountDto } from './platform.dto';
+import { COD_FREE_PACKAGE_SLUG } from './product-access.service';
 
 /** Where an account stands with one product. 'free': Tasks (no plans) or Staff on its Free plan. */
 export type ProductState = 'not_started' | 'trial' | 'active' | 'expired' | 'free';
@@ -56,6 +57,10 @@ export class PlatformService {
     const daysLeft = (d: Date | null) => (d ? Math.max(0, Math.ceil((new Date(d).getTime() - now) / 86_400_000)) : null);
     const planName = (r: Subscription) => packages.find(k => k.id === r.package_id)?.name ?? null;
 
+    // COD Free is a plan of its own, not a paid one
+    if (pick && p.slug === 'cod' && packages.find(k => k.id === pick.package_id)?.slug === COD_FREE_PACKAGE_SLUG) {
+      return { ...base, enabled: true, state: 'free', plan: planName(pick) };
+    }
     if (pick) {
       return {
         ...base, enabled: true,
@@ -66,6 +71,8 @@ export class PlatformService {
     }
     // Staff never locks: once the trial or a paid plan ends, the account carries on with Staff Free
     if (p.slug === 'hr') return { ...base, enabled: true, state: 'free', plan: 'Staff Free' };
+    // COD too: 50 orders a month stay free
+    if (p.slug === 'cod') return { ...base, enabled: true, state: 'free', plan: 'COD Free' };
     const last = [...rows].sort((a, b) => new Date(b.expires_at ?? 0).getTime() - new Date(a.expires_at ?? 0).getTime())[0];
     return { ...base, enabled: false, state: 'expired', plan: planName(last), expires_at: last.expires_at ?? null, days_left: 0 };
   }

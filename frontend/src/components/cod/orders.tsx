@@ -13,6 +13,7 @@ import { STATUS_STYLE } from '../../lib/cod/order-status';
 import { statusConfirmKey } from '../../lib/cod/credit';
 import { PAYMENT_TYPE_KEY, orderError } from '../../lib/cod/order-messages';
 import { useCodCan } from '../../lib/cod/capabilities';
+import { orderAllowance } from '../../lib/cod/plans';
 import {
   ORDER_STATUSES, PAYMENT_METHODS, PAYMENT_TYPES,
   type CustomerType, type Item, type Order, type OrderDetail, type OrderStatus, type PaymentMethod, type PaymentType,
@@ -239,7 +240,12 @@ export function OrderForm({ items, mode = 'create', source, onSaved, trigger }: 
         if (saveAs !== 'pending') body.status = saveAs;
         if (mode === 'reorder' && source) body.reordered_from_order_id = source.id;
         saved = (await api.post<Order & { warning?: string }>('/cod/orders', body)).data;
+        // `me` is from before this order, so look one order ahead for the limit warning
+        const allowance = orderAllowance(me?.usage, 1);
         if (saved.warning === 'SAVED_PENDING_NO_STOCK') toast(t('orders.savedPendingNoStock'), { icon: '⚠️', duration: 7000 });
+        else if (allowance.state === 'grace') toast(t.n('orders.createdGrace', allowance.left, { limit: allowance.limit }), { icon: '⚠️', duration: 8000 });
+        else if (allowance.state === 'blocked') toast(t('orders.createdLast'), { icon: '⚠️', duration: 8000 });
+        else if (allowance.state === 'warn') toast(t.n('orders.createdWarn', allowance.left), { icon: '⚠️', duration: 6000 });
         else toast.success(t('orders.created'));
       }
       setOpen(false);

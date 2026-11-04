@@ -29,6 +29,8 @@ export class EmailService {
         to,
         subject,
         html,
+        // Keeps the email agent from ever processing a notification that lands in its own mailbox
+        headers: { 'X-KadeHub-Agent': 'internal' },
       });
       this.logger.log(`Email sent: ${subject} → ${to}`);
       return true;

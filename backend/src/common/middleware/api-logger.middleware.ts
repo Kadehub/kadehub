@@ -26,7 +26,7 @@ export class ApiLoggerMiddleware implements NestMiddleware {
         }
       } catch {}
       const path: string = req.path || '';
-      if (path.startsWith('/api/super-admin') || path.startsWith('/uploads')) return;
+      if (path.startsWith('/api/super-admin') || path.startsWith('/uploads') || path.startsWith('/api/email-agent')) return;
       this.logRepo.save(
         this.logRepo.create({ tenant_id, method: req.method, path, status_code: res.statusCode, response_ms: ms }),
       ).catch((err) => this.logger.error(`Failed to save log: ${err?.message}`));

@@ -6,6 +6,8 @@ import { PRODUCTS } from '../common/products';
 export type Migration = {
   id: string;
   up: (ds: DataSource, dialect: string) => Promise<void>;
+  /** Optional. Only used by rollbackMigration; startup never rolls back. */
+  down?: (ds: DataSource, dialect: string) => Promise<void>;
 };
 
 export const MIGRATIONS: Migration[] = [

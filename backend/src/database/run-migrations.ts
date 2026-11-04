@@ -4,6 +4,7 @@ import { MIGRATIONS } from './migrations';
 import { COD_MIGRATIONS } from './migrations-cod';
 import { TASKS_MIGRATIONS } from './migrations-tasks';
 import { HR_MIGRATIONS } from './migrations-hr';
+import { EMAIL_AGENT_MIGRATIONS } from './migrations-email-agent';
 
 const logger = new Logger('Migrations');
 
@@ -24,7 +25,7 @@ export async function runPendingMigrations(ds: DataSource) {
   const appliedRows: Array<{ id: string }> = await ds.query('SELECT id FROM schema_migration');
   const applied = new Set(appliedRows.map(r => r.id));
 
-  for (const migration of [...MIGRATIONS, ...COD_MIGRATIONS, ...TASKS_MIGRATIONS, ...HR_MIGRATIONS]) {
+  for (const migration of [...MIGRATIONS, ...COD_MIGRATIONS, ...TASKS_MIGRATIONS, ...HR_MIGRATIONS, ...EMAIL_AGENT_MIGRATIONS]) {
     if (applied.has(migration.id)) continue;
     logger.log(`Applying ${migration.id}…`);
     try {
@@ -40,4 +41,13 @@ export async function runPendingMigrations(ds: DataSource) {
       throw err;
     }
   }
+}
+
+/** Undoes one migration that has a `down`. Never called at startup: for tests and deliberate manual rollback. */
+export async function rollbackMigration(ds: DataSource, id: string) {
+  const migration = [...MIGRATIONS, ...COD_MIGRATIONS, ...TASKS_MIGRATIONS, ...HR_MIGRATIONS, ...EMAIL_AGENT_MIGRATIONS].find(m => m.id === id);
+  if (!migration?.down) throw new Error(`Migration ${id} has no down step`);
+  const dialect = ds.options.type as string;
+  await migration.down(ds, dialect);
+  await ds.query(`DELETE FROM schema_migration WHERE id = ${dialect === 'postgres' ? '$1' : '?'}`, [id]);
 }

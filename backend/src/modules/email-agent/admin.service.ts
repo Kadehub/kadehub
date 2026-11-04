@@ -255,7 +255,7 @@ export class AdminService {
     const bounced = await countBy(`SELECT COUNT(*) AS n FROM ea_email WHERE bounced_at >= ?`, [since]);
     const optOuts = await countBy(`SELECT COUNT(*) AS n FROM ea_suppression WHERE reason IN ('unsubscribe', 'opt_out') AND created_at >= ?`, [since]);
     const contacted = await countBy(`SELECT COUNT(*) AS n FROM ea_prospect WHERE step > 0`);
-    const replied = await countBy(`SELECT COUNT(*) AS n FROM ea_prospect WHERE status = 'replied' OR (status = 'stopped' AND step > 0) OR (status = 'opted_out' AND step > 0)`);
+    const replied = await countBy(`SELECT COUNT(DISTINCT prospect_id) AS n FROM ea_message WHERE prospect_id IS NOT NULL AND triage IN ('pass', 'unsubscribe')`);
     const approved = await countBy(`SELECT COUNT(*) AS n FROM ea_email WHERE approved_at >= ?`, [since]);
     const rejected = await countBy(`SELECT COUNT(*) AS n FROM ea_email WHERE status = 'rejected' AND updated_at >= ?`, [since]);
     const received = await countBy(`SELECT COUNT(*) AS n FROM ea_message WHERE created_at >= ?`, [since]);

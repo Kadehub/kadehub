@@ -153,6 +153,8 @@ export class IngestService {
 
       if (result === 'bounce') await this.applyBounce(tx, mail, messageId);
       if (result === 'unsubscribe' && from.address) {
+        // A colleague can opt out from another address in the thread, which suppress() alone would not catch
+        if (prospect) await this.stopSequenceOnReply(tx, prospect, messageId);
         await suppress(tx, SERVICE, from.address, 'unsubscribe', `message:${messageId}`);
       }
       if (result === 'pass') {

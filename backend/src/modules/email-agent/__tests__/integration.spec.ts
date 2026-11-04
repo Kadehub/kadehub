@@ -151,10 +151,12 @@ async function wipe(ds: DataSource, pg: boolean) {
 if (!TARGETS.length) {
   // eslint-disable-next-line no-console
   console.warn('Email agent integration tests skipped: set EA_TEST_PG_URL and/or EA_TEST_MYSQL_URL.');
-  it.skip('needs a test database', () => undefined);
 }
 
-describe.each(TARGETS)('email agent on %s', (type, url) => {
+// describe.each throws on an empty table, so with no database the suite is skipped rather than failed
+const forEachDatabase: any = TARGETS.length ? describe.each(TARGETS) : describe.skip.each([['no database', '']]);
+
+forEachDatabase('email agent on %s', (type: 'postgres' | 'mysql', url: string) => {
   const pg = type === 'postgres';
   let app: INestApplication;
   let base: string;
@@ -1252,6 +1254,13 @@ describe.each(TARGETS)('email agent on %s', (type, url) => {
       expect(p.next_touch_at).toBeNull();
       expect((await emailRow(pending)).status).toBe('cancelled');
       expect(await count('ea_job', `kind = 'classify'`)).toBe(1);
+    });
+
+    it('an opt-out from another address in the thread stops the sequence', async () => {
+      const pid = await activeProspect({ step: 1, provider_thread_id: 'thr-c' });
+      await ingest.store(inbound({ threadId: 'thr-c', headers: { from: 'colleague@realshop.example.lk' }, text: 'unsubscribe' }));
+      expect((await db.rows('SELECT status FROM ea_prospect WHERE id = ?', [pid]))[0].status).toBe('replied');
+      expect((await admin.analytics()).replied).toBe(1);
     });
 
     it('an out-of-office auto-reply does not stop the sequence', async () => {

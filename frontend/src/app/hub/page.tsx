@@ -125,7 +125,6 @@ export default function HubPage() {
             <a href="#products" className="hidden sm:inline px-3 py-2 text-sm font-medium text-ink-600 hover:text-ink-900">Products</a>
             <a href="#how" className="hidden md:inline px-3 py-2 text-sm font-medium text-ink-600 hover:text-ink-900">How it works</a>
             <a href="#faq" className="hidden md:inline px-3 py-2 text-sm font-medium text-ink-600 hover:text-ink-900">FAQ</a>
-            <a href="/portfolio" className="hidden lg:inline px-3 py-2 text-sm font-medium text-ink-600 hover:text-ink-900">Portfolio</a>
             <a href="/apps" className="px-4 py-2 rounded-xl text-sm font-bold kh-btn-primary">Sign in</a>
           </nav>
         </div>
@@ -370,7 +369,6 @@ export default function HubPage() {
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-ink-400">Company</p>
             <ul className="mt-3 space-y-2 text-sm">
-              <li><a href="/portfolio" className="text-ink-600 hover:text-ink-900">Portfolio</a></li>
               <li><a href="#faq" className="text-ink-600 hover:text-ink-900">FAQ</a></li>
               <li><a href="mailto:official.kadehub@gmail.com" className="text-ink-600 hover:text-ink-900">Contact us</a></li>
               <li><a href="/apps" className="text-ink-600 hover:text-ink-900">Sign in</a></li>

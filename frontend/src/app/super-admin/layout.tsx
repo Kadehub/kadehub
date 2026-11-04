@@ -8,7 +8,7 @@ import KadeHubLogo from '../../components/ui/KadeHubLogo';
 import {
   LayoutDashboard, Store, CreditCard, Package,
   LogOut, ChevronRight, ShieldCheck, BarChart2, Settings,
-  Tag, Megaphone, Activity, Banknote, FileText, ClipboardList, DollarSign, Menu, Briefcase, Users, Truck, History,
+  Tag, Megaphone, Activity, Banknote, FileText, ClipboardList, DollarSign, Menu, Briefcase, Users, Truck, History, Mail,
 } from 'lucide-react';
 
 const NAV = [
@@ -39,6 +39,7 @@ const NAV = [
     group: 'Communication',
     items: [
       { href: '/super-admin/announcements', label: 'Announcements', icon: Megaphone },
+      { href: '/super-admin/email-agent', label: 'Email Agent', icon: Mail },
     ],
   },
   {
@@ -58,6 +59,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   const [hydrated, setHydrated] = useState(false);
   const [pendingSlips, setPendingSlips] = useState(0);
   const [newQuotes, setNewQuotes] = useState(0);
+  const [emailsToReview, setEmailsToReview] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isLogin = pathname === '/super-admin/login';
@@ -70,6 +72,9 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
       .catch(() => {});
     api.get('/super-admin/quotations/new-count')
       .then(r => setNewQuotes(r.data?.count || 0))
+      .catch(() => {});
+    api.get('/super-admin/email-agent/emails/pending-count')
+      .then(r => setEmailsToReview(r.data?.count || 0))
       .catch(() => {});
   }, [hydrated, user, pathname, isLogin]);
   useEffect(() => {
@@ -139,6 +144,12 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                         <span className="min-w-[18px] h-[18px] px-1 rounded-full text-2xs font-bold flex items-center justify-center"
                           style={{ background: active ? 'rgba(255,255,255,0.25)' : '#F59E0B', color: active ? 'white' : '#0a2e25' }}>
                           {newQuotes}
+                        </span>
+                      )}
+                      {href === '/super-admin/email-agent' && emailsToReview > 0 && (
+                        <span className="min-w-[18px] h-[18px] px-1 rounded-full text-2xs font-bold flex items-center justify-center"
+                          style={{ background: active ? 'rgba(255,255,255,0.25)' : '#F59E0B', color: active ? 'white' : '#0a2e25' }}>
+                          {emailsToReview}
                         </span>
                       )}
                       {active && <ChevronRight size={14} className="opacity-60" />}

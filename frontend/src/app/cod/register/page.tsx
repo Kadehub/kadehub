@@ -11,6 +11,7 @@ import { MascotScene, MascotState } from '../../../components/brand/Mascot';
 import { LanguageSwitcher, codHref } from '../../../components/cod/bits';
 import { Button, Field, TextInput, Toggle, btnClass, cn } from '../../../components/cod/ui';
 import KadeHubLogo from '../../../components/ui/KadeHubLogo';
+import { PasswordInput } from '../../../components/ui/PasswordInput';
 import { useAuthHydrated, useAuthStore } from '../../../hooks/useAuth';
 import api from '../../../lib/api';
 import { trackRegistration } from '../../../lib/meta-pixel';
@@ -257,8 +258,8 @@ function Wizard({ hasSession, defaultName, onDone }: { hasSession: boolean; defa
               <Field label={t('reg.yourName')} htmlFor="full_name"><TextInput id="full_name" {...field('full_name')} autoComplete="name" /></Field>
               <Field label={t('common.email')} htmlFor="email"><TextInput id="email" {...field('email')} type="email" autoComplete="email" required /></Field>
               <Field label={t('common.password')} htmlFor="password" hint={t('reg.passwordHelp')}>
-                <TextInput id="password" {...field('password')} type="password" autoComplete="new-password" minLength={8} required
-                  pattern="(?=.*[A-Z])(?=.*\d).{8,}" />
+                <PasswordInput as={TextInput} id="password" {...field('password')} autoComplete="new-password" minLength={8} required
+                  pattern="(?=.*[A-Z])(?=.*\d).{8,}" showLabel={t('common.showPassword')} hideLabel={t('common.hidePassword')} />
               </Field>
             </>
           )}

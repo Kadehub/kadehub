@@ -4,6 +4,7 @@ import { LogOut, LayoutGrid, ShieldCheck, UserRound, KeyRound, Store, ArrowRight
 import toast from 'react-hot-toast';
 import KadeHubLogo from '../../components/ui/KadeHubLogo';
 import ProductIcon from '../../components/platform/ProductIcon';
+import { PasswordInput } from '../../components/ui/PasswordInput';
 import { MascotState } from '../../components/brand/Mascot';
 import { useAuthHydrated, useAuthStore } from '../../hooks/useAuth';
 import { ROOT_DOMAIN, getProduct, productUrl, type ProductSlug } from '../../lib/platform';
@@ -189,13 +190,13 @@ export default function AccountPage() {
           <p className="text-xs text-ink-400 mt-1">Changing it here changes it for every KadeHub app.</p>
           <div className="mt-4 space-y-3">
             <Field label="Current password">
-              <input type="password" value={pw.current} onChange={e => setPw(s => ({ ...s, current: e.target.value }))} required className={inputCls} autoComplete="current-password" />
+              <PasswordInput value={pw.current} onChange={e => setPw(s => ({ ...s, current: e.target.value }))} required className={inputCls} autoComplete="current-password" />
             </Field>
             <Field label="New password" hint="At least 8 characters, with an uppercase letter and a number.">
-              <input type="password" value={pw.next} onChange={e => setPw(s => ({ ...s, next: e.target.value }))} required minLength={8} className={inputCls} autoComplete="new-password" />
+              <PasswordInput value={pw.next} onChange={e => setPw(s => ({ ...s, next: e.target.value }))} required minLength={8} className={inputCls} autoComplete="new-password" />
             </Field>
             <Field label="Confirm new password">
-              <input type="password" value={pw.confirm} onChange={e => setPw(s => ({ ...s, confirm: e.target.value }))} required minLength={8} className={inputCls} autoComplete="new-password" />
+              <PasswordInput value={pw.confirm} onChange={e => setPw(s => ({ ...s, confirm: e.target.value }))} required minLength={8} className={inputCls} autoComplete="new-password" />
             </Field>
           </div>
           <button disabled={saving === 'password'} className="mt-4 px-4 py-2 rounded-xl text-sm font-bold kh-btn-primary">{saving === 'password' ? 'Saving…' : 'Change password'}</button>

@@ -8,6 +8,7 @@ import { MascotScene, MascotState } from '../../../components/brand/Mascot';
 import { hrHref } from '../../../components/hr/HrContext';
 import { Button, Field, TextInput, btnClass, cn } from '../../../components/hr/ui';
 import KadeHubLogo from '../../../components/ui/KadeHubLogo';
+import { PasswordInput } from '../../../components/ui/PasswordInput';
 import LanguageSwitcher from '../../../components/ui/LanguageSwitcher';
 import { useAuthHydrated, useAuthStore } from '../../../hooks/useAuth';
 import api from '../../../lib/api';
@@ -229,7 +230,7 @@ function Wizard({ hasSession, defaultName, onDone }: { hasSession: boolean; defa
             </Field>
             <Field label={t('common.email')} htmlFor="email"><TextInput id="email" {...field('email')} type="email" autoComplete="email" required /></Field>
             <Field label={t('reg.password')} htmlFor="password" hint={t('reg.passwordHelp')}>
-              <TextInput id="password" {...field('password')} type="password" autoComplete="new-password" minLength={8} required
+              <PasswordInput as={TextInput} id="password" {...field('password')} autoComplete="new-password" minLength={8} required
                 pattern="(?=.*[A-Z])(?=.*\d).{8,}" />
             </Field>
           </div>

@@ -1,4 +1,5 @@
 import { InputHTMLAttributes, ReactNode } from 'react';
+import { PasswordInput } from './PasswordInput';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -6,16 +7,16 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   icon?: ReactNode;
 }
 
-export function Input({ label, error, icon, className = '', ...props }: InputProps) {
+export function Input({ label, error, icon, className = '', type, ...props }: InputProps) {
+  const inputClass = `w-full border border-ink-200 rounded-lg bg-white text-ink-800 placeholder:text-ink-400 text-sm transition-all ${icon ? 'pl-9' : 'px-3'} py-2.5 ${error ? 'border-red-400' : ''} ${className}`;
   return (
     <div className="space-y-1">
       {label && <label className="block text-sm font-medium text-ink-700">{label}</label>}
       <div className="relative">
         {icon && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400">{icon}</span>}
-        <input
-          className={`w-full border border-ink-200 rounded-lg bg-white text-ink-800 placeholder:text-ink-400 text-sm transition-all ${icon ? 'pl-9' : 'px-3'} py-2.5 ${error ? 'border-red-400' : ''} ${className}`}
-          {...props}
-        />
+        {type === 'password'
+          ? <PasswordInput className={inputClass} {...props} />
+          : <input className={inputClass} type={type} {...props} />}
       </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>

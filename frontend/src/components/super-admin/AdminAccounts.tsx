@@ -4,6 +4,7 @@ import { UserPlus, Power, KeyRound } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 import { errMsg, fmtDate, inputCls } from './bits';
+import { PasswordInput } from '../ui/PasswordInput';
 
 type Admin = { id: number; name: string; email: string; created_at: string; disabled_at: string | null };
 
@@ -29,11 +30,11 @@ export function ChangeOwnPassword() {
     <form onSubmit={submit} className="pt-4 border-t border-ink-100 space-y-3">
       <p className="flex items-center gap-2 text-sm font-semibold text-ink-800"><KeyRound size={15} /> Change my password</p>
       <div className="grid gap-3 sm:grid-cols-3">
-        <input type="password" required placeholder="Current password" autoComplete="current-password" value={form.current_password}
+        <PasswordInput required placeholder="Current password" autoComplete="current-password" value={form.current_password}
           onChange={e => setForm({ ...form, current_password: e.target.value })} className={inputCls} aria-label="Current password" />
-        <input type="password" required minLength={8} placeholder="New password (8+)" autoComplete="new-password" value={form.new_password}
+        <PasswordInput required minLength={8} placeholder="New password (8+)" autoComplete="new-password" value={form.new_password}
           onChange={e => setForm({ ...form, new_password: e.target.value })} className={inputCls} aria-label="New password" />
-        <input type="password" required minLength={8} placeholder="Repeat new password" autoComplete="new-password" value={form.confirm}
+        <PasswordInput required minLength={8} placeholder="Repeat new password" autoComplete="new-password" value={form.confirm}
           onChange={e => setForm({ ...form, confirm: e.target.value })} className={inputCls} aria-label="Repeat new password" />
       </div>
       <button type="submit" disabled={busy} className="kh-btn-primary px-4 py-2 rounded-xl text-sm disabled:opacity-50">{busy ? 'Saving…' : 'Change password'}</button>
@@ -95,7 +96,7 @@ export function AdminAccounts({ myId, onMe }: { myId?: number; onMe?: (me: Admin
         <form onSubmit={add} className="grid gap-3 sm:grid-cols-3 rounded-xl bg-ink-50 p-3">
           <input required placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputCls} aria-label="Name" />
           <input required type="email" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className={inputCls} aria-label="Email" />
-          <input required type="password" minLength={8} placeholder="Password (8+)" autoComplete="new-password" value={form.password}
+          <PasswordInput required minLength={8} placeholder="Password (8+)" autoComplete="new-password" value={form.password}
             onChange={e => setForm({ ...form, password: e.target.value })} className={inputCls} aria-label="Password" />
           <div className="sm:col-span-3 flex justify-end gap-2">
             <button type="button" onClick={() => setAdding(false)} className="px-3 py-2 text-sm font-semibold text-ink-500">Cancel</button>

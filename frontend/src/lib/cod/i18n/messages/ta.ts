@@ -47,6 +47,8 @@ export const ta: Record<MessageKey, string> = {
   "common.city": "நகரம்",
   "common.email": "மின்னஞ்சல்",
   "common.password": "கடவுச்சொல்",
+  "common.showPassword": "கடவுச்சொல்லைக் காட்டு",
+  "common.hidePassword": "கடவுச்சொல்லை மறை",
   "common.quantity": "எண்ணிக்கை",
   "common.unitPrice": "அலகு விலை",
   "common.invoice": "விலைப்பட்டியல்",

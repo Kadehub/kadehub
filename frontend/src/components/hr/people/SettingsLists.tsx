@@ -10,6 +10,7 @@ import { useHrT } from '../../../lib/hr/i18n';
 import { formatDate, formatMinutes, formatNumber, formatShift, shiftMinutes, today } from '../../../lib/hr/format';
 import type { Branch, Holiday, LeaveType, Manager, ShiftTemplate } from '../../../lib/hr/types';
 import { hrHref, useHr } from '../HrContext';
+import { PasswordInput } from '../../ui/PasswordInput';
 import {
   Button, Card, ConfirmDialog, Dialog, Dot, EmptyState, Field, LoadError, Loading, Menu, MenuItem, NativeSelect, Pill, TextInput, Toggle, cn,
 } from '../ui';
@@ -229,7 +230,7 @@ function NewManagerDialog({ onClose, onSaved }: { onClose: () => void; onSaved: 
       <Field label={t('common.email')} htmlFor="mgr-email"><TextInput id="mgr-email" type="email" required value={v.email} onChange={e => setV({ ...v, email: e.target.value })} /></Field>
       <Field label={t('common.phone')} htmlFor="mgr-phone"><TextInput id="mgr-phone" type="tel" maxLength={40} value={v.phone} onChange={e => setV({ ...v, phone: e.target.value })} /></Field>
       <Field label={t('set.mgr.password')} htmlFor="mgr-pass" hint={t('set.mgr.passwordHint')}>
-        <TextInput id="mgr-pass" type="password" required minLength={8} autoComplete="new-password" value={v.password} onChange={e => setV({ ...v, password: e.target.value })} />
+        <PasswordInput as={TextInput} id="mgr-pass" required minLength={8} autoComplete="new-password" value={v.password} onChange={e => setV({ ...v, password: e.target.value })} />
       </Field>
       <Field label={t('set.mgr.branches')}><BranchChecks value={ids} onChange={setIds} /></Field>
     </FormDialog>
@@ -298,7 +299,7 @@ function ReplaceManagerDialog({ manager, others, onClose, onSaved }: { manager: 
           <Field label={t('common.email')} htmlFor="rep-email"><TextInput id="rep-email" type="email" required value={v.email} onChange={e => setV({ ...v, email: e.target.value })} /></Field>
           <Field label={t('common.phone')} htmlFor="rep-phone"><TextInput id="rep-phone" type="tel" maxLength={40} value={v.phone} onChange={e => setV({ ...v, phone: e.target.value })} /></Field>
           <Field label={t('set.mgr.password')} htmlFor="rep-pass" hint={t('set.mgr.passwordHint')}>
-            <TextInput id="rep-pass" type="password" required minLength={8} autoComplete="new-password" value={v.password} onChange={e => setV({ ...v, password: e.target.value })} />
+            <PasswordInput as={TextInput} id="rep-pass" required minLength={8} autoComplete="new-password" value={v.password} onChange={e => setV({ ...v, password: e.target.value })} />
           </Field>
         </>
       )}

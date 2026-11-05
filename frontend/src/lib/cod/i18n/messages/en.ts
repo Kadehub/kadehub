@@ -49,6 +49,8 @@ export const en = {
   "common.city": "City",
   "common.email": "Email",
   "common.password": "Password",
+  "common.showPassword": "Show password",
+  "common.hidePassword": "Hide password",
   "common.quantity": "Qty",
   "common.unitPrice": "Unit price",
   "common.invoice": "Invoice",

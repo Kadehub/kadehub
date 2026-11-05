@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { Upload } from 'lucide-react';
 import { useCod } from '../../../components/cod/CodContext';
 import { Button, Card, Field, NativeSelect, TextArea, TextInput, Toggle, cn } from '../../../components/cod/ui';
+import { PasswordInput } from '../../../components/ui/PasswordInput';
 import api from '../../../lib/api';
 import { useT } from '../../../lib/cod/i18n/client';
 import { BRAND_SWATCHES, normalizeHex, readableTextColor } from '../../../lib/cod/brand';
@@ -178,12 +179,18 @@ function PasswordForm() {
     }
   }
 
-  const f = (key: keyof typeof form) => ({ value: form[key], onChange: (e: React.ChangeEvent<HTMLInputElement>) => setForm(v => ({ ...v, [key]: e.target.value })) });
+  const f = (key: keyof typeof form) => ({
+    as: TextInput,
+    showLabel: t('common.showPassword'),
+    hideLabel: t('common.hidePassword'),
+    value: form[key],
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setForm(v => ({ ...v, [key]: e.target.value })),
+  });
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <Field label={t('set.currentPassword')} htmlFor="current-password"><TextInput id="current-password" type="password" autoComplete="current-password" required {...f('current')} /></Field>
-      <Field label={t('set.newPassword')} htmlFor="new-password"><TextInput id="new-password" type="password" autoComplete="new-password" minLength={8} required {...f('password')} /></Field>
-      <Field label={t('set.confirmPassword')} htmlFor="confirm-password"><TextInput id="confirm-password" type="password" autoComplete="new-password" minLength={8} required {...f('confirm')} /></Field>
+      <Field label={t('set.currentPassword')} htmlFor="current-password"><PasswordInput id="current-password" autoComplete="current-password" required {...f('current')} /></Field>
+      <Field label={t('set.newPassword')} htmlFor="new-password"><PasswordInput id="new-password" autoComplete="new-password" minLength={8} required {...f('password')} /></Field>
+      <Field label={t('set.confirmPassword')} htmlFor="confirm-password"><PasswordInput id="confirm-password" autoComplete="new-password" minLength={8} required {...f('confirm')} /></Field>
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
       <Button type="submit" disabled={busy}>{busy ? t('set.updating') : t('set.updatePassword')}</Button>
     </form>

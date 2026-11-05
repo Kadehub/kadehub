@@ -48,6 +48,8 @@ export const si: Record<MessageKey, string> = {
   "common.city": "City",
   "common.email": "Email",
   "common.password": "Password",
+  "common.showPassword": "මුරපදය පෙන්වන්න",
+  "common.hidePassword": "මුරපදය සඟවන්න",
   "common.quantity": "Qty",
   "common.unitPrice": "Unit price",
   "common.invoice": "Invoice",

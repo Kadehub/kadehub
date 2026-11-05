@@ -318,4 +318,24 @@ export const MIGRATIONS: Migration[] = [
       await addColumn(ds, 'user', 'tasks_ban_reason', 'VARCHAR(255) NULL');
     },
   },
+  {
+    id: '012_plan_upgrade_notice',
+    up: async (ds, dialect) => {
+      const pg = dialect === 'postgres';
+      if (await tableExists(ds, 'plan_upgrade_notice')) return;
+      const ts = pg ? 'TIMESTAMP' : 'DATETIME';
+      await ds.query(`CREATE TABLE plan_upgrade_notice (
+        ${pg ? 'id SERIAL PRIMARY KEY' : 'id INT NOT NULL AUTO_INCREMENT PRIMARY KEY'},
+        tenant_id INT NOT NULL${pg ? ' REFERENCES tenant(id) ON DELETE CASCADE' : ''},
+        product VARCHAR(30) NOT NULL,
+        plan_name VARCHAR(255) NOT NULL,
+        expires_at ${ts} NULL,
+        seen_at ${ts} NULL,
+        created_at ${ts} NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ${pg ? '' : ', FOREIGN KEY (tenant_id) REFERENCES tenant (id) ON DELETE CASCADE'}
+      )`);
+      if (pg) await ds.query('CREATE INDEX IF NOT EXISTS plan_upgrade_notice_tenant_idx ON plan_upgrade_notice (tenant_id, seen_at)');
+      else await ds.query('CREATE INDEX plan_upgrade_notice_tenant_idx ON `plan_upgrade_notice` (tenant_id, seen_at)').catch(() => {});
+    },
+  },
 ];

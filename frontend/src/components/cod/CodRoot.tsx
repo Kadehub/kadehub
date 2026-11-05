@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard, Package, Receipt, Wallet, BarChart3, CreditCard, Settings, BookImage, LogOut, Banknote, MoreHorizontal, LayoutGrid, Home,
+  LayoutDashboard, Package, Receipt, Wallet, BarChart3, CreditCard, Settings, BookImage, LogOut, Banknote, Coins, MoreHorizontal, LayoutGrid, Home,
 } from 'lucide-react';
 import { useAuthHydrated, useAuthStore } from '../../hooks/useAuth';
 import api from '../../lib/api';
@@ -127,6 +127,7 @@ function navItems(t: ReturnType<typeof useT>, itemsLabel: string): { href: strin
     { href: '/items', label: itemsLabel, icon: Package },
     { href: '/orders', label: t('nav.orders'), icon: Receipt },
     { href: '/credit', label: t('nav.credit'), icon: Banknote, cap: 'credit' },
+    { href: '/courier-cash', label: t('nav.courierCash'), icon: Coins, cap: 'reports' },
     { href: '/catalog', label: t('nav.catalog'), icon: BookImage },
     { href: '/expenses', label: t('nav.expenses'), icon: Wallet, cap: 'expenses' },
     { href: '/reports', label: t('nav.reports'), icon: BarChart3, cap: 'reports' },

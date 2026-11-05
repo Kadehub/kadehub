@@ -11,6 +11,7 @@ import KadeHubLogo from '../../../components/ui/KadeHubLogo';
 import LanguageSwitcher from '../../../components/ui/LanguageSwitcher';
 import { useAuthHydrated, useAuthStore } from '../../../hooks/useAuth';
 import api from '../../../lib/api';
+import { trackRegistration } from '../../../lib/meta-pixel';
 import { apiError } from '../../../lib/hr/api';
 import { useHrT, type HrKey } from '../../../lib/hr/i18n';
 import type { HrMe } from '../../../lib/hr/types';
@@ -147,6 +148,7 @@ function Wizard({ hasSession, defaultName, onDone }: { hasSession: boolean; defa
         branch_name: values.branch_name.trim() || undefined,
         weekly_off_days: [...offDays].sort().join(','),
       });
+      trackRegistration('hr', values.email);
       onDone();
     } catch (err) {
       const status = (err as { response?: { status?: number } })?.response?.status;
@@ -252,6 +254,9 @@ function Wizard({ hasSession, defaultName, onDone }: { hasSession: boolean; defa
         </div>
         <p className="text-center text-xs text-ink-400">{t('reg.trialNote')}</p>
       </form>
+      <p className="text-center text-xs text-ink-500">
+        <a href="/privacy" className="underline underline-offset-4">{t('reg.privacy')}</a>
+      </p>
 
       {!hasSession && (
         <p className="text-center text-sm text-ink-500">

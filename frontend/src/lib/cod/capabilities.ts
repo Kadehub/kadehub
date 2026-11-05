@@ -6,9 +6,9 @@ import { useAuthStore } from '../../hooks/useAuth';
  * The UI uses this only to hide what the user can't do; the backend guard is the real check.
  */
 export type CodCapability =
-  | 'orders_create' | 'orders_status' | 'credit' | 'costs' | 'expenses' | 'reports' | 'personal_finance';
+  | 'orders_create' | 'orders_status' | 'credit' | 'costs' | 'expenses' | 'reports' | 'personal_finance' | 'couriers';
 
-const ALL: CodCapability[] = ['orders_create', 'orders_status', 'credit', 'costs', 'expenses', 'reports', 'personal_finance'];
+const ALL: CodCapability[] = ['orders_create', 'orders_status', 'credit', 'costs', 'expenses', 'reports', 'personal_finance', 'couriers'];
 
 const ROLE_CAPABILITIES: Record<string, CodCapability[]> = {
   ADMIN: ALL,

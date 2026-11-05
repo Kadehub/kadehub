@@ -8,6 +8,10 @@ import { CodOrder, CodOrderStatus } from '../../database/entities/cod-order.enti
 import { CodOrderItem } from '../../database/entities/cod-order-item.entity';
 import { CodCreditPayment } from '../../database/entities/cod-credit-payment.entity';
 import { CodAuditService } from './cod-audit.service';
+import { CodCouriersService, buildTrackingLink } from './cod-couriers.service';
+import { CodShipmentEvent } from '../../database/entities/cod-shipment-event.entity';
+import { CodCourierAccount } from '../../database/entities/cod-courier-account.entity';
+import { CodRemittance } from '../../database/entities/cod-remittance.entity';
 import {
   computeOrderTotals, summariseCredit, dueBucket, deriveDueDate, nextInvoiceNumber, phoneKey, localDay, OrderRuleError, checkCustomerPhone,
 } from './cod-orders-calc';
@@ -17,7 +21,7 @@ import {
   RangeKey, LineWithCost,
 } from './cod-analytics';
 import {
-  SaveCodItemDto, CreateCodOrderDto, UpdateCodOrderDto, SaveCodOrderDto, AddCreditPaymentDto, SettleCreditDto,
+  SaveCodItemDto, CreateCodOrderDto, UpdateCodOrderDto, SaveCodOrderDto, AddCreditPaymentDto, SettleCreditDto, CodTrackingDto,
 } from './cod.dto';
 
 /** The signed-in user as the JWT carries it. */
@@ -38,6 +42,10 @@ export class CodService {
     @InjectRepository(CodOrderItem) private lineRepo: Repository<CodOrderItem>,
     @InjectRepository(CodCreditPayment) private paymentRepo: Repository<CodCreditPayment>,
     private audit: CodAuditService,
+    private couriers: CodCouriersService,
+    @InjectRepository(CodShipmentEvent) private eventRepo: Repository<CodShipmentEvent>,
+    @InjectRepository(CodCourierAccount) private courierAccountRepo: Repository<CodCourierAccount>,
+    @InjectRepository(CodRemittance) private remittanceRepo: Repository<CodRemittance>,
   ) {}
 
   // ───────────── items ─────────────
@@ -101,24 +109,34 @@ export class CodService {
 
   // ───────────── orders ─────────────
 
-  /** All orders, newest first, each with `paid` (sum of credit payments). */
+  /** All orders, newest first, each with `paid` (sum of credit payments) and its courier's name. */
   async listOrders(tenantId: number) {
     const orders = await this.orderRepo.find({ where: { tenant_id: tenantId }, order: { created_at: 'DESC', id: 'DESC' } });
-    const paid = await this.paidByOrder(tenantId);
-    return orders.map(o => ({ ...o, paid: paid.get(o.id) ?? 0 }));
+    const [paid, couriers] = await Promise.all([this.paidByOrder(tenantId), this.couriers.byIds(orders.map(o => o.courier_id))]);
+    return orders.map(o => ({ ...o, paid: paid.get(o.id) ?? 0, courier_name: couriers.get(o.courier_id as number)?.name ?? null }));
   }
 
   async getOrder(tenantId: number, id: number) {
     const order = await this.orderRepo.findOne({ where: { id, tenant_id: tenantId } });
     if (!order) throw new NotFoundException('Order not found');
-    const [order_items, payments, trust] = await Promise.all([
+    const [order_items, payments, trust, couriers, shipment_events, courierAccount, remittance] = await Promise.all([
       this.lineRepo.find({ where: { order_id: id, tenant_id: tenantId }, order: { id: 'ASC' } }),
       this.paymentRepo.find({ where: { order_id: id, tenant_id: tenantId }, order: { payment_date: 'ASC', id: 'ASC' } }),
       this.customerTrustStats(tenantId, order.customer_phone, id),
+      this.couriers.byIds([order.courier_id]),
+      this.eventRepo.find({ where: { order_id: id, tenant_id: tenantId }, order: { occurred_at: 'DESC', id: 'DESC' } }),
+      order.courier_id ? this.courierAccountRepo.findOne({ where: { tenant_id: tenantId, courier_id: order.courier_id } }) : null,
+      order.remittance_id ? this.remittanceRepo.findOne({ where: { id: order.remittance_id, tenant_id: tenantId } }) : null,
     ]);
     const credit = summariseCredit(order.total_amount, payments.reduce((s, p) => s + Number(p.amount), 0));
+    const courier = couriers.get(order.courier_id as number);
     return {
       ...order, order_items, payments, trust,
+      courier: courier ? { id: courier.id, name: courier.name } : null,
+      tracking_link: buildTrackingLink(courier?.tracking_url, order.tracking_number, order.customer_phone),
+      courier_connected: !!courierAccount?.api_key_enc,
+      shipment_events: shipment_events.map(e => ({ id: e.id, status: e.status, occurred_at: e.occurred_at, note: e.note })),
+      remittance: remittance ? { id: remittance.id, paid_on: remittance.paid_on, reference: remittance.reference } : null,
       credit: { ...credit, bucket: dueBucket({ payment_due_date: order.payment_due_date, created_at: order.created_at, outstanding: credit.outstanding }) },
     };
   }
@@ -188,7 +206,7 @@ export class CodService {
     order.payment_type = dto.payment_type ?? order.payment_type ?? 'cod';
     order.customer_type = dto.customer_type ?? order.customer_type ?? 'retail';
     order.po_number = dto.po_number?.trim() || null;
-    if (dto.tracking_number !== undefined) order.tracking_number = dto.tracking_number?.trim() || null;
+    this.applyShipment(order, dto.tracking_number === undefined ? order.tracking_number : dto.tracking_number, dto.courier_id);
     if (order.payment_type === 'credit') {
       order.credit_period_days = dto.credit_period_days ?? null;
       order.payment_due_date = deriveDueDate(order.created_at ?? new Date(), order.credit_period_days, dto.payment_due_date || null);
@@ -198,6 +216,20 @@ export class CodService {
       order.payment_due_date = null;
       order.credit_note = null;
     }
+  }
+
+  /** A different parcel starts its courier history afresh. */
+  private applyShipment(order: CodOrder, tracking: string | null | undefined, courierId: number | null | undefined) {
+    const nextTracking = tracking?.trim() || null;
+    const nextCourier = courierId === undefined ? order.courier_id ?? null : courierId;
+    if (nextTracking !== (order.tracking_number ?? null) || nextCourier !== (order.courier_id ?? null)) {
+      order.courier_status = null;
+      order.courier_state = null;
+      order.courier_attention = null;
+      order.courier_synced_at = null;
+    }
+    order.tracking_number = nextTracking;
+    order.courier_id = nextCourier;
   }
 
   private lineRows(manager: EntityManager, order: CodOrder, lines: Awaited<ReturnType<CodService['priceLines']>>['lines']) {
@@ -213,6 +245,7 @@ export class CodService {
   async createOrder(actor: Actor, dto: CreateCodOrderDto) {
     const tenantId = actor.tenant_id;
     await this.account.assertCanAddOrder(tenantId);
+    await this.couriers.assertUsable(tenantId, dto.courier_id);
     const priced = await this.priceLines(tenantId, dto);
     const isCredit = (dto.payment_type ?? 'cod') === 'credit';
     const initial = isCredit ? round2(dto.initial_payment ?? 0) : 0;
@@ -281,6 +314,7 @@ export class CodService {
       const repo = manager.getRepository(CodOrder);
       const order = await repo.findOne({ where: { id, tenant_id: tenantId } });
       if (!order) throw new NotFoundException('Order not found');
+      await this.couriers.assertUsable(tenantId, dto.courier_id, order.courier_id);
       const payments = await manager.getRepository(CodCreditPayment).find({ where: { order_id: id, tenant_id: tenantId } });
       const paid = round2(payments.reduce((s, p) => s + Number(p.amount), 0));
       const newType = dto.payment_type ?? order.payment_type;
@@ -317,6 +351,8 @@ export class CodService {
       order.stock_deducted = deduct;
     }
     if (status === 'returned') order.returned_at = new Date();
+    order.delivered_at = status === 'delivered' ? new Date() : null;
+    order.courier_attention = null;
     order.status = status;
     await manager.getRepository(CodOrder).save(order);
     return true;
@@ -354,7 +390,8 @@ export class CodService {
     }
   }
 
-  async updateOrderStatus(actor: Actor, id: number, status: CodOrderStatus) {
+  /** `via` says what made the change when it wasn't a person, for the activity log. */
+  async updateOrderStatus(actor: Actor, id: number, status: CodOrderStatus, via?: string) {
     const tenantId = actor.tenant_id;
     const { order, changed, from } = await this.ds.transaction(async manager => {
       const o = await manager.getRepository(CodOrder).findOne({ where: { id, tenant_id: tenantId } });
@@ -363,7 +400,7 @@ export class CodService {
       const did = await this.applyStatus(manager, o, status);
       return { order: o, changed: did, from: prev };
     });
-    if (changed) await this.audit.log(actor, 'status', 'cod_order', id, `${order.invoice_number} ${from} → ${status}`);
+    if (changed) await this.audit.log(actor, 'status', 'cod_order', id, `${order.invoice_number} ${from} → ${status}${via ? ` (${via})` : ''}`);
     return order;
   }
 
@@ -415,12 +452,14 @@ export class CodService {
     return { ok: true };
   }
 
-  async setTracking(actor: Actor, id: number, tracking: string | null | undefined) {
+  async setTracking(actor: Actor, id: number, dto: CodTrackingDto) {
     const order = await this.orderRepo.findOne({ where: { id, tenant_id: actor.tenant_id } });
     if (!order) throw new NotFoundException('Order not found');
-    order.tracking_number = tracking?.trim() || null;
+    await this.couriers.assertUsable(actor.tenant_id, dto.courier_id, order.courier_id);
+    this.applyShipment(order, dto.tracking_number, dto.courier_id);
     const saved = await this.orderRepo.save(order);
-    await this.audit.log(actor, 'updated', 'cod_order', id, `${order.invoice_number} tracking ${order.tracking_number ?? '—'}`);
+    const courier = (await this.couriers.byIds([order.courier_id])).get(order.courier_id as number);
+    await this.audit.log(actor, 'updated', 'cod_order', id, `${order.invoice_number} courier ${courier?.name ?? '—'} tracking ${order.tracking_number ?? '—'}`);
     return saved;
   }
 

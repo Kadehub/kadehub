@@ -8,14 +8,16 @@ import { Subscription } from '../../database/entities/subscription.entity';
 import { Package } from '../../database/entities/package.entity';
 import { User } from '../../database/entities/user.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
+import { PlanUpgradeNotice } from '../../database/entities/plan-upgrade-notice.entity';
+import { PlanUpgradeNoticeService } from './plan-upgrade-notice.service';
 import { BillingModule } from '../billing/billing.module';
 
 // Global so every product module can use ProductGuard / ProductAccessService without importing this module
 @Global()
 @Module({
-  imports: [TypeOrmModule.forFeature([Subscription, Package, User, Tenant]), BillingModule],
+  imports: [TypeOrmModule.forFeature([Subscription, Package, User, Tenant, PlanUpgradeNotice]), BillingModule],
   controllers: [PlatformController],
-  providers: [PlatformService, ProductAccessService, ProductGuard],
-  exports: [ProductAccessService, ProductGuard],
+  providers: [PlatformService, ProductAccessService, ProductGuard, PlanUpgradeNoticeService],
+  exports: [ProductAccessService, ProductGuard, PlanUpgradeNoticeService],
 })
 export class PlatformModule {}

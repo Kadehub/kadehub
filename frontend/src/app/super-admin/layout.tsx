@@ -8,7 +8,7 @@ import KadeHubLogo from '../../components/ui/KadeHubLogo';
 import {
   LayoutDashboard, Store, CreditCard, Package,
   LogOut, ChevronRight, ShieldCheck, BarChart2, Settings,
-  Tag, Megaphone, Activity, Banknote, FileText, ClipboardList, DollarSign, Menu, Briefcase, Users, Truck, History, Mail,
+  Tag, Megaphone, Activity, Banknote, FileText, ClipboardList, DollarSign, Menu, Briefcase, Users, Truck, History, Mail, MapPin,
 } from 'lucide-react';
 
 const NAV = [
@@ -25,6 +25,7 @@ const NAV = [
       { href: '/super-admin/shops', label: 'All Shops', icon: Store },
       { href: '/super-admin/users', label: 'People', icon: Users },
       { href: '/super-admin/cod', label: 'COD Directory', icon: Truck },
+      { href: '/super-admin/couriers', label: 'Couriers', icon: MapPin },
       { href: '/super-admin/payments', label: 'Payment Slips', icon: Banknote },
       { href: '/super-admin/invoices', label: 'Invoices', icon: FileText },
       { href: '/super-admin/quotations', label: 'Quotations', icon: ClipboardList },

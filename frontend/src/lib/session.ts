@@ -11,13 +11,13 @@ const LEGACY_STORAGE_KEY = 'auth-store';
 const IMPERSONATION_COOKIE = 'kh_sa_backup';
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // matches the backend JWT expiry
 
-function readCookie(name: string): string | null {
+export function readCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.split('; ').find(c => c.startsWith(`${name}=`));
   return match ? decodeURIComponent(match.slice(name.length + 1)) : null;
 }
 
-function writeCookie(name: string, value: string, maxAge?: number) {
+export function writeCookie(name: string, value: string, maxAge?: number) {
   if (typeof document === 'undefined') return;
   const parts = [`${name}=${encodeURIComponent(value)}`, 'path=/', 'SameSite=Lax'];
   if (COOKIE_DOMAIN) parts.push(`domain=${COOKIE_DOMAIN}`);
@@ -26,7 +26,7 @@ function writeCookie(name: string, value: string, maxAge?: number) {
   document.cookie = parts.join('; ');
 }
 
-function deleteCookie(name: string) {
+export function deleteCookie(name: string) {
   writeCookie(name, '', 0);
 }
 

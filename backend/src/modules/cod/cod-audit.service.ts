@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { AuditLog } from '../../database/entities/audit-log.entity';
 
 export type CodAuditAction = 'created' | 'updated' | 'deleted' | 'status' | 'payment' | 'budget';
-export type CodAuditEntity = 'cod_order' | 'cod_expense' | 'cod_personal_expense' | 'cod_credit' | 'cod_personal_settings';
+export type CodAuditEntity = 'cod_order' | 'cod_expense' | 'cod_personal_expense' | 'cod_credit' | 'cod_personal_settings' | 'cod_courier';
 
 /**
  * Best-effort audit trail for COD, written to the shared audit_log table.

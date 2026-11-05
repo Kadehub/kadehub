@@ -11,14 +11,20 @@ import { BRAND_SWATCHES, normalizeHex, readableTextColor } from '../../../lib/co
 import { BUSINESS_TYPES, businessTypeLabel } from '../../../lib/cod/business-types';
 import { apiError } from '../../../lib/cod/session';
 import { isValidPhone } from '../../../lib/cod/order-share';
+import { useCodCan } from '../../../lib/cod/capabilities';
+import { CourierConnections, CourierSettings } from '../../../components/cod/couriers';
 
 // cod.kadehub.com/settings — business profile, branding, costing, password (reachable even when the plan lapsed)
 export default function CodSettingsPage() {
   const t = useT();
+  const can = useCodCan();
+  const { me } = useCod();
   return (
     <div className="max-w-2xl space-y-6">
       <h1 className="text-xl font-bold tracking-tight text-ink-900">{t('nav.settings')}</h1>
       <Card title={t('set.businessDetails')}><BusinessForm /></Card>
+      {can('couriers') && <Card title={t('set.couriers')}><CourierSettings /></Card>}
+      {can('couriers') && <Card title={t('set.courierAuto')}><CourierConnections premium={!!me.premium} /></Card>}
       <Card title={t('set.changePassword')}><PasswordForm /></Card>
     </div>
   );

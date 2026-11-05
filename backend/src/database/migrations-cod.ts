@@ -4,6 +4,7 @@ import { tableExists } from './migration-utils';
 import { COD_PLANS, COD_TOPUP } from '../modules/cod/cod-plans';
 import { COD_ORDER_MIGRATIONS } from './migrations-cod-orders';
 import { COD_EXPENSE_MIGRATIONS } from './migrations-cod-expenses';
+import { COD_COURIER_MIGRATIONS } from './migrations-cod-couriers';
 
 /** Column spec: name, Postgres type, MySQL type (constraints included). */
 type Col = [string, string, string];
@@ -180,7 +181,8 @@ export const COD_MIGRATIONS: Migration[] = [
       await createIndex(ds, pg, 'cod_order_topup_month_idx', 'cod_order_topup', 'tenant_id, month');
     },
   },
-  // Orders + credit (ids 110-139) and expenses (ids 140-169) live in their own files
+  // Orders + credit (ids 110-139), expenses (ids 140-169) and couriers (ids 170-179) live in their own files
   ...COD_ORDER_MIGRATIONS,
   ...COD_EXPENSE_MIGRATIONS,
+  ...COD_COURIER_MIGRATIONS,
 ];

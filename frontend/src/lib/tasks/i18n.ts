@@ -302,6 +302,8 @@ const en = {
   'reg.passwordHint': 'At least 8 characters, with an uppercase letter and a number',
   'reg.submit': 'Create account',
   'reg.haveAccount': 'Already have a KadeHub account?',
+  'reg.privacy': 'How we use your data: read our Privacy notice',
+  'common.privacy': 'Privacy notice',
   'reg.signIn': 'Sign in',
   'reg.welcome': 'Welcome to KadeHub Tasks!',
 
@@ -636,6 +638,8 @@ const si: Record<TasksKey, string> = {
   'reg.passwordHint': 'අකුරු 8කට වඩා, capital අකුරක් සහ අංකයක් සමඟ',
   'reg.submit': 'Account එක හදන්න',
   'reg.haveAccount': 'දැනටමත් KadeHub account එකක් තියෙනවද?',
+  'reg.privacy': 'ඔබේ දත්ත භාවිත කරන ආකාරය: අපගේ රහස්‍යතා නිවේදනය කියවන්න',
+  'common.privacy': 'රහස්‍යතා නිවේදනය',
   'reg.signIn': 'Sign in',
   'reg.welcome': 'KadeHub Tasks වලට සාදරයෙන් පිළිගනිමු!',
 

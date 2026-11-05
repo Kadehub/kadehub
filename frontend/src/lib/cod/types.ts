@@ -128,6 +128,15 @@ export interface Order {
   customer_email: string | null;
   po_number: string | null;
   tracking_number: string | null;
+  courier_id: number | null;
+  /** Courier's name (list endpoint) */
+  courier_name?: string | null;
+  /** The courier's own wording for the parcel, from automatic tracking */
+  courier_status?: string | null;
+  courier_synced_at?: string | null;
+  courier_attention?: CourierAttention | null;
+  delivered_at?: string | null;
+  remittance_id?: number | null;
   confirmation_sent_at: string | null;
   created_by: number | null;
   reordered_from_order_id: number | null;
@@ -140,6 +149,17 @@ export interface Order {
   /** Sum of credit payments (list endpoint) */
   paid?: number;
   order_items?: OrderItem[];
+}
+
+export type CourierAttention = 'INSUFFICIENT_STOCK' | 'RETURN_STARTED' | 'DELIVERY_FAILED' | 'NOT_FOUND' | 'CHECK_STATUS';
+
+/** GET /api/cod/couriers */
+export interface Courier {
+  id: number;
+  name: string;
+  tracking_url: string | null;
+  /** The business's own courier, rather than one on the shared list */
+  is_custom: boolean;
 }
 
 export type PaymentType = "cod" | "pay_now" | "credit";
@@ -166,6 +186,13 @@ export interface OrderDetail extends Order {
   payments: CreditPayment[];
   credit: { total: number; paid: number; outstanding: number; status: CreditStatus; bucket: DueBucket };
   trust: { delivered: number; returned: number } | null;
+  courier: { id: number; name: string } | null;
+  /** The courier's tracking page for this parcel, when there's a courier link and a tracking number */
+  tracking_link: string | null;
+  courier_connected: boolean;
+  shipment_events: { id: number; status: string; occurred_at: string | null; note: string | null }[];
+  /** The courier payment that covered this order */
+  remittance: { id: number; paid_on: string; reference: string } | null;
   /** Set on create when the order couldn't be marked delivered for lack of stock */
   warning?: string;
 }

@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, Logger, OnModuleInit } from '@nestjs/common';
+import { PlanUpgradeNoticeService } from '../platform/plan-upgrade-notice.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -86,6 +87,7 @@ export class SuperAdminService implements OnModuleInit {
     private emailService: EmailService,
     private cloudflare: CloudflareService,
     private jwtService: JwtService,
+    private upgradeNotices: PlanUpgradeNoticeService,
   ) {}
 
   async onModuleInit() {
@@ -278,6 +280,10 @@ export class SuperAdminService implements OnModuleInit {
       if (!result.affected) throw new BadRequestException('Coupon usage limit reached');
     }
 
+    // What they're on now, read before it's replaced, decides whether this counts as an upgrade
+    const current = await this.subRepo.findOne({ where: { tenant_id: tenantId, product: pkg.product, status: 'active' } });
+    const previous = current?.package_id ? await this.packageRepo.findOne({ where: { id: current.package_id } }) : null;
+
     // Replace only this package's product subscriptions (a COD plan must not wipe out POS)
     await this.subRepo.delete({ tenant_id: tenantId, product: pkg.product });
     const expiresAt = new Date();
@@ -291,6 +297,9 @@ export class SuperAdminService implements OnModuleInit {
       payment_status: 'paid', payment_ref: `ADMIN-${Date.now()}`,
     }));
     await this.subRepo.save(subs);
+    // Nice to have: the plan change has already happened, so a problem here must not report it as failed
+    await this.upgradeNotices.planChanged(tenantId, pkg.product, pkg, previous, expiresAt)
+      .catch(err => this.logger.warn(`Could not save upgrade notice: ${err.message}`));
 
     if (dto.plan_note !== undefined) { tenant.plan_note = dto.plan_note; await this.tenantRepo.save(tenant); }
 
@@ -320,7 +329,7 @@ export class SuperAdminService implements OnModuleInit {
       details: { impersonated_user_id: admin.id, impersonated_user_email: admin.email },
     })).catch(err => this.logger.warn(`Could not record impersonation audit log: ${err.message}`));
 
-    const payload = { sub: admin.id, tenant_id: admin.tenant_id, role: admin.role, name: admin.name };
+    const payload = { sub: admin.id, tenant_id: admin.tenant_id, role: admin.role, name: admin.name, impersonated: true };
     return {
       // Short-lived — unlike a normal 7-day login token, an impersonation
       // session shouldn't quietly outlive the support ticket it was opened for.

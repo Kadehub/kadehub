@@ -659,7 +659,7 @@ function Footer() {
           </div>
         </div>
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 28, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', fontFamily: 'Poppins,sans-serif', fontWeight: 400 }}>© 2026 KadeHub. All rights reserved.</p>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', fontFamily: 'Poppins,sans-serif', fontWeight: 400 }}>© 2026 KadeHub. All rights reserved. <a href="/privacy" style={{ color: 'rgba(255,255,255,0.65)' }}>Privacy notice</a></p>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', fontFamily: 'Poppins,sans-serif', fontWeight: 400 }}>Smart retail, simplified.</p>
         </div>
       </div>

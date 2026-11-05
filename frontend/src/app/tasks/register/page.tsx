@@ -9,6 +9,7 @@ import { useViewer } from '../../../lib/tasks/auth';
 import { productPath } from '../../../lib/platform';
 import { useTasksT } from '../../../lib/tasks/i18n';
 import { apiError } from '../../../lib/tasks/format';
+import { trackRegistration } from '../../../lib/meta-pixel';
 import api from '../../../lib/api';
 
 // tasks.kadehub.com/register — free KadeHub account with Tasks turned on
@@ -32,8 +33,10 @@ export default function TasksRegisterPage() {
       const { data } = await api.post('/auth/register-account', { product: 'tasks', ...form, email: form.email.trim() });
       justRegistered.current = true;
       setAuth(data.user, data.access_token);
+      trackRegistration('tasks', form.email);
       toast.success(t('reg.welcome'));
-      window.location.href = productPath('tasks', '/profile');
+      // Leaving at once could cancel the pixel's request
+      setTimeout(() => { window.location.href = productPath('tasks', '/profile'); }, 300);
     } catch (err) {
       toast.error(apiError(err, t('common.error')));
     } finally {
@@ -61,6 +64,9 @@ export default function TasksRegisterPage() {
             {loading && <Spinner className="!w-4 !h-4 !border-white !border-t-transparent" />} {t('reg.submit')}
           </button>
         </form>
+        <p className="mt-4 text-center text-xs text-ink-500">
+          <a href="/privacy" className="underline underline-offset-4">{t('reg.privacy')}</a>
+        </p>
         <p className="mt-5 text-center text-sm text-ink-500">
           {t('reg.haveAccount')} <a href="/login" className="font-semibold text-amber-dark hover:underline">{t('reg.signIn')}</a>
         </p>

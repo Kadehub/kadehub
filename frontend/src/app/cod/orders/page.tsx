@@ -15,7 +15,7 @@ import { useT } from '../../../lib/cod/i18n/client';
 import type { RangeKey } from '../../../lib/cod/dates';
 import { formatDate, formatLKR } from '../../../lib/cod/format';
 import { STATUS_STYLE } from '../../../lib/cod/order-status';
-import { applyStatus, scopeOrders, statusChips, type OrderFilters } from '../../../lib/cod/order-filters';
+import { applyStatus, orderCouriers, scopeOrders, statusChips, type OrderFilters } from '../../../lib/cod/order-filters';
 import { PAYMENT_TYPE_KEY, orderError } from '../../../lib/cod/order-messages';
 import { whatsappUrl } from '../../../lib/cod/order-share';
 import { summariseCredit } from '../../../lib/cod/credit';
@@ -67,6 +67,7 @@ export default function CodOrdersPage() {
   const scoped = useMemo(() => scopeOrders(orders ?? [], filters), [orders, filters]);
   const filtered = useMemo(() => applyStatus(scoped, filters.status), [scoped, filters.status]);
   const chips = useMemo(() => statusChips(scoped), [scoped]);
+  const courierOptions = useMemo(() => orderCouriers(orders ?? []), [orders]);
 
   const targets = (orders ?? []).filter(o => selected.has(o.id));
   const plan = useMemo(() => {
@@ -174,6 +175,14 @@ export default function CodOrdersPage() {
             <NativeSelect aria-label={t('orders.dateRange')} value={filters.range} onChange={e => setFilters(f => ({ ...f, range: e.target.value as OrderFilters['range'] }))} className="sm:w-44">
               {RANGE_KEYS.map(k => <option key={k} value={k}>{k === 'custom' ? t('range.custom') : t(`range.${k}`)}</option>)}
             </NativeSelect>
+            {courierOptions.length > 0 && (
+              <NativeSelect aria-label={t('orders.courier')} value={String(filters.courier ?? 'all')} className="sm:w-44"
+                onChange={e => { const v = e.target.value; setFilters(f => ({ ...f, courier: v === 'all' || v === 'none' ? v : Number(v) })); }}>
+                <option value="all">{t('orders.allCouriers')}</option>
+                {courierOptions.map(c => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
+                <option value="none">{t('orders.courierNone')}</option>
+              </NativeSelect>
+            )}
           </div>
           {filters.range === 'custom' && (
             <div className="grid grid-cols-2 gap-2 sm:max-w-sm">
@@ -259,6 +268,8 @@ export default function CodOrdersPage() {
                         <span>· {formatDate(o.created_at, t.locale)}</span>
                         <span className={cn('rounded-full px-1.5 py-0.5 font-semibold', STATUS_STYLE[o.status].badge)}>{t(`status.${o.status}`)}</span>
                         {paymentBadge(o)}
+                        {o.courier_name && <span>· {o.courier_name}</span>}
+                        {o.courier_attention && <Badge tone="amber">{t('orders.needsCheck')}</Badge>}
                       </span>
                     </Link>
                     {o.customer_phone && (
@@ -286,7 +297,8 @@ export default function CodOrdersPage() {
                     <th className={tbl.th}>{t('common.invoice')}</th>
                     <th className={tbl.th}>{t('common.customer')}</th>
                     <th className={tbl.th}>{t('common.phone')}</th>
-                    <th className={tbl.th}>{t('common.city')}</th>
+                    <th className={`${tbl.th} hidden 2xl:table-cell`}>{t('common.city')}</th>
+                    <th className={tbl.th}>{t('orders.courier')}</th>
                     <th className={tbl.th}>{t('pay.label')}</th>
                     <th className={`${tbl.th} ${tbl.right}`}>{t('common.total')}</th>
                     <th className={tbl.th}>{t('common.status')}</th>
@@ -301,13 +313,17 @@ export default function CodOrdersPage() {
                             aria-label={t('orders.selectRow', { invoice: o.invoice_number })} onChange={() => toggleRow(o.id)} />
                         </td>
                         <td className={tbl.td}>
-                          <Link href={codHref(`/orders/${o.id}`)} className="font-semibold text-[color:var(--cod-primary)] hover:underline">{o.invoice_number}</Link>
+                          <Link href={codHref(`/orders/${o.id}`)} className="whitespace-nowrap font-semibold text-[color:var(--cod-primary)] hover:underline">{o.invoice_number}</Link>
                         </td>
                         <td className={`${tbl.td} max-w-[14rem] truncate`}>{o.customer_name}</td>
                         <td className={`${tbl.td} text-ink-500`}>{o.customer_phone || '—'}</td>
-                        <td className={`${tbl.td} text-ink-500`}>{o.city || '—'}</td>
+                        <td className={`${tbl.td} hidden text-ink-500 2xl:table-cell`}>{o.city || '—'}</td>
+                        <td className={`${tbl.td} text-ink-500`}>
+                          {o.courier_name || '—'}
+                          {o.courier_attention && <Badge tone="amber" className="ml-1.5">{t('orders.needsCheck')}</Badge>}
+                        </td>
                         <td className={tbl.td}>{paymentBadge(o)}</td>
-                        <td className={`${tbl.td} ${tbl.right}`}>{formatLKR(o.total_amount)}</td>
+                        <td className={`${tbl.td} ${tbl.right} whitespace-nowrap`}>{formatLKR(o.total_amount)}</td>
                         <td className={tbl.td}><StatusSelect order={o} onChanged={updateOne} /></td>
                         <td className={`${tbl.td} whitespace-nowrap text-ink-500`}>{formatDate(o.created_at, t.locale)}</td>
                         <td className={tbl.td}>

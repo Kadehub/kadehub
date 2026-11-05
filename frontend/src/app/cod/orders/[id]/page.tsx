@@ -5,13 +5,14 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
-  AlertTriangle, ArrowLeft, Copy, Download, FileText, MessageCircle, PencilLine, Printer, Receipt, RotateCcw, Share2,
+  AlertTriangle, ArrowLeft, Copy, Download, ExternalLink, FileText, MessageCircle, PencilLine, Printer, Receipt, RefreshCw, RotateCcw, Share2,
   ShieldCheck, Smartphone, Tag, Trash2,
 } from 'lucide-react';
 import { MascotState } from '../../../../components/brand/Mascot';
 import { useCod } from '../../../../components/cod/CodContext';
 import { codHref } from '../../../../components/cod/bits';
 import { ConfirmDialog, OrderForm, StatusSelect, StatusStepper } from '../../../../components/cod/orders';
+import { CourierPicker, courierChoice, courierChoiceError, fetchCouriers, resolveCourierChoice, type CourierChoice } from '../../../../components/cod/couriers';
 import { CreditPanel } from '../../../../components/cod/orders-credit';
 import { Button, Card, Menu, MenuItem, TextInput, btnClass, cn, tbl } from '../../../../components/cod/ui';
 import api from '../../../../lib/api';
@@ -22,7 +23,13 @@ import { invoiceFileName, type InvoicePdfData } from '../../../../lib/cod/invoic
 import { renderInvoicePages } from '../../../../lib/cod/invoice-render';
 import { buildOrderMessage, normalizePhone, whatsappUrl } from '../../../../lib/cod/order-share';
 import { shareFiles, useCanShare } from '../../../../lib/cod/use-can-share';
-import type { Item, OrderDetail } from '../../../../lib/cod/types';
+import type { Courier, CourierAttention, Item, OrderDetail } from '../../../../lib/cod/types';
+import type { MessageKey } from '../../../../lib/cod/i18n/messages/en';
+
+const ATTENTION_KEY: Record<CourierAttention, MessageKey> = {
+  INSUFFICIENT_STOCK: 'attention.stock', RETURN_STARTED: 'attention.returnStarted', DELIVERY_FAILED: 'attention.failed',
+  NOT_FOUND: 'attention.notFound', CHECK_STATUS: 'attention.check',
+};
 import { PAYMENT_TYPE_KEY, buildConfirmationMessage, orderError } from '../../../../lib/cod/order-messages';
 import { useCodCan } from '../../../../lib/cod/capabilities';
 
@@ -39,6 +46,9 @@ export default function CodOrderPage() {
   const [deleting, setDeleting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [tracking, setTracking] = useState<string | null>(null);
+  const [couriers, setCouriers] = useState<Courier[]>([]);
+  // Null until changed, like `tracking`: the fields show the saved values and Save appears on the first edit
+  const [courier, setCourier] = useState<CourierChoice | null>(null);
 
   const load = (quiet = false) => {
     if (!quiet) setState('loading');
@@ -49,6 +59,7 @@ export default function CodOrderPage() {
   useEffect(() => {
     load();
     api.get<Item[]>('/cod/items').then(r => setItems(r.data)).catch(() => {});
+    fetchCouriers().then(setCouriers).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -93,13 +104,32 @@ export default function CodOrderPage() {
     }
   }
 
+  const fulfilmentChanged = tracking !== null || courier !== null;
+
   async function saveTracking() {
-    if (tracking === null) return;
+    if (!fulfilmentChanged) return;
+    const courierError = courier && courierChoiceError(courier, t);
+    if (courierError) { toast.error(courierError); return; }
     setBusy(true);
     try {
-      await api.patch(`/cod/orders/${o.id}/tracking`, { tracking_number: tracking || null });
+      await api.patch(`/cod/orders/${o.id}/tracking`, {
+        tracking_number: (tracking ?? o.tracking_number) || null,
+        ...(courier ? { courier_id: await resolveCourierChoice(courier) } : {}),
+      });
       toast.success(t('orders.saved'));
       setTracking(null);
+      setCourier(null);
+      if (courier?.selected === 'other') fetchCouriers().then(setCouriers).catch(() => {});
+      load(true);
+    } catch (err) {
+      toast.error(orderError(err, t));
+    } finally { setBusy(false); }
+  }
+
+  async function checkCourier() {
+    setBusy(true);
+    try {
+      await api.post(`/cod/couriers/sync-order/${o.id}`);
       load(true);
     } catch (err) {
       toast.error(orderError(err, t));
@@ -166,13 +196,55 @@ export default function CodOrderPage() {
           <Card title={t('orders.fulfilment')}>
             <div className="space-y-3 text-sm">
               <div>
+                <label htmlFor="courier" className="text-xs font-medium text-ink-500">{t('orders.courier')}</label>
+                <div className="mt-1">
+                  <CourierPicker id="courier" couriers={couriers} current={o.courier} value={courier ?? courierChoice(o.courier_id)}
+                    onChange={setCourier} disabled={!can('orders_status')} />
+                </div>
+              </div>
+              <div>
                 <label htmlFor="tracking" className="text-xs font-medium text-ink-500">{t('orders.tracking')}</label>
                 <div className="mt-1 flex gap-2">
                   <TextInput id="tracking" value={tracking ?? o.tracking_number ?? ''} disabled={!can('orders_status')}
                     onChange={e => setTracking(e.target.value)} placeholder="—" />
-                  {tracking !== null && <Button onClick={saveTracking} disabled={busy}>{t('orders.saveTracking')}</Button>}
+                  {fulfilmentChanged && <Button onClick={saveTracking} disabled={busy}>{t('orders.saveTracking')}</Button>}
                 </div>
               </div>
+              {o.tracking_link && !fulfilmentChanged && (
+                <a href={o.tracking_link} target="_blank" rel="noopener noreferrer" className={cn(btnClass('outline'), 'w-full justify-center')}>
+                  <ExternalLink /> {t('orders.trackParcel')}
+                </a>
+              )}
+              {o.courier_attention && (
+                <p role="status" className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-xs text-amber-800">
+                  <AlertTriangle size={14} className="mt-0.5 shrink-0" /> {t(ATTENTION_KEY[o.courier_attention])}
+                </p>
+              )}
+              {o.courier_status && (
+                <p className="text-xs text-ink-500">
+                  {t('orders.courierSays', { status: o.courier_status })}
+                  {o.courier_synced_at && ` · ${t('orders.courierChecked', { date: formatDate(o.courier_synced_at, t.locale) })}`}
+                </p>
+              )}
+              {o.courier_connected && o.tracking_number && can('orders_status') && !fulfilmentChanged && (
+                <Button variant="outline" disabled={busy} onClick={checkCourier} className="w-full justify-center"><RefreshCw /> {t('orders.checkCourier')}</Button>
+              )}
+              {o.shipment_events.length > 0 && (
+                <ol className="space-y-1.5 border-l-2 border-ink-100 pl-3">
+                  {o.shipment_events.map(e => (
+                    <li key={e.id} className="text-xs">
+                      <span className="font-medium text-ink-800">{e.status}</span>
+                      {e.occurred_at && <span className="text-ink-500"> · {formatDate(e.occurred_at, t.locale)}</span>}
+                      {e.note && <span className="block text-ink-500">{e.note}</span>}
+                    </li>
+                  ))}
+                </ol>
+              )}
+              {o.payment_type === 'cod' && o.status === 'delivered' && o.courier_id && (
+                <p className={cn('rounded-lg px-2.5 py-2 text-xs font-medium', o.remittance ? 'bg-emerald-50 text-emerald-700' : 'bg-ink-50 text-ink-600')}>
+                  {o.remittance ? t('orders.courierPaid', { date: formatDate(o.remittance.paid_on, t.locale) }) : t('orders.courierHoldsCash')}
+                </p>
+              )}
               <div>
                 <Button variant="outline" onClick={sendConfirmation} disabled={!o.customer_phone} className="w-full justify-center">
                   <MessageCircle /> {t('orders.sendConfirmation')}

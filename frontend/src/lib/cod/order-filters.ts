@@ -10,6 +10,15 @@ export interface OrderFilters {
   to?: string;
   payment: "all" | PaymentType;
   status: "all" | OrderStatus;
+  /** A courier's id, or "none" for orders without one. Left out: every order. */
+  courier?: "all" | "none" | number;
+}
+
+/** The couriers actually on these orders, for the filter (includes removed ones that past orders still show). */
+export function orderCouriers(orders: Pick<Order, "courier_id" | "courier_name">[]) {
+  const byId = new Map<number, string>();
+  for (const o of orders) if (o.courier_id != null && o.courier_name) byId.set(o.courier_id, o.courier_name);
+  return Array.from(byId, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export function inRange(o: Pick<Order, "created_at">, f: Pick<OrderFilters, "range" | "from" | "to">, now = new Date()) {
@@ -24,17 +33,20 @@ export function inRange(o: Pick<Order, "created_at">, f: Pick<OrderFilters, "ran
   return t >= r.from.getTime() && t <= r.to.getTime();
 }
 
-/** Search (invoice, customer, phone, city), date and payment — everything except the status chip. */
+/** Search (invoice, customer, phone, city, tracking no.), date, payment and courier — everything except the status chip. */
 export function scopeOrders<T extends Order>(orders: T[], f: OrderFilters, now = new Date()): T[] {
   const q = f.search.trim().toLowerCase();
   const digits = q.replace(/\D/g, "");
   return orders.filter(o => {
     if (!inRange(o, f, now)) return false;
     if (f.payment !== "all" && (o.payment_type ?? "cod") !== f.payment) return false;
+    if (f.courier === "none" && o.courier_id != null) return false;
+    if (typeof f.courier === "number" && o.courier_id !== f.courier) return false;
     if (!q) return true;
     return o.invoice_number.toLowerCase().includes(q)
       || o.customer_name.toLowerCase().includes(q)
       || (o.city ?? "").toLowerCase().includes(q)
+      || (o.tracking_number ?? "").toLowerCase().includes(q)
       || (digits.length >= 3 && o.customer_phone.replace(/\D/g, "").includes(digits));
   });
 }

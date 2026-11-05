@@ -14,10 +14,11 @@ export type CodCapability =
   | 'costs'            // see landed cost and profit
   | 'expenses'         // business expenses
   | 'reports'          // reports and the dashboard
-  | 'personal_finance'; // the owner's personal expenses, budget and remaining cash
+  | 'personal_finance' // the owner's personal expenses, budget and remaining cash
+  | 'couriers';        // rename and remove the business's own couriers
 
 export const ALL_COD_CAPABILITIES: CodCapability[] = [
-  'orders_create', 'orders_status', 'credit', 'costs', 'expenses', 'reports', 'personal_finance',
+  'orders_create', 'orders_status', 'credit', 'costs', 'expenses', 'reports', 'personal_finance', 'couriers',
 ];
 
 export const ROLE_CAPABILITIES: Record<string, CodCapability[]> = {

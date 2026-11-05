@@ -80,6 +80,7 @@ export class SaveCodOrderDto {
   @IsOptional() @IsIn(COD_CUSTOMER_TYPES as unknown as string[]) customer_type?: CodCustomerType;
   @IsOptional() @IsString() @MaxLength(100) po_number?: string | null;
   @IsOptional() @IsString() @MaxLength(100) tracking_number?: string | null;
+  @IsOptional() @Type(() => Number) @IsInt() courier_id?: number | null;
   // Credit terms (only kept when payment_type = credit)
   @IsOptional() @Type(() => Number) @IsInt() @Min(0) @Max(3650) credit_period_days?: number | null;
   @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) payment_due_date?: string | null;
@@ -100,6 +101,55 @@ export class UpdateCodOrderDto extends SaveCodOrderDto {}
 
 export class CodTrackingDto {
   @IsOptional() @IsString() @MaxLength(100) tracking_number?: string | null;
+  /** Left out: the order keeps its courier. Null clears it. */
+  @IsOptional() @Type(() => Number) @IsInt() courier_id?: number | null;
+}
+
+export class CreateCourierDto {
+  @IsString() @MaxLength(100) name: string;
+  @IsOptional() @IsString() @MaxLength(500) tracking_url?: string | null;
+}
+
+export class UpdateCourierDto {
+  @IsOptional() @IsString() @MaxLength(100) name?: string;
+  @IsOptional() @IsString() @MaxLength(500) tracking_url?: string | null;
+}
+
+export class UpdateSharedCourierDto extends UpdateCourierDto {
+  @IsOptional() @IsBoolean() is_active?: boolean;
+}
+
+export class ConnectCourierDto {
+  @IsString() @IsNotEmpty() @MaxLength(500) api_key: string;
+}
+
+/** One statement line, or one order picked by hand (order_id). */
+export class SettlementRowDto {
+  @IsOptional() @Type(() => Number) @IsInt() order_id?: number | null;
+  @IsOptional() @IsString() @MaxLength(100) tracking_number?: string | null;
+  @Type(() => Number) @IsNumber() @Min(0) @Max(MAX_AMOUNT, { message: 'AMOUNT_TOO_LARGE' }) collected: number;
+  @Type(() => Number) @IsNumber() @Min(0) @Max(MAX_AMOUNT, { message: 'AMOUNT_TOO_LARGE' }) fee: number;
+}
+
+export class PreviewSettlementDto {
+  @Type(() => Number) @IsInt() courier_id: number;
+  @IsArray() @ArrayMaxSize(5000) @ValidateNested({ each: true }) @Type(() => SettlementRowDto) rows: SettlementRowDto[];
+}
+
+/** The statement's column headings, remembered for that courier's next statement. */
+export class StatementMappingDto {
+  @IsString() @MaxLength(200) tracking: string;
+  @IsString() @MaxLength(200) collected: string;
+  @IsOptional() @IsString() @MaxLength(200) fee?: string;
+}
+
+export class RecordSettlementDto extends PreviewSettlementDto {
+  @Matches(/^\d{4}-\d{2}-\d{2}$/) paid_on: string;
+  @IsOptional() @IsString() @MaxLength(100) reference?: string;
+  /** Left out: the statement's collected amount less its fees */
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(MAX_AMOUNT, { message: 'AMOUNT_TOO_LARGE' }) received?: number;
+  @IsOptional() @IsString() @MaxLength(1000) notes?: string;
+  @IsOptional() @ValidateNested() @Type(() => StatementMappingDto) mapping?: StatementMappingDto;
 }
 
 export class AddCreditPaymentDto {

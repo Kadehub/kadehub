@@ -13,6 +13,7 @@ import { Button, Field, TextInput, Toggle, btnClass, cn } from '../../../compone
 import KadeHubLogo from '../../../components/ui/KadeHubLogo';
 import { useAuthHydrated, useAuthStore } from '../../../hooks/useAuth';
 import api from '../../../lib/api';
+import { trackRegistration } from '../../../lib/meta-pixel';
 import { useT } from '../../../lib/cod/i18n/client';
 import { BUSINESS_TYPES, businessTypeBlurb, businessTypeLabel, getBusinessType, type BusinessTypeKey } from '../../../lib/cod/business-types';
 import { apiError, type CodMe } from '../../../lib/cod/session';
@@ -166,6 +167,7 @@ function Wizard({ hasSession, defaultName, onDone }: { hasSession: boolean; defa
         brand_color: preset.color,
         imports_goods: importsGoods,
       });
+      trackRegistration('cod', values.email);
       onDone();
     } catch (err) {
       const status = (err as { response?: { status?: number } })?.response?.status;
@@ -281,6 +283,9 @@ function Wizard({ hasSession, defaultName, onDone }: { hasSession: boolean; defa
           )}
         </div>
       </form>
+      <p className="text-center text-xs text-ink-500">
+        <a href="/privacy" className="underline underline-offset-4">{t('reg.privacy')}</a>
+      </p>
 
       {!hasSession && (
         <p className="text-center text-sm text-ink-500">

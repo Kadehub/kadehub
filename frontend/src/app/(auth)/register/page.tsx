@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '../../../lib/api';
+import { trackRegistration } from '../../../lib/meta-pixel';
 import { useAuthStore } from '../../../hooks/useAuth';
 import KadeHubLogo from '../../../components/ui/KadeHubLogo';
 import { Input } from '../../../components/ui/Input';
@@ -50,6 +51,7 @@ export default function RegisterPage() {
     try {
       const { data } = await api.post('/auth/register', account);
       setAuth(data.user, data.access_token);
+      trackRegistration('pos', account.email);
       toast.success('14-day free trial activated!');
       setStep('company');
     } catch (err: any) {
@@ -149,6 +151,9 @@ export default function RegisterPage() {
                 className="kh-btn-primary w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm sm:text-base">
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <>Start Free Trial <ChevronRight size={16} /></>}
               </button>
+              <p className="text-center text-xs text-ink-500">
+                <a href="/privacy" className="underline underline-offset-4">How we use your data: read our Privacy notice</a>
+              </p>
             </form>
           </div>
         )}

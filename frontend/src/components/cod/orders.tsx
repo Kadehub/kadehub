@@ -16,12 +16,13 @@ import { useCodCan } from '../../lib/cod/capabilities';
 import { orderAllowance } from '../../lib/cod/plans';
 import {
   ORDER_STATUSES, PAYMENT_METHODS, PAYMENT_TYPES,
-  type CustomerType, type Item, type Order, type OrderDetail, type OrderStatus, type PaymentMethod, type PaymentType,
+  type Courier, type CustomerType, type Item, type Order, type OrderDetail, type OrderStatus, type PaymentMethod, type PaymentType,
 } from '../../lib/cod/types';
 import { useCod } from './CodContext';
 import { codHref } from './bits';
 import { Button, Dialog, Field, NativeSelect, TextArea, TextInput, cn } from './ui';
 import { ItemPicker } from './ItemPicker';
+import { CourierPicker, courierChoice, courierChoiceError, fetchCouriers, resolveCourierChoice } from './couriers';
 import { isValidPhone } from '../../lib/cod/order-share';
 
 /** Yes / No confirmation with the spec's exact wording for risky status changes. */
@@ -151,6 +152,8 @@ export function OrderForm({ items, mode = 'create', source, onSaved, trigger }: 
   const [credit, setCredit] = useState({ days: '', due: '', note: '', initial: '', method: 'cash' as PaymentMethod });
   const [saveAs, setSaveAs] = useState<OrderStatus>('pending');
   const [more, setMore] = useState(false);
+  const [couriers, setCouriers] = useState<Courier[]>([]);
+  const [courier, setCourier] = useState(courierChoice(null));
 
   const itemById = useMemo(() => new Map(items.map(i => [i.id, i])), [items]);
   const inOrder = useMemo(() => {
@@ -180,16 +183,21 @@ export function OrderForm({ items, mode = 'create', source, onSaved, trigger }: 
       const price = mode === 'reorder' && item ? Number(item.selling_price) : Number(l.unit_price);
       return { key: nextKey(), item_id: item ? item.id : null, item_name: item ? item.name : l.item_name, sku: item?.sku, quantity: l.quantity, unit_price: price, stock: item?.stock_quantity };
     }));
-    setMore(mode === 'edit' && !!(source.customer_email || source.po_number || source.tracking_number || source.notes || source.customer_type === 'wholesale'));
+    setCourier(courierChoice(source.courier_id));
+    setMore(mode === 'edit' && !!(source.customer_email || source.po_number || source.tracking_number || source.courier_id || source.notes || source.customer_type === 'wholesale'));
   }
 
   function reset() {
     setLines([]); setPhoneTouched(false); setDeliveryCharge(0); setDiscount(0); setError(undefined); setPaymentType('cod');
-    setCredit({ days: '', due: '', note: '', initial: '', method: 'cash' }); setSaveAs('pending'); setCustomerType('retail'); setMore(false);
+    setCredit({ days: '', due: '', note: '', initial: '', method: 'cash' }); setSaveAs('pending'); setCustomerType('retail'); setMore(false); setCourier(courierChoice(null));
     setCustomer({ customer_name: '', customer_phone: '', customer_address: '', city: '', notes: '', customer_email: '', po_number: '', tracking_number: '' });
   }
 
-  function openForm() { reset(); fill(); setOpen(true); }
+  function openForm() {
+    reset(); fill(); setOpen(true);
+    // The form still works without the list: "Other" and the order's current courier don't need it
+    fetchCouriers().then(setCouriers).catch(() => {});
+  }
 
   function addItem(item: Item) {
     setLines(prev => prev.some(l => l.item_id === item.id)
@@ -216,6 +224,8 @@ export function OrderForm({ items, mode = 'create', source, onSaved, trigger }: 
     if (!valid.length) { setError(t('orders.addAtLeastOne', { item: labels.singularLower })); return; }
     if (valid.some(l => l.item_id == null && !l.item_name.trim())) { setError(t('err.customLineName')); return; }
     if (valid.some(l => l.unit_price < 0) || deliveryCharge < 0 || discount < 0) { setError(t('err.negativeAmount')); return; }
+    const courierError = courierChoiceError(courier, t);
+    if (courierError) { setMore(true); setError(courierError); return; }
     setPending(true);
     setError(undefined);
     const body: Record<string, unknown> = {
@@ -231,6 +241,10 @@ export function OrderForm({ items, mode = 'create', source, onSaved, trigger }: 
       body.credit_note = credit.note || null;
     }
     try {
+      const courierId = await resolveCourierChoice(courier);
+      // A reorder starts as a new order, so it can't carry over a courier that has since been removed
+      const isRemoved = mode === 'reorder' && courierId === source?.courier_id && !couriers.some(c => c.id === courierId);
+      body.courier_id = isRemoved ? null : courierId;
       let saved: Order & { warning?: string };
       if (mode === 'edit' && source) {
         saved = (await api.put<Order>(`/cod/orders/${source.id}`, body)).data;
@@ -407,6 +421,9 @@ export function OrderForm({ items, mode = 'create', source, onSaved, trigger }: 
                 </Field>
                 <Field label={t('common.email')} htmlFor="customer_email"><TextInput id="customer_email" type="email" {...c('customer_email')} /></Field>
                 <Field label={t('orders.poNumber')} htmlFor="po_number"><TextInput id="po_number" {...c('po_number')} /></Field>
+                <Field label={t('orders.courier')} htmlFor="order_courier">
+                  <CourierPicker id="order_courier" couriers={couriers} current={mode === 'edit' ? source?.courier : undefined} value={courier} onChange={setCourier} />
+                </Field>
                 <Field label={t('orders.tracking')} htmlFor="tracking_number"><TextInput id="tracking_number" {...c('tracking_number')} /></Field>
                 <Field label={t('common.notes')} htmlFor="notes" className="col-span-2"><TextArea id="notes" rows={2} {...c('notes')} /></Field>
               </div>

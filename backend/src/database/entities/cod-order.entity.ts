@@ -35,6 +35,18 @@ export class CodOrder {
   /** Customer's purchase-order reference */
   @Column({ type: 'varchar', nullable: true }) po_number: string | null;
   @Column({ type: 'varchar', nullable: true }) tracking_number: string | null;
+  /** Shared or this tenant's own cod_courier row */
+  @Column({ type: 'int', nullable: true }) courier_id: number | null;
+  /** The courier's own wording for the parcel's latest status, and when we last asked */
+  @Column({ type: 'varchar', nullable: true }) courier_status: string | null;
+  @Column({ type: Date, nullable: true }) courier_synced_at: Date | null;
+  /** The last state the sync acted on. Only a new state moves the order, so a staff member's correction sticks. */
+  @Column({ type: 'varchar', nullable: true }) courier_state: string | null;
+  /** Why someone should look at this order: see COURIER_ATTENTION in cod-courier-sync.ts */
+  @Column({ type: 'varchar', nullable: true }) courier_attention: string | null;
+  @Column({ type: Date, nullable: true }) delivered_at: Date | null;
+  /** The courier payment that covered this order; null while the courier still holds the cash */
+  @Column({ type: 'int', nullable: true }) remittance_id: number | null;
   @Column({ type: Date, nullable: true }) confirmation_sent_at: Date | null;
   @Column({ type: 'int', nullable: true }) created_by: number | null;
   @Column({ type: 'int', nullable: true }) reordered_from_order_id: number | null;

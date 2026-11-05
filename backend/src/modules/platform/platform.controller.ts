@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Patch, Param, Body, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseGuards, UsePipes, ValidationPipe, HttpCode } from '@nestjs/common';
 import { PlatformService } from './platform.service';
+import { PlanUpgradeNoticeService } from './plan-upgrade-notice.service';
 import { ProductAccessService } from './product-access.service';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -10,7 +11,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 @Controller('platform')
 @UsePipes(new ValidationPipe({ whitelist: true }))
 export class PlatformController {
-  constructor(private platformService: PlatformService, private access: ProductAccessService) {}
+  constructor(private platformService: PlatformService, private access: ProductAccessService, private upgradeNotices: PlanUpgradeNoticeService) {}
 
   @Get('products')
   listProducts() {
@@ -43,6 +44,18 @@ export class PlatformController {
   }
 
   /** Lets an existing account start using another product (e.g. a POS shop turning on COD). */
+  /**
+   * The "congratulations" for a plan a super admin gave this business, if one is waiting. Only the owner's own
+   * session uses it up: staff won't see it, and neither will a super admin signed in as the shop.
+   */
+  @Post('upgrade-notice/claim')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  async claimUpgradeNotice(@CurrentUser() user: any) {
+    if (user.role !== 'ADMIN' || user.impersonated) return { notice: null };
+    return { notice: await this.upgradeNotices.claim(user.tenant_id) };
+  }
+
   @Post('enable/:product')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')

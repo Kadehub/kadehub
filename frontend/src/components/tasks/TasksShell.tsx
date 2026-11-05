@@ -153,7 +153,7 @@ export default function TasksShell({ children }: { children: React.ReactNode }) 
 
       <footer className="border-t border-ink-200 bg-white">
         <div className="max-w-6xl mx-auto px-4 py-6 text-center sm:text-left text-xs text-ink-400">
-          © {new Date().getFullYear()} KadeHub Tasks
+          © {new Date().getFullYear()} KadeHub Tasks · <a href="/privacy" className="hover:underline">{t('common.privacy')}</a>
         </div>
       </footer>
     </div>

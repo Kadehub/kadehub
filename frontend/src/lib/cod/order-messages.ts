@@ -27,7 +27,9 @@ export function buildConfirmationMessage(o: OrderDetail, businessName: string, t
   if (o.payment_type === "credit" && o.payment_due_date) out.push(t("conf.due", { date: formatDate(o.payment_due_date, t.locale) }));
   const to = [o.customer_address, o.city].filter(Boolean).join(", ");
   if (to) { out.push(""); out.push(t("msg.deliveringTo", { value: to })); }
+  if (o.courier) out.push(t("conf.courier", { value: o.courier.name }));
   if (o.tracking_number) out.push(t("conf.tracking", { value: o.tracking_number }));
+  if (o.tracking_link) out.push(t("conf.trackingLink", { value: o.tracking_link }));
   return out.join("\n");
 }
 
@@ -77,6 +79,17 @@ export function orderError(err: unknown, t: Translator, me?: CodMe | null): stri
     case "INVALID_PHONE": return t("err.phoneInvalid");
     case "QUANTITY_TOO_LARGE": return t("err.quantityTooLarge");
     case "PHONE_REQUIRED": return t("err.phoneRequired");
+    case "COURIER_NOT_FOUND": return t("err.courierNotFound");
+    case "COURIER_NAME": return t("err.courierName");
+    case "COURIER_DUPLICATE": return t("err.courierDuplicate");
+    case "COURIER_URL_INVALID": return t("err.courierUrl");
+    case "COURIER_KEY_REQUIRED": return t("err.courierKeyRequired");
+    case "COURIER_KEY_REJECTED": return t("err.courierKeyRejected");
+    case "COURIER_UNREACHABLE": return t("err.courierUnreachable");
+    case "COURIER_SECRET_MISSING": return t("err.courierSecretMissing");
+    case "COURIER_NOT_CONNECTED": return t("err.courierNotConnected");
+    case "PREMIUM_REQUIRED": return t("err.courierPremium");
+    case "SETTLEMENT_EMPTY": return t("err.settlementEmpty");
   }
   return apiError(err, t, me);
 }

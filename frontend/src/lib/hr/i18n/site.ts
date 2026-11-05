@@ -37,6 +37,7 @@ const en = {
   'reg.enabling': 'Turning on…',
   'reg.adminOnly': 'Only the account owner can turn on KadeHub Staff.',
   'reg.trialNote': '14-day Pro trial · No card needed',
+  'reg.privacy': 'How we use your data: read our Privacy notice',
 
   'job.loading': 'Loading the job…',
   'job.closedTitle': 'This job is closed',
@@ -109,6 +110,7 @@ const si: Record<keyof typeof en, string> = {
   'reg.enabling': 'සක්‍රීය කරමින්…',
   'reg.adminOnly': 'KadeHub Staff සක්‍රීය කළ හැක්කේ ගිණුම් හිමිකරුට පමණි.',
   'reg.trialNote': 'දින 14 Pro අත්හදා බැලීම · කාඩ්පතක් අවශ්‍ය නැත',
+  'reg.privacy': 'ඔබේ දත්ත භාවිත කරන ආකාරය: අපගේ රහස්‍යතා නිවේදනය කියවන්න',
 
   'job.loading': 'රැකියාව පූරණය වෙමින්…',
   'job.closedTitle': 'මෙම රැකියාව වසා ඇත',

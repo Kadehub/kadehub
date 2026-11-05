@@ -178,7 +178,7 @@ export class CodController {
   @Patch('orders/:id/tracking')
   @CodCap('orders_status')
   tracking(@CurrentUser() u: any, @Param('id', ParseIntPipe) id: number, @Body() dto: CodTrackingDto) {
-    return this.cod.setTracking(u, id, dto.tracking_number);
+    return this.cod.setTracking(u, id, dto);
   }
 
   @Post('orders/:id/confirmation-sent')

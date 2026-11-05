@@ -313,6 +313,7 @@ export function LandingFooter({ slug, blurb }: { slug: ProductSlug; blurb: strin
           <ul className="mt-3 space-y-2 text-sm">
             <li><a href="#faq" className="text-ink-600 hover:text-ink-900">FAQ</a></li>
             <li><a href="mailto:official.kadehub@gmail.com" className="text-ink-600 hover:text-ink-900">Contact us</a></li>
+            <li><a href="/privacy" className="text-ink-600 hover:text-ink-900">Privacy notice</a></li>
             <li><a href="/login" className="text-ink-600 hover:text-ink-900">Sign in</a></li>
           </ul>
         </div>

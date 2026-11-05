@@ -3,6 +3,8 @@ import './fonts.css';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import { LangProvider } from '../hooks/useLang';
+import MetaPixel from '../components/platform/MetaPixel';
+import UpgradeCelebration from '../components/platform/UpgradeCelebration';
 
 export const metadata: Metadata = {
   title: 'KadeHub — Business apps for growing businesses',
@@ -35,7 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           style: { fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '13px' },
           success: { iconTheme: { primary: '#00796B', secondary: '#fff' } },
         }} />
+        <UpgradeCelebration />
         </LangProvider>
+        <MetaPixel />
       </body>
     </html>
   );
